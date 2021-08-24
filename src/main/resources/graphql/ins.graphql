@@ -1,138 +1,85 @@
-type alt_participant {
-  alt_participant_id: String
-  source: String
-  participants: [participant] @relation(name:"has_alt_participant", direction:OUT)
+type clinical_trial {
+  clinical_trial_id: String
+  title: String
+  last_update_posted: String
+  recruitment_status: String
+  projects: [project] @relation(name:"has_clinical_trial", direction:OUT)
 }
 
-type file_set {
-  file_set_id: String
-  file_ordinal: String
-  file_id: String
-  file_name: String
-  file_md5: String
-  file_content_format: String
-  file_deposit_location: String
-  submitted_file: submitted_file @relation(name:"files_of_submitted_file", direction:OUT)
+type dbgap {
+  accession: String
+  title: String
+  release_date: String
+  projects: [project] @relation(name:"has_dbgap", direction:OUT)
 }
 
-type participant {
-  participant_id: String
-  gender: String
-  age_at_index: String
-  submitted_files: [submitted_file] @relation(name:"has_participant", direction:OUT)
-  alt_participants: [alt_participant] @relation(name:"has_alt_participant", direction:IN)
-  samples: [sample] @relation(name:"sample_from_participant", direction:IN)
-}
-
-type sample {
-  sample_id: String
-  sample_type: String
-  date_of_sample_collection: String
-  participant: participant @relation(name:"sample_from_participant", direction:OUT)
-}
-
-type study {
-  study_id: String
-  pi_name: String
-  pi_institution: String
-  pi_email: String
-  pi_era_id: String
-  study_title: String
-  study_phs_id: String
-  is_published: Boolean
-  doi: String
-  submitted_2_repo: Boolean
-  gdc: Boolean
-  pdc: Boolean
-  dbGap: Boolean
-  sra: Boolean
-  genbank: Boolean
-  figshare: Boolean
-  other_repo: String
-  submitted_files: [submitted_file] @relation(name:"study_within_submitted_file", direction:OUT)
-}
-
-type submitted_file {
-  submitted_file_id: String
-  ccdi_arm: String
+type geo {
+  accession: String
+  title: String
+  status: String
   submission_date: String
-  submission_ts: String
-  source_ip: String
-  file_count_validate: Boolean
-  filename_list_validate: Boolean
-  study_registered: Boolean
-  permitted_4_gru: Boolean
-  data_identifying: Boolean
-  species: String
-  human_subjects: Boolean
-  files_count: Int
-  file_names: String
-  file_name_suffixes: String
-  is_free_text: Boolean
-  is_tsv_csv: Boolean
-  is_json: Boolean
-  is_xml: Boolean
-  is_other_non_binary: Boolean
-  is_excel: Boolean
-  is_dicom: Boolean
-  is_svs: Boolean
-  is_other_binary_image: Boolean
-  is_other_binary_non_image: Boolean
-  total_size_in_bytes: Int
-  subject_demographics: Boolean
-  subject_clinical_data: Boolean
-  subject_treatment_response_data: Boolean
-  subject_outcomes_data: Boolean
-  subject_imaging_data_raw: Boolean
-  subject_imaging_data_written_findings: Boolean
-  subject_data_metadata: Boolean
-  biospecimen_data: Boolean
-  surgical_pathology_reports: Boolean
-  histopathology_images_raw: Boolean
-  primary_dna_sequence_data: Boolean
-  germline_data: Boolean
-  somatic_data: Boolean
-  derived_germline_variants: Boolean
-  derived_somatic_variants: Boolean
-  primary_rnaseq_expression_data: Boolean
-  scrna_sequencing: Boolean
-  scchromatin_sequencing: Boolean
-  proteogenomics_data: Boolean
-  rppa_data: Boolean
-  fish: Boolean
-  imc: Boolean
-  in_vitro_cell_proliferation_assay: Boolean
-  in_vitro_small_molecule_sensitivity_assays: Boolean
-  in_vitro_crispr_screens: Boolean
-  in_vitro_shrna_orf_screens: Boolean
-  other: Boolean
-  other_specify: String
-  primary_datatype: String
-  derived_interventional_clinical_trial: Boolean
-  derived_observational_study: Boolean
-  have_subject_ids: Boolean
-  have_pii: Boolean
-  subject_id_cross_reference: Boolean
-  contain_biospecimen_ids: Boolean
-  contain_biospecimen_2_subject_mappings: Boolean
-  participant_id_column_header_or_number: String
-  alt_participant_id_column_header_or_number: String
-  participants: [participant] @relation(name:"has_participant", direction:IN)
-  submitters: [submitter] @relation(name:"submitted_by", direction:OUT)
-  studies: [study] @relation(name:"study_within_submitted_file", direction:IN)
-  file_sets: [file_set] @relation(name:"files_of_submitted_file", direction:IN)
+  last_update_date: String
+  projects: [project] @relation(name:"has_geo", direction:OUT)
 }
 
-type submitter {
-  submitter_id: String
-  submitter_name: String
-  submitter_identifier: String
-  submitter_email: String
-  submitter_era_id: String
-  institution_id: String
-  institution_name: String
+type program {
   program_id: String
-  submitted_files: [submitted_file] @relation(name:"submitted_by", direction:IN)
+  program_name: String
+  program_description: String
+  program_website: String
+  projects: [project] @relation(name:"projects_of_program", direction:IN)
+}
+
+type project {
+  project_id: String
+  application_id: String
+  fiscal_year: String
+  project_title: String
+  project_type: String
+  abstract_text: String
+  keywords: String
+  org_name: String
+  org_city: String
+  org_state: String
+  org_country: String
+  principal_investigators: String
+  lead_doc: String
+  program_officers: String
+  award_amount: String
+  nci_funded_amount: String
+  award_notice_date: String
+  project_start_date: String
+  project_end_date: String
+  full_foa: String
+  publications: [publication] @relation(name:"has_publication", direction:IN)
+  geos: [geo] @relation(name:"has_geo", direction:IN)
+  sras: [sra] @relation(name:"has_sra", direction:IN)
+  dbgaps: [dbgap] @relation(name:"has_dbgap", direction:IN)
+  clinical_trials: [clinical_trial] @relation(name:"has_clinical_trial", direction:IN)
+  program: program @relation(name:"projects_of_program", direction:OUT)
+}
+
+type publication {
+  publication_id: String
+  pmc_id: String
+  year: String
+  journal: String
+  title: String
+  authors: String
+  publish_date: String
+  citation_count: String
+  relative_citation_ratio: String
+  nih_percentile: String
+  doi: String
+  projects: [project] @relation(name:"has_publication", direction:OUT)
+}
+
+type sra {
+  accession: String
+  study_title: String
+  bioproject_accession: String
+  registration_date: String
+  projects: [project] @relation(name:"has_sra", direction:OUT)
 }
 
 type GroupCount {
@@ -142,129 +89,196 @@ type GroupCount {
 
 type ProgramInfo {
     program_id: String
-    start_date: String
-    end_date: String
-    num_files: Int
-    num_participants: Int
-    num_studies: Int
+    program_name: String
+    program_description: String
+    program_website: String
+    num_projects: Int
+    num_publications: Int
 }
 
-type SubmitterInfo {
-    submitter_id: String
-    submitter_name: String
-    submitter_identifier: String
-    submitter_email: String
-    submitter_era_id: String
-    institution_id: String
-    institution_name: String
-    program_id: String
+type ProjectInfo {
+    project_id: String
+    application_id: String
+    fiscal_year: String
+    project_title: String
+    project_type: String
+    abstract_text: String
+    keywords: String
+    org_name: String
+    org_city: String
+    org_state: String
+    org_country: String
+    principal_investigators: String
+    lead_doc: String
+    program_officers: String
+    award_amount: String
+    nci_funded_amount: String
+    award_notice_date: String
+    project_start_date: String
+    project_end_date: String
+    full_foa: String
 } 
 
-type StudyInfo {
-    study_id: String
-    pi_name: String
-    pi_institution: String
-    pi_email: String
-    pi_era_id: String
-    study_title: String
-    study_phs_id: String
-    is_published: Boolean
+type PublicationInfo {
+    publication_id: String
+    pmc_id: String
+    year: String
+    journal: String
+    title: String
+    authors: String
+    publish_date: String
+    citation_count: String
+    relative_citation_ratio: String
+    nih_percentile: String
     doi: String
-    submitted_2_repo: Boolean
-    gdc: Boolean
-    pdc: Boolean
-    dbGap: Boolean
-    sra: Boolean
-    genbank: Boolean
-    figshare: Boolean
-    other_repo: String
 }
 
-type Alt_Participant_Info {
-    alt_participant_id: String
-    source: String
-}
-
-type ParticipantInfo {
-    participant_id: String
-    gender: String
-    age_at_index: String
-    alt_participants:String
-}
-
-type File_Set_Info {
-    file_set_id: String
-    file_ordinal: Int
-    file_id: String
-    file_name: String
-    file_md5: String
-    file_content_format: String
-    file_deposit_location: String
-}
-
-type SubmittedFileDetail {
-    submitted_file_id: String
-    submitter_id: String
-    submitter_name: String
-    ccdi_arm: String
+type GEOInfo {
+    accession: String
+    title: String
+    status: String
     submission_date: String
-    submission_ts: String
-    source_ip: String
-    file_count_validate: Boolean
-    filename_list_validate: Boolean
-    species: String
-    human_subjects: Boolean
-    total_size_in_bytes: Int
-    primary_datatype: String
-    have_subject_ids: Boolean
-    have_pii: Boolean
-    subject_id_cross_reference: Boolean
-    contain_biospecimen_ids: Boolean
-    contain_biospecimen_2_subject_mappings: Boolean
-    participant_id_column_header_or_number: String
-    alt_participant_id_column_header_or_number: String
-    studies: [StudyInfo]
-    participants: [ParticipantInfo]
-    files: [File_Set_Info]
+    last_update_date: String
 }
 
-type SubmittedFileOverview {
-    submitted_file_id: String
-    ccdi_arm: String
+type SRAInfo {
+    accession: String
+    study_title: String
+    bioproject_accession: String
+    registration_date: String
+}
+
+type DBGapInfo {
+    accession: String
+    title: String
+    release_date: String
+}
+
+type ClinicalTrialInfo {
+    clinical_trial_id: String
+    title: String
+    last_update_posted: String
+    recruitment_status: String
+}
+
+type ProgramDetail {
+    program_id: String
+    program_name: String
+    program_description: String
+    program_website: String
+    num_publications: Int
+    num_projects: Int
+    num_geos: Int
+    num_sras: Int
+    num_clinical_trials: Int
+    projects: [ProjectInfo]
+}
+
+type ProjectDetail {
+    project_id: String
+    application_id: String
+    fiscal_year: String
+    project_title: String
+    project_type: String
+    abstract_text: String
+    keywords: String
+    org_name: String
+    org_city: String
+    org_state: String
+    org_country: String
+    principal_investigators: String
+    lead_doc: String
+    program_officers: String
+    award_amount: String
+    nci_funded_amount: String
+    award_notice_date: String
+    project_start_date: String
+    project_end_date: String
+    full_foa: String
+    publications: [PublicationInfo]
+    geos: [GEOInfo]
+    sras: [SRAInfo]
+    dbgaps: [DBGapInfo]
+    clinical_trials: [ClinicalTrialInfo]
+}
+
+type ProjectOverview {
+    project_id: String
+    application_id: String
+    fiscal_year: String
+    project_title: String
+    project_type: String
+    abstract_text: String
+    keywords: String
+    org_name: String
+    org_city: String
+    org_state: String
+    org_country: String
+    principal_investigators: String
+    lead_doc: String
+    program_officers: String
+    award_amount: String
+    nci_funded_amount: String
+    award_notice_date: String
+    project_start_date: String
+    project_end_date: String
+    full_foa: String
+}
+
+type PublicationOverview {
+    publication_id: String
+    pmc_id: String
+    year: String
+    journal: String
+    title: String
+    authors: String
+    publish_date: String
+    citation_count: String
+    relative_citation_ratio: String
+    nih_percentile: String
+    doi: String
+}
+
+type GEOOverview {
+    accession: String
+    title: String
+    status: String
     submission_date: String
-    submission_ts: String
-    source_ip: String
-    file_count_validate: Boolean
-    filename_list_validate: Boolean
-    study_registered: Boolean
-    primary_datatype: String
-    derived_interventional_clinical_trial: Boolean
-    derived_observational_study: Boolean
-    have_subject_ids: Boolean
-    have_pii: Boolean
-    subject_id_cross_reference: Boolean
-    contain_biospecimen_ids: Boolean
-    contain_biospecimen_2_subject_mappings: Boolean
-    participant_id_column_header_or_number: String
-    alt_participant_id_column_header_or_number: String
-    files: [file_set]
+    last_update_date: String
 }
 
-type ParticipantOverview {
-    participant_id: String
-    gender: String
-    age_at_index: String
-    alt_participants: [alt_participant]
+type SRAOverview {
+    accession: String
+    study_title: String
+    bioproject_accession: String
+    registration_date: String
+}
+
+type DBGapOverview {
+    accession: String
+    title: String
+    release_date: String
+}
+
+type ClinicalTrialOverview {
+    clinical_trial_id: String
+    title: String
+    last_update_posted: String
+    recruitment_status: String
 }
 
 type SearchResult {
+    projectIds: [String]
+    publicationIds: [String]
+    accessions: [String]
     numberOfPrograms: Int
-    numberOfStudies: Int
-    numberOfSubmitters: Int
-    numberOfParticipants: Int
-    numberOfFiles: Int
-    fileIds: [String]
-    firstPage: [SubmittedFileOverview]
+    numberOfProjects: Int
+    numberOfPublications: Int
+    numberOfGEOs: Int
+    numberOfSRAs: Int
+    numberOfDBGaps: Int
+    numberOfClinicalTrials: Int
+    firstPage: [ProjectOverview]
 }
 
 schema {
@@ -275,332 +289,409 @@ type QueryType {
     schemaVersion: String @cypher(statement: "RETURN '1.1.0'")
 
     "Simple counts"
-    numberOfPrograms: Int @cypher(statement: "MATCH (n:submitter) return count(n)")
-    numberOfSubmitters: Int @cypher(statement: "MATCH (n:submitter) return count(n)")
-    numberOfStudies: Int @cypher(statement: "MATCH (n:study) return count(n)")
-    numberOfParticipants: Int @cypher(statement: "MATCH (n:participant) return count(n)")
-    numberOfFiles: Int @cypher(statement: "MATCH (n:submitted_file) return count(n)")
+    numberOfPrograms: Int @cypher(statement: "MATCH (n:program) return count(n)")
+    numberOfProjects: Int @cypher(statement: "MATCH (n:project) return count(n)")
+    numberOfPublications: Int @cypher(statement: "MATCH (n:publication) return count(n)")
+    numberOfGEOs: Int @cypher(statement: "MATCH (n:geo) return count(n)")
+    numberOfSRAs: Int @cypher(statement: "MATCH (n:sra) return count(n)")
+    numberOfDBGaps: Int @cypher(statement: "MATCH (n:dbgap) return count(n)")
+    numberOfClinicalTrials: Int @cypher(statement: "MATCH (n:clinical_trial) return count(n)")
 
     programInfo: [ProgramInfo] @cypher(statement: """
-        MATCH (sb:submitter)
-        OPTIONAL MATCH (sb)<--(sf:submitted_file)
-        OPTIONAL MATCH (sf)<--(s:study)
-        OPTIONAL MATCH (sf)<--(p:participant)
+        MATCH (p:program)
+        OPTIONAL MATCH (p)<--(pr:project)
+        OPTIONAL MATCH (pr)<--(pub:publication)
         RETURN {
-            program_id: sb.program_id,
-            start_date: "2006-04-07",
-            end_date: "2018-03-18",
-            num_files: COUNT(DISTINCT sf),
-            num_participants: COUNT(DISTINCT p),
-            num_studies: COUNT(DISTINCT s)
+            program_id: p.program_id,
+            program_name: p.program_name,
+            program_website: p.program_website,
+            num_projects: COUNT(DISTINCT pr),
+            num_publications: COUNT(DISTINCT pub)
         }
     """, passThrough: true)
 
     "Group counts"
-    fileCountByProgram(submitted_file_ids: [String] = []): [GroupCount] @cypher(statement: """
-        MATCH (s:submitter)
-        OPTIONAL MATCH (s)<--(sf:submitted_file)
-        WITH DISTINCT s, sf
-            WHERE (size($submitted_file_ids) = 0 OR sf.submitted_file_id IN $submitted_file_ids)
-        RETURN { group: s.program_id,
-                 subjects: count(sf) }
+    projectCountByProgram(project_ids: [String] = []): [GroupCount] @cypher(statement: """
+        MATCH (p:program)
+        OPTIONAL MATCH (p)<--(pr:project)
+        WITH DISTINCT p, pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        RETURN { group: p.program_id,
+                 subjects: count(pr.project_id) }
     """, passThrough: true)
-    fileCountByContentFormat(submitted_file_ids: [String] = []): [GroupCount] @cypher(statement: """
-        MATCH (sf:submitted_file)
-        OPTIONAL MATCH (sf)<--(fs:file_set)
-        WITH DISTINCT sf, fs
-            WHERE (size($submitted_file_ids) = 0 OR sf.submitted_file_id IN $submitted_file_ids)
-        RETURN { group: fs.file_content_format,
-                 subjects: COUNT(DISTINCT sf.submitted_file_id)}
+    projectCountByDOC(project_ids: [String] = []): [GroupCount] @cypher(statement: """
+        MATCH (pr:project)
+        WITH DISTINCT pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        RETURN { group: pr.lead_doc,
+                 subjects: COUNT(DISTINCT pr.project_id)}
     """, passThrough: true)
-
-    fileOverViewPaged(submitted_file_ids: [String] = [""], order_by: String = ""): [SubmittedFileOverview] @cypher(statement: """
-        MATCH (sf:submitted_file)
-          WHERE ($submitted_file_ids IS NULL OR $submitted_file_ids = [""] OR sf.submitted_file_id IN $submitted_file_ids)
-        OPTIONAL MATCH (sf)<--(fs:file_set)
-        WITH
-            collect(DISTINCT fs {.*}) AS files, sf
-        RETURN {
-            submitted_file_id: sf.submitted_file_id,
-            ccdi_arm: sf.ccdi_arm,
-            submission_date: sf.submission_date,
-            submission_ts: sf.submission_ts,
-            source_ip: sf.source_ip,
-            file_count_validate: sf.file_count_validate,
-            filename_list_validate: sf.filename_list_validate,
-            study_registered: sf.study_registered,
-            primary_datatype: sf.primary_datatype,
-            derived_interventional_clinical_trial: sf.derived_interventional_clinical_trial,
-            derived_observational_study: sf.derived_observational_study,
-            have_subject_ids: sf.have_subject_ids,
-            have_pii: sf.have_pii,
-            subject_id_cross_reference: sf.subject_id_cross_reference,
-            contain_biospecimen_ids: sf.contain_biospecimen_ids,
-            contain_biospecimen_2_subject_mappings: sf.contain_biospecimen_2_subject_mappings,
-            participant_id_column_header_or_number: sf.participant_id_column_header_or_number,
-            alt_participant_id_column_header_or_number: sf.alt_participant_id_column_header_or_number,
-            files: files
-        }
-        ORDER BY CASE $order_by
-            WHEN 'submitted_file_id' THEN sf.submitted_file_id
-            WHEN 'ccdi_arm' THEN sf.ccdi_arm
-            WHEN 'submission_date' THEN sf.submission_date
-            WHEN 'submission_ts' THEN sf.submission_ts
-            WHEN 'source_ip' THEN sf.source_ip
-            WHEN 'file_count_validate' THEN sf.file_count_validate
-            WHEN 'filename_list_validate' THEN sf.filename_list_validate
-            WHEN 'study_registered' THEN sf.study_registered
-            WHEN 'primary_datatype' THEN sf.primary_datatype
-            WHEN 'derived_interventional_clinical_trial' THEN sf.derived_interventional_clinical_trial
-            WHEN 'derived_observational_study' THEN sf.derived_observational_study
-            WHEN 'have_subject_ids' THEN sf.have_subject_ids
-            WHEN 'have_pii' THEN sf.have_pii
-            WHEN 'subject_id_cross_reference' THEN sf.subject_id_cross_reference
-            WHEN 'contain_biospecimen_ids' THEN sf.contain_biospecimen_ids
-            WHEN 'contain_biospecimen_2_subject_mappings' THEN sf.contain_biospecimen_2_subject_mappings
-            WHEN 'participant_id_column_header_or_number' THEN sf.participant_id_column_header_or_number
-            WHEN 'alt_participant_id_column_header_or_number' THEN sf.alt_participant_id_column_header_or_number
-            ELSE sf.submitted_file_id END
+    projectCountByFiscalYear(project_ids: [String] = []): [GroupCount] @cypher(statement: """
+        MATCH (pr:project)
+        WITH DISTINCT pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        RETURN { group: pr.fiscal_year,
+                 subjects: COUNT(DISTINCT pr.project_id)}
     """, passThrough: true)
 
-    fileOverViewPagedDesc(submitted_file_ids: [String] = [""], order_by: String = ""): [SubmittedFileOverview] @cypher(statement: """
-        MATCH (sf:submitted_file)
-          WHERE ($submitted_file_ids IS NULL OR $submitted_file_ids = [""] OR sf.submitted_file_id IN $submitted_file_ids)
-        OPTIONAL MATCH (sf)<--(fs:file_set)
-        WITH
-            collect(DISTINCT fs {.*}) AS files, sf
+    projectOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [ProjectOverview] @cypher(statement: """
+        MATCH (pr:project)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
+        WITH pr
         RETURN {
-            submitted_file_id: sf.submitted_file_id,
-            ccdi_arm: sf.ccdi_arm,
-            submission_date: sf.submission_date,
-            submission_ts: sf.submission_ts,
-            source_ip: sf.source_ip,
-            file_count_validate: sf.file_count_validate,
-            filename_list_validate: sf.filename_list_validate,
-            study_registered: sf.study_registered,
-            primary_datatype: sf.primary_datatype,
-            derived_interventional_clinical_trial: sf.derived_interventional_clinical_trial,
-            derived_observational_study: sf.derived_observational_study,
-            have_subject_ids: sf.have_subject_ids,
-            have_pii: sf.have_pii,
-            subject_id_cross_reference: sf.subject_id_cross_reference,
-            contain_biospecimen_ids: sf.contain_biospecimen_ids,
-            contain_biospecimen_2_subject_mappings: sf.contain_biospecimen_2_subject_mappings,
-            participant_id_column_header_or_number: sf.participant_id_column_header_or_number,
-            alt_participant_id_column_header_or_number: sf.alt_participant_id_column_header_or_number,
-            files: files
+            project_id: pr.project_id,
+            application_id: pr.application_id,
+            fiscal_year: pr.fiscal_year,
+            project_title: pr.project_title,
+            project_type: pr.project_type,
+            abstract_text: pr.abstract_text,
+            keywords: pr.keywords,
+            org_name: pr.org_name,
+            org_city: pr.org_city,
+            org_state: pr.org_state,
+            org_country: pr.org_country,
+            principal_investigators: pr.principal_investigators,
+            lead_doc: pr.lead_doc,
+            program_officers: pr.program_officers,
+            award_amount: pr.award_amount,
+            nci_funded_amount: pr.nci_funded_amount,
+            award_notice_date: pr.award_notice_date,
+            project_start_date: pr.project_start_date,
+            project_end_date: pr.project_end_date,
+            full_foa: pr.full_foa
         }
         ORDER BY CASE $order_by
-            WHEN 'submitted_file_id' THEN sf.submitted_file_id
-            WHEN 'ccdi_arm' THEN sf.ccdi_arm
-            WHEN 'submission_date' THEN sf.submission_date
-            WHEN 'submission_ts' THEN sf.submission_ts
-            WHEN 'source_ip' THEN sf.source_ip
-            WHEN 'file_count_validate' THEN sf.file_count_validate
-            WHEN 'filename_list_validate' THEN sf.filename_list_validate
-            WHEN 'study_registered' THEN sf.study_registered
-            WHEN 'primary_datatype' THEN sf.primary_datatype
-            WHEN 'derived_interventional_clinical_trial' THEN sf.derived_interventional_clinical_trial
-            WHEN 'derived_observational_study' THEN sf.derived_observational_study
-            WHEN 'have_subject_ids' THEN sf.have_subject_ids
-            WHEN 'have_pii' THEN sf.have_pii
-            WHEN 'subject_id_cross_reference' THEN sf.subject_id_cross_reference
-            WHEN 'contain_biospecimen_ids' THEN sf.contain_biospecimen_ids
-            WHEN 'contain_biospecimen_2_subject_mappings' THEN sf.contain_biospecimen_2_subject_mappings
-            WHEN 'participant_id_column_header_or_number' THEN sf.participant_id_column_header_or_number
-            WHEN 'alt_participant_id_column_header_or_number' THEN sf.alt_participant_id_column_header_or_number
-            ELSE sf.submitted_file_id END DESC
+            WHEN 'project_id' THEN pr.project_id
+            WHEN 'application_id' THEN pr.application_id
+            WHEN 'fiscal_year' THEN pr.fiscal_year
+            WHEN 'project_title' THEN pr.project_title
+            WHEN 'project_type' THEN pr.project_type
+            WHEN 'abstract_text' THEN pr.abstract_text
+            WHEN 'keywords' THEN pr.keywords
+            WHEN 'org_name' THEN pr.org_name
+            WHEN 'org_city' THEN pr.org_city
+            WHEN 'org_state' THEN pr.org_state
+            WHEN 'org_country' THEN pr.org_country
+            WHEN 'principal_investigators' THEN pr.principal_investigators
+            WHEN 'lead_doc' THEN pr.lead_doc
+            WHEN 'program_officers' THEN pr.program_officers
+            WHEN 'award_amount' THEN pr.award_amount
+            WHEN 'nci_funded_amount' THEN pr.nci_funded_amount
+            WHEN 'award_notice_date' THEN pr.award_notice_date
+            WHEN 'project_start_date' THEN pr.project_start_date
+            WHEN 'project_end_date' THEN pr.project_end_date
+            WHEN 'full_foa' THEN pr.full_foa
+            ELSE pr.project_id END
     """, passThrough: true)
 
-    participantOverViewPaged(participant_ids: [String] = [""], order_by: String = ""): [ParticipantOverview] @cypher(statement: """
-        MATCH (p:participant)
-          WHERE ($participant_ids IS NULL OR $participant_ids = [""] OR p.participant_id IN $participant_ids)
-        OPTIONAL MATCH (p)<--(ap:alt_participant)
-        WITH
-            collect(DISTINCT ap {.*}) AS alt_participants, p
+    projectOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [ProjectOverview] @cypher(statement: """
+        MATCH (pr:project)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
+        WITH pr
         RETURN {
-            participant_id: p.participant_id,
-            gender: p.gender,
-            age_at_index: p.age_at_index,
-            alt_participants: alt_participants
+            project_id: pr.project_id,
+            application_id: pr.application_id,
+            fiscal_year: pr.fiscal_year,
+            project_title: pr.project_title,
+            project_type: pr.project_type,
+            abstract_text: pr.abstract_text,
+            keywords: pr.keywords,
+            org_name: pr.org_name,
+            org_city: pr.org_city,
+            org_state: pr.org_state,
+            org_country: pr.org_country,
+            principal_investigators: pr.principal_investigators,
+            lead_doc: pr.lead_doc,
+            program_officers: pr.program_officers,
+            award_amount: pr.award_amount,
+            nci_funded_amount: pr.nci_funded_amount,
+            award_notice_date: pr.award_notice_date,
+            project_start_date: pr.project_start_date,
+            project_end_date: pr.project_end_date,
+            full_foa: pr.full_foa
         }
         ORDER BY CASE $order_by
-            WHEN 'participant_id' THEN p.participant_id
-            WHEN 'gender' THEN p.gender
-            WHEN 'age_at_index' THEN p.age_at_index
-            ELSE p.participant_id END
+            WHEN 'project_id' THEN pr.project_id
+            WHEN 'application_id' THEN pr.application_id
+            WHEN 'fiscal_year' THEN pr.fiscal_year
+            WHEN 'project_title' THEN pr.project_title
+            WHEN 'project_type' THEN pr.project_type
+            WHEN 'abstract_text' THEN pr.abstract_text
+            WHEN 'keywords' THEN pr.keywords
+            WHEN 'org_name' THEN pr.org_name
+            WHEN 'org_city' THEN pr.org_city
+            WHEN 'org_state' THEN pr.org_state
+            WHEN 'org_country' THEN pr.org_country
+            WHEN 'principal_investigators' THEN pr.principal_investigators
+            WHEN 'lead_doc' THEN pr.lead_doc
+            WHEN 'program_officers' THEN pr.program_officers
+            WHEN 'award_amount' THEN pr.award_amount
+            WHEN 'nci_funded_amount' THEN pr.nci_funded_amount
+            WHEN 'award_notice_date' THEN pr.award_notice_date
+            WHEN 'project_start_date' THEN pr.project_start_date
+            WHEN 'project_end_date' THEN pr.project_end_date
+            WHEN 'full_foa' THEN pr.full_foa
+            ELSE pr.project_id END DESC
     """, passThrough: true)
 
-    participantOverViewPagedDesc(submitted_file_ids: [String] = [""], order_by: String = ""): [ParticipantOverview] @cypher(statement: """
-        MATCH (p:participant)
-          WHERE ($participant_ids IS NULL OR $participant_ids = [""] OR p.participant_id IN $participant_ids)
-        OPTIONAL MATCH (p)<--(ap:alt_participant)
-        WITH
-            collect(DISTINCT ap {.*}) AS alt_participants, p
+    publicationOverViewPaged(publication_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
+        MATCH (pub:publication)
+          WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
+        WITH pub
         RETURN {
-            participant_id: p.participant_id,
-            gender: p.gender,
-            age_at_index: p.age_at_index,
-            alt_participants: alt_participants
+            publication_id: pub.publication_id,
+            pmc_id: pub.pmc_id,
+            year: pub.year,
+            journal: pub.journal,
+            title: pub.title,
+            authors: pub.authors,
+            publish_date: pub.publish_date,
+            citation_count: pub.citation_count,
+            relative_citation_ratio: pub.relative_citation_ratio,
+            nih_percentile: pub.nih_percentile,
+            doi: pub.doi
         }
         ORDER BY CASE $order_by
-            WHEN 'participant_id' THEN p.participant_id
-            WHEN 'gender' THEN p.gender
-            WHEN 'age_at_index' THEN p.age_at_index
-            ELSE p.participant_id END DESC
+            WHEN 'publication_id' THEN pub.publication_id
+            WHEN 'pmc_id' THEN pub.pmc_id
+            WHEN 'year' THEN pub.year
+            WHEN 'journal' THEN pub.journal
+            WHEN 'title' THEN pub.title
+            WHEN 'authors' THEN pub.authors
+            WHEN 'publish_date' THEN pub.publish_date
+            WHEN 'citation_count' THEN pub.citation_count
+            WHEN 'relative_citation_ratio' THEN pub.relative_citation_ratio
+            WHEN 'nih_percentile' THEN pub.nih_percentile
+            WHEN 'doi' THEN pub.doi
+            ELSE pub.publication_id END
+    """, passThrough: true)
+
+    publicationOverViewPagedDesc(publication_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
+        MATCH (pub:publication)
+          WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
+        WITH pub
+        RETURN {
+            publication_id: pub.publication_id,
+            pmc_id: pub.pmc_id,
+            year: pub.year,
+            journal: pub.journal,
+            title: pub.title,
+            authors: pub.authors,
+            publish_date: pub.publish_date,
+            citation_count: pub.citation_count,
+            relative_citation_ratio: pub.relative_citation_ratio,
+            nih_percentile: pub.nih_percentile,
+            doi: pub.doi
+        }
+        ORDER BY CASE $order_by
+            WHEN 'publication_id' THEN pub.publication_id
+            WHEN 'pmc_id' THEN pub.pmc_id
+            WHEN 'year' THEN pub.year
+            WHEN 'journal' THEN pub.journal
+            WHEN 'title' THEN pub.title
+            WHEN 'authors' THEN pub.authors
+            WHEN 'publish_date' THEN pub.publish_date
+            WHEN 'citation_count' THEN pub.citation_count
+            WHEN 'relative_citation_ratio' THEN pub.relative_citation_ratio
+            WHEN 'nih_percentile' THEN pub.nih_percentile
+            WHEN 'doi' THEN pub.doi
+            ELSE pub.publication_id END DESC
+    """, passThrough: true)
+
+    geoOverViewPaged(accessions: [String] = [""], order_by: String = ""): [GEOOverview] @cypher(statement: """
+        MATCH (g:geo)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
+        WITH g
+        RETURN {
+            accession: g.accession,
+            title: g.title,
+            status: g.status,
+            submission_date: g.submission_date,
+            last_update_date: g.last_update_date
+        }
+        ORDER BY CASE $order_by
+            WHEN 'accession' THEN g.accession
+            WHEN 'title' THEN g.title
+            WHEN 'status' THEN g.status
+            WHEN 'submission_date' THEN g.submission_date
+            WHEN 'last_update_date' THEN g.last_update_date
+            ELSE g.accession END
+    """, passThrough: true)
+
+    geoOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [GEOOverview] @cypher(statement: """
+        MATCH (g:geo)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
+        WITH g
+        RETURN {
+            accession: g.accession,
+            title: g.title,
+            status: g.status,
+            submission_date: g.submission_date,
+            last_update_date: g.last_update_date
+        }
+        ORDER BY CASE $order_by
+            WHEN 'accession' THEN g.accession
+            WHEN 'title' THEN g.title
+            WHEN 'status' THEN g.status
+            WHEN 'submission_date' THEN g.submission_date
+            WHEN 'last_update_date' THEN g.last_update_date
+            ELSE g.accession END DESC
     """, passThrough: true)
 
     "Facet search counts"
-    filterFileCountByProgram(
+    filterProjectCountByProgram(
         programs: [String] = [],
-        file_content_formats: [String] = []
+        docs: [String] = [],
+        fiscal_years: [String] = []
     ): [GroupCount] @cypher(statement: """
         // Filtering subjects
-        MATCH (s:submitter)<--(sf:submitted_file)<--(fs:file_set)
-          WHERE (size($programs) = 0 OR s.program_id IN $programs)
-            AND (size($file_content_formats) = 0 OR fs.file_content_format IN $file_content_formats)
-        WITH DISTINCT sf, s
-        RETURN {group: s.program_id , subjects: count(sf)}
+        MATCH (p:program)<--(pr:project)
+          WHERE (size($programs) = 0 OR p.program_id IN $programs)
+            AND (size($docs) = 0 OR pr.lead_doc IN $docs)
+            AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
+        WITH DISTINCT p, pr
+        RETURN {group: p.program_id , subjects: count(pr)}
     """, passThrough: true)
 
-    filterFileCountByContentFormat(
+    filterProjectCountByDOC(
         programs: [String] = [],
-        file_content_formats: [String] = []
+        docs: [String] = [],
+        fiscal_years: [String] = []
     ): [GroupCount] @cypher(statement: """
         // Filtering subjects
-        MATCH (s:submitter)<--(sf:submitted_file)<--(fs:file_set)
-          WHERE (size($programs) = 0 OR s.program_id IN $programs)
-            AND (size($file_content_formats) = 0 OR fs.file_content_format IN $file_content_formats)
-        WITH DISTINCT sf, fs
-        RETURN {group: fs.file_content_format , subjects: COUNT(DISTINCT sf.submitted_file_id)}
+        MATCH (p:program)<--(pr:project)
+          WHERE (size($programs) = 0 OR p.program_id IN $programs)
+            AND (size($docs) = 0 OR pr.lead_doc IN $docs)
+            AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
+        WITH DISTINCT p, pr
+        RETURN {group: pr.lead_doc , subjects: COUNT(DISTINCT pr.project_id)}
     """, passThrough: true)
 
-    searchFiles (
+    filterProjectCountByFiscalYear(
+        programs: [String] = [],
+        docs: [String] = [],
+        fiscal_years: [String] = []
+    ): [GroupCount] @cypher(statement: """
+        // Filtering subjects
+        MATCH (p:program)<--(pr:project)
+          WHERE (size($programs) = 0 OR p.program_id IN $programs)
+            AND (size($docs) = 0 OR pr.lead_doc IN $docs)
+            AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
+        WITH DISTINCT p, pr
+        RETURN {group: pr.fiscal_year , subjects: COUNT(DISTINCT pr.project_id)}
+    """, passThrough: true)
+
+    searchProjects (
           programs: [String] = [],
-          file_content_formats: [String] = [],
+          docs: [String] = [],
+          fiscal_years: [String] = [],
           first: Int = 100
     ): SearchResult @cypher(statement: """
         // Filtering subjects
-        MATCH (s:submitter)<--(sf:submitted_file)<--(fs:file_set)
-          WHERE (size($programs) = 0 OR s.program_id IN $programs)
-            AND (size($file_content_formats) = 0 OR fs.file_content_format IN $file_content_formats)
-        MATCH (sf)<--(p:participant)
-        MATCH (sf)<--(st:study)
-        WITH DISTINCT sf, fs, s, p, st
+        MATCH (p:program)<--(pr:project)
+          WHERE (size($programs) = 0 OR p.program_id IN $programs)
+            AND (size($docs) = 0 OR pr.lead_doc IN $docs)
+            AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
+        OPTIONAL MATCH (pr)<--(pub:publication)
+        OPTIONAL MATCH (pr)<--(g:geo)
+        OPTIONAL MATCH (pr)<--(s:sra)
+        OPTIONAL MATCH (pr)<--(d:dbgap)
+        OPTIONAL MATCH (pr)<--(c:clinical_trial)
+        WITH DISTINCT p, pr, pub, g, s, d, c
         RETURN  {
-            fileIds: COLLECT(DISTINCT sf.submitted_file_id),
-            numberOfSubmitters: COUNT(DISTINCT s.submitter_id),
-            numberOfPrograms: COUNT(DISTINCT s.program_id),
-            numberOfStudies: COUNT(DISTINCT st.study_id),
-            numberOfParticipants: COUNT(DISTINCT p.participant_id),
-            numberOfFiles: COUNT(DISTINCT sf.submitted_file_id),
+            projectIds: COLLECT(DISTINCT pr.project_id),
+            publicationIds: COLLECT(DISTINCT pub.publication_id),
+            accessions: COLLECT(DISTINCT g.accession),
+            numberOfPrograms: COUNT(DISTINCT p.program_id),
+            numberOfProjects: COUNT(DISTINCT pr.project_id),
+            numberOfPublications: COUNT(DISTINCT pub.publication_id),
+            numberOfGEOs: COUNT(DISTINCT g.accession),
+            numberOfSRAs: COUNT(DISTINCT s.accession),
+            numberOfDBGaps: COUNT(DISTINCT d.accession),
+            numberOfClinicalTrials: COUNT(DISTINCT c.clinical_trial_id),
             firstPage: COLLECT( DISTINCT({
-                        submitted_file_id: sf.submitted_file_id,
-                        ccdi_arm: sf.ccdi_arm,
-                        submission_date: sf.submission_date,
-                        submission_ts: sf.submission_ts,
-                        source_ip: sf.source_ip,
-                        file_count_validate: sf.file_count_validate,
-                        filename_list_validate: sf.filename_list_validate,
-                        study_registered: sf.study_registered,
-                        primary_datatype: sf.primary_datatype,
-                        derived_interventional_clinical_trial: sf.derived_interventional_clinical_trial,
-                        derived_observational_study: sf.derived_observational_study,
-                        have_subject_ids: sf.have_subject_ids,
-                        have_pii: sf.have_pii,
-                        subject_id_cross_reference: sf.subject_id_cross_reference,
-                        contain_biospecimen_ids: sf.contain_biospecimen_ids,
-                        contain_biospecimen_2_subject_mappings: sf.contain_biospecimen_2_subject_mappings,
-                        participant_id_column_header_or_number: sf.participant_id_column_header_or_number,
-                        alt_participant_id_column_header_or_number: sf.alt_participant_id_column_header_or_number
+                        project_id: pr.project_id,
+                        application_id: pr.application_id,
+                        fiscal_year: pr.fiscal_year,
+                        project_title: pr.project_title,
+                        project_type: pr.project_type,
+                        abstract_text: pr.abstract_text,
+                        keywords: pr.keywords,
+                        org_name: pr.org_name,
+                        org_city: pr.org_city,
+                        org_state: pr.org_state,
+                        org_country: pr.org_country,
+                        principal_investigators: pr.principal_investigators,
+                        lead_doc: pr.lead_doc,
+                        program_officers: pr.program_officers,
+                        award_amount: pr.award_amount,
+                        nci_funded_amount: pr.nci_funded_amount,
+                        award_notice_date: pr.award_notice_date,
+                        project_start_date: pr.project_start_date,
+                        project_end_date: pr.project_end_date,
+                        full_foa: pr.full_foa
                       }))[0..$first]
         }
     """, passThrough:true)
 
-    fileDetail(submitted_file_id: String): SubmittedFileDetail @cypher(statement:  """
-        MATCH (sf:submitted_file {submitted_file_id: $submitted_file_id})
-        MATCH (sf)<--(p:participant)<--(ap:alt_participant)
-        MATCH (s:submitter)<--(sf)<--(fs:file_set)
-        MATCH (sf)<--(st:study)
-        WITH sf, p, s, st, collect(DISTINCT fs {.*}) AS files, COLLECT(DISTINCT(ap.alt_participant_id)) AS alt_participant_ids
+    programDetail(program_id: String): ProgramDetail @cypher(statement:  """
+        MATCH (p:program {program_id: $program_id})
+        MATCH (p)<--(pr:project)
+        OPTIONAL MATCH (pr)<--(pub:publication)
+        OPTIONAL MATCH (pr)<--(g:geo)
+        OPTIONAL MATCH (pr)<--(s:sra)
+        OPTIONAL MATCH (pr)<--(d:dbgap)
+        OPTIONAL MATCH (pr)<--(c:clinical_trial)
+        WITH p, pr, pub, g, s, d, c
         RETURN {
-            submitted_file_id: sf.submitted_file_id,
-            submitter_id: s.submitter_id,
-            submitter_name: s.submitter_name,
-            ccdi_arm: sf.ccdi_arm,
-            submission_date: sf.submission_date,
-            submission_ts: sf.submission_ts,
-            source_ip: sf.source_ip,
-            file_count_validate: sf.file_count_validate,
-            filename_list_validate: sf.filename_list_validate,
-            species: sf.species,
-            human_subjects: sf.human_subjects,
-            total_size_in_bytes: sf.total_size_in_bytes,
-            primary_datatype: sf.primary_datatype,
-            have_subject_ids: sf.have_subject_ids,
-            have_pii: sf.have_pii,
-            subject_id_cross_reference: sf.subject_id_cross_reference,
-            contain_biospecimen_ids: sf.contain_biospecimen_ids,
-            contain_biospecimen_2_subject_mappings: sf.contain_biospecimen_2_subject_mappings,
-            participant_id_column_header_or_number: sf.participant_id_column_header_or_number,
-            alt_participant_id_column_header_or_number: sf.alt_participant_id_column_header_or_number,
-            files: files,
-            participants: COLLECT( DISTINCT({
-                        participant_id: p.participant_id,
-                        gender: p.gender,
-                        age_at_index: p.age_at_index,
-                        alt_participants: apoc.text.join(alt_participant_ids, ',')
-                      })),
-            studies: COLLECT(DISTINCT st {.*})
+            program_id: p.program_id,
+            program_name: p.program_name,
+            program_description: p.program_description,
+            program_website: p.program_website,
+            num_publications: COUNT(DISTINCT pub.publication_id),
+            num_projects: COUNT(DISTINCT pr.project_id),
+            num_geos: COUNT(DISTINCT g.accession),
+            num_sras: COUNT(DISTINCT s.accession),
+            num_clinical_trials: COUNT(DISTINCT c.clinical_trial_id),
+            projects: collect(DISTINCT pr {.*})
         }
     """, passThrough: true)
 
-    filesInList(file_ids: [String], order_by: String = ""): [File_Set_Info] @cypher(statement: """
-        MATCH (f:file_set)
-        WHERE f.file_set_id in $file_ids
-        WITH f
+    projectDetail(project_id: String): ProjectDetail @cypher(statement:  """
+        MATCH (pr:project {project_id: $project_id})
+        OPTIONAL MATCH (pr)<--(pub:publication)
+        OPTIONAL MATCH (pr)<--(g:geo)
+        OPTIONAL MATCH (pr)<--(s:sra)
+        OPTIONAL MATCH (pr)<--(d:dbgap)
+        OPTIONAL MATCH (pr)<--(c:clinical_trial)
+        WITH pr, pub, g, s, d, c
         RETURN {
-            file_set_id: f.file_set_id,
-            file_ordinal: f.file_ordinal,
-            file_id: f.file_id,
-            file_name: f.file_name,
-            file_md5: f.file_md5,
-            file_content_format: f.file_content_format,
-            file_deposit_location: f.file_deposit_location
+            project_id: pr.project_id,
+            application_id: pr.application_id,
+            fiscal_year: pr.fiscal_year,
+            project_title: pr.project_title,
+            project_type: pr.project_type,
+            abstract_text: pr.abstract_text,
+            keywords: pr.keywords,
+            org_name: pr.org_name,
+            org_city: pr.org_city,
+            org_state: pr.org_state,
+            org_country: pr.org_country,
+            principal_investigators: pr.principal_investigators,
+            lead_doc: pr.lead_doc,
+            program_officers: pr.program_officers,
+            award_amount: pr.award_amount,
+            nci_funded_amount: pr.nci_funded_amount,
+            award_notice_date: pr.award_notice_date,
+            project_start_date: pr.project_start_date,
+            project_end_date: pr.project_end_date,
+            full_foa: pr.full_foa,
+            publications: COLLECT(DISTINCT pub {.*}),
+            geos: COLLECT(DISTINCT g {.*}),
+            sras: COLLECT(DISTINCT s {.*}),
+            dbgaps: COLLECT(DISTINCT d {.*}),
+            clinical_trials: COLLECT(DISTINCT c {.*})
         }
-        ORDER BY CASE $order_by
-            WHEN 'file_set_id' THEN f.file_set_id
-            WHEN 'file_ordinal' THEN f.file_ordinal
-            WHEN 'file_id' THEN f.file_id
-            WHEN 'file_name' THEN f.file_name
-            WHEN 'file_md5' THEN f.file_md5
-            WHEN 'file_content_format' THEN f.file_content_format
-            WHEN 'file_deposit_location' THEN f.file_deposit_location
-            ELSE f.file_set_id END
-    """, passThrough: true)
-
-    filesInListDesc(file_ids: [String], order_by: String = ""): [File_Set_Info] @cypher(statement: """
-        MATCH (f:file_set)
-        WHERE f.file_set_id in $file_ids
-        WITH f
-        RETURN {
-            file_set_id: f.file_set_id,
-            file_ordinal: f.file_ordinal,
-            file_id: f.file_id,
-            file_name: f.file_name,
-            file_md5: f.file_md5,
-            file_content_format: f.file_content_format,
-            file_deposit_location: f.file_deposit_location
-        }
-        ORDER BY CASE $order_by
-            WHEN 'file_set_id' THEN f.file_set_id
-            WHEN 'file_ordinal' THEN f.file_ordinal
-            WHEN 'file_id' THEN f.file_id
-            WHEN 'file_name' THEN f.file_name
-            WHEN 'file_md5' THEN f.file_md5
-            WHEN 'file_content_format' THEN f.file_content_format
-            WHEN 'file_deposit_location' THEN f.file_deposit_location
-            ELSE f.file_set_id END DESC
     """, passThrough: true)
 
 }
