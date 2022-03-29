@@ -1,25 +1,46 @@
+type patent_application {
+    patent_id: String
+    fulfilled_date: Date
+    projects: [project] @relation(name:"has_patent_application", direction:OUT)
+}
+
+type granted_patent {
+    patent_id: String
+    fulfilled_date: Date
+    projects: [project] @relation(name:"has_granted_patent", direction:OUT)
+}
+
 type clinical_trial {
   clinical_trial_id: String
   title: String
-  last_update_posted: String
+  last_update_posted: Date
   recruitment_status: String
   projects: [project] @relation(name:"has_clinical_trial", direction:OUT)
+  publications: [publication] @relation(name:"has_publication", direction:OUT)
 }
 
 type dbgap {
   accession: String
   title: String
-  release_date: String
-  projects: [project] @relation(name:"has_dbgap", direction:OUT)
+  release_date: Date
+  publications: [publication] @relation(name:"has_dbgap", direction:OUT)
 }
 
 type geo {
   accession: String
   title: String
   status: String
-  submission_date: String
-  last_update_date: String
-  projects: [project] @relation(name:"has_geo", direction:OUT)
+  submission_date: Date
+  last_update_date: Date
+  publications: [publication] @relation(name:"has_geo", direction:OUT)
+}
+
+type sra {
+  accession: String
+  study_title: String
+  bioproject_accession: String
+  registration_date: Date
+  publications: [publication] @relation(name:"has_sra", direction:OUT)
 }
 
 type program {
@@ -33,7 +54,7 @@ type program {
 type project {
   project_id: String
   application_id: String
-  fiscal_year: String
+  fiscal_year: Date
   project_title: String
   project_type: String
   abstract_text: String
@@ -45,41 +66,36 @@ type project {
   principal_investigators: String
   lead_doc: String
   program_officers: String
-  award_amount: String
-  nci_funded_amount: String
-  award_notice_date: String
-  project_start_date: String
-  project_end_date: String
+  award_amount: Int
+  nci_funded_amount: Int
+  award_notice_date: Date
+  project_start_date: Date
+  project_end_date: Date
   full_foa: String
   publications: [publication] @relation(name:"has_publication", direction:IN)
-  geos: [geo] @relation(name:"has_geo", direction:IN)
-  sras: [sra] @relation(name:"has_sra", direction:IN)
-  dbgaps: [dbgap] @relation(name:"has_dbgap", direction:IN)
   clinical_trials: [clinical_trial] @relation(name:"has_clinical_trial", direction:IN)
+  granted_patents: [granted_patent] @relation(name:"has_granted_patent", direction:IN)
+  patent_application: [patent_application] @relation(name:"has_patent_application", direction:IN)
   program: program @relation(name:"projects_of_program", direction:OUT)
 }
 
 type publication {
   publication_id: String
   pmc_id: String
-  year: String
+  year: Date
   journal: String
   title: String
   authors: String
-  publish_date: String
-  citation_count: String
+  publish_date: Date
+  citation_count: Int
   relative_citation_ratio: String
-  nih_percentile: String
+  nih_percentile: Float
   doi: String
   projects: [project] @relation(name:"has_publication", direction:OUT)
-}
-
-type sra {
-  accession: String
-  study_title: String
-  bioproject_accession: String
-  registration_date: String
-  projects: [project] @relation(name:"has_sra", direction:OUT)
+  sras: [sra] @relation(name:"has_sra", direction:IN)
+  geos: [geo] @relation(name:"has_geo", direction:IN)
+  dbgaps: [dbgap] @relation(name:"has_dbgap", direction:IN)
+  clinical_trials: [clinical_trial] @relation(name:"has_clinical_trial", direction:IN)
 }
 
 type GroupCount {
@@ -213,7 +229,7 @@ type ProjectDetail {
 type ProjectOverview {
     project_id: String
     application_id: String
-    fiscal_year: String
+    fiscal_year: Date
     project_title: String
     project_type: String
     abstract_text: String
@@ -225,25 +241,25 @@ type ProjectOverview {
     principal_investigators: String
     lead_doc: String
     program_officers: String
-    award_amount: String
-    nci_funded_amount: String
-    award_notice_date: String
-    project_start_date: String
-    project_end_date: String
+    award_amount: Int
+    nci_funded_amount: Int
+    award_notice_date: Date
+    project_start_date: Date
+    project_end_date: Date
     full_foa: String
 }
 
 type PublicationOverview {
     publication_id: String
     pmc_id: String
-    year: String
+    year: Date
     journal: String
     title: String
     authors: String
-    publish_date: String
-    citation_count: String
+    publish_date: Date
+    citation_count: Int
     relative_citation_ratio: String
-    nih_percentile: String
+    nih_percentile: Float
     doi: String
 }
 
@@ -251,27 +267,27 @@ type GEOOverview {
     accession: String
     title: String
     status: String
-    submission_date: String
-    last_update_date: String
+    submission_date: Date
+    last_update_date: Date
 }
 
 type SRAOverview {
     accession: String
     study_title: String
     bioproject_accession: String
-    registration_date: String
+    registration_date: Date
 }
 
 type DBGapOverview {
     accession: String
     title: String
-    release_date: String
+    release_date: Date
 }
 
 type ClinicalTrialOverview {
     clinical_trial_id: String
     title: String
-    last_update_posted: String
+    last_update_posted: Date
     recruitment_status: String
 }
 
@@ -418,14 +434,14 @@ type QueryType {
     """, passThrough: true)
 
     numberOfGEOsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pr:project)<--(g:geo)
+        MATCH (pr:project)<--(:publication)<--(g:geo)
         WITH g, pr
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
         return COUNT(DISTINCT g.accession)
     """, passThrough: true)
 
     numberOfSRAsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pr:project)<--(s:sra)
+        MATCH (pr:project)<--(:publication)<--(s:sra)
         WITH s, pr
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
         return  COUNT(DISTINCT s.accession)
