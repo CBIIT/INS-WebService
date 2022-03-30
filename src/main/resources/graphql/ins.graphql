@@ -1,3 +1,5 @@
+scalar Date
+
 type patent_application {
     patent_id: String
     fulfilled_date: Date
