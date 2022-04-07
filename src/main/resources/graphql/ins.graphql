@@ -502,6 +502,7 @@ type QueryType {
           WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH pr
         RETURN {
+            program: pr.program
             project_id: pr.project_id,
             application_id: pr.application_id,
             fiscal_year: pr.fiscal_year,
