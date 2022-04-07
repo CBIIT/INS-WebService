@@ -450,10 +450,36 @@ type QueryType {
     """, passThrough: true)
 
     numberOfDBGapsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pr:project)<--(d:dbgap)
+        MATCH (pr:project)<--(:publication)<--(d:dbgap)
         WITH d, pr
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
         return  COUNT(DISTINCT d.accession)
+    """, passThrough: true)
+
+    numberOfDatasetsByProjects(project_ids: [String] = []): Int @cypher(statement: """
+        MATCH (pr:project)<--(:publication)<--(ds:geo)
+        WITH ds AS result, pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        UNION
+        MATCH (pr:project)<--(:publication)<--(ds:sra)
+        WITH ds AS result, pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        UNION
+        MATCH (pr:project)<--(:publication)<--(ds:dbgap)
+        WITH ds AS result, pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        return  COUNT(DISTINCT ds.accession)
+    """, passThrough: true)
+
+    numberOfPatentsByProjects(project_ids: [String] = []): Int @cypher(statement: """
+        MATCH (pr:project)<--(p:patent_application)
+        WITH p AS patents, pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        UNION
+        MATCH (pr:project)<--(p:granted_patent)
+        WITH p AS patents, pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        return  COUNT(DISTINCT patents.patent_id)
     """, passThrough: true)
 
     numberOfClinicalTrialsByProjects(project_ids: [String] = []): Int @cypher(statement: """
