@@ -295,6 +295,7 @@ type ClinicalTrialOverview {
     title: String
     last_update_posted: Date
     recruitment_status: String
+    queried_project_ids: String
 }
 
 type PatentOverview {
@@ -778,51 +779,41 @@ type QueryType {
     """, passThrough: true)
 
     clinicalTrialOverViewPaged(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
-        MATCH (g:clinical_trial)
-          WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR g.clinical_trial_id IN $clinical_trial_ids)
-        WITH g
-        MATCH (p:publication)<-(g)
-        WITH p.queried_project_ids as queriedProjectIds, g
-        UNION
-        MATCH (pr:project)<-(g)
-        WITH pr.queried_project_id as projectIds
+        MATCH (pr:project)<--(ct), (pr:project)<--(:publication)<--(ct)
+          WHERE ct:clinical_trial AND ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR ct.clinical_trial_id IN $clinical_trial_ids)
+        WITH pr, ct
         RETURN {
-            clinical_trial_id: g.clinical_trial_id,
-            title: g.title,
-            last_update_posted: g.last_update_posted,
-            recruitment_status: g.recruitment_status,
-            queried_project_ids: queriedProjectIds
+            clinical_trial_id: ct.clinical_trial_id,
+            title: ct.title,
+            last_update_posted: ct.last_update_posted,
+            recruitment_status: ct.recruitment_status,
+            queried_project_ids: pr.queried_project_id
         }
         ORDER BY CASE $order_by
-            WHEN 'clinical_trial_id' THEN g.clinical_trial_id
-            WHEN 'title' THEN g.title
-            WHEN 'last_update_posted' THEN g.last_update_posted
-            WHEN 'recruitment_status' THEN g.recruitment_status
-            ELSE g.clinical_trial_id END
+            WHEN 'clinical_trial_id' THEN ct.clinical_trial_id
+            WHEN 'title' THEN ct.title
+            WHEN 'last_update_posted' THEN ct.last_update_posted
+            WHEN 'recruitment_status' THEN ct.recruitment_status
+            ELSE ct.clinical_trial_id END
     """, passThrough: true)
 
     clinicalTrialOverViewPagedDesc(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
-        MATCH (g:clinical_trial)
-          WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR g.clinical_trial_id IN $clinical_trial_ids)
-        WITH g
-        MATCH (p:publication)<-(g)
-        WITH p.queried_project_ids as queriedProjectIds, g
-        UNION
-        MATCH (pr:project)<-(g)
-        WITH pr.queried_project_id as queriedProjectIds
+        MATCH (pr:project)<--(ct), (pr:project)<--(:publication)<--(ct)
+          WHERE ct:clinical_trial AND ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR ct.clinical_trial_id IN $clinical_trial_ids)
+        WITH pr, ct
         RETURN {
-            clinical_trial_id: g.clinical_trial_id,
-            title: g.title,
-            last_update_posted: g.last_update_posted,
-            recruitment_status: g.recruitment_status,
-            queried_project_ids: queriedProjectIds,
+            clinical_trial_id: ct.clinical_trial_id,
+            title: ct.title,
+            last_update_posted: ct.last_update_posted,
+            recruitment_status: ct.recruitment_status,
+            queried_project_ids: pr.queried_project_id
         }
         ORDER BY CASE $order_by
-            WHEN 'clinical_trial_id' THEN g.clinical_trial_id
-            WHEN 'title' THEN g.title
-            WHEN 'last_update_posted' THEN g.last_update_posted
-            WHEN 'recruitment_status' THEN g.recruitment_status
-            ELSE g.clinical_trial_id END DESC
+            WHEN 'clinical_trial_id' THEN ct.clinical_trial_id
+            WHEN 'title' THEN ct.title
+            WHEN 'last_update_posted' THEN ct.last_update_posted
+            WHEN 'recruitment_status' THEN ct.recruitment_status
+            ELSE ct.clinical_trial_id END DESC
     """, passThrough: true)
 
     patentOverViewPaged(patent_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
