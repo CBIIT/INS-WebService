@@ -287,6 +287,7 @@ type DBGAPOverview {
     accession: String
     title: String
     release_date: Date
+    queried_project_ids: String
 }
 
 type ClinicalTrialOverview {
@@ -743,41 +744,37 @@ type QueryType {
     """, passThrough: true)
 
     dbGapOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
-        MATCH (g:dbgap)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
-        WITH g
-        MATCH (p:publication)<-(:dbgap {accession: g.accession})
-        WITH p.queried_project_ids as queriedProjectIds
+        MATCH (pr:project)<--(:publication)<--(d:dbgap)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR d.accession IN $accessions)
+        WITH d, pr
         RETURN {
-            accession: g.accession,
-            title: g.title,
-            release_date: g.release_date
-            queried_project_ids: queriedProjectIds
+            accession: d.accession,
+            title: d.title,
+            release_date: d.release_date,
+            queried_project_ids: pr.queried_project_id
         }
         ORDER BY CASE $order_by
-            WHEN 'accession' THEN g.accession
-            WHEN 'title' THEN g.study_title
-            WHEN 'release_date' THEN g.release_date
-            ELSE g.accession END
+            WHEN 'accession' THEN d.accession
+            WHEN 'title' THEN d.study_title
+            WHEN 'release_date' THEN d.release_date
+            ELSE d.accession END
     """, passThrough: true)
 
     dbGapOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
-        MATCH (g:dbgap)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
-        WITH g
-        MATCH (p:publication)<-(:dbgap {accession: g.accession})
-        WITH p.queried_project_ids as queriedProjectIds
+        MATCH (pr:project)<--(:publication)<--(d:dbgap)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR d.accession IN $accessions)
+        WITH d, pr
          RETURN {
-            accession: g.accession,
-            title: g.title,
-            release_date: g.release_date
-            queried_project_ids: queriedProjectIds
+            accession: d.accession,
+            title: d.title,
+            release_date: d.release_date,
+            queried_project_ids: pr.queried_project_id
         }
         ORDER BY CASE $order_by
-            WHEN 'accession' THEN g.accession
-            WHEN 'title' THEN g.study_title
-            WHEN 'release_date' THEN g.release_date
-            ELSE g.accession END DESC
+            WHEN 'accession' THEN d.accession
+            WHEN 'title' THEN d.study_title
+            WHEN 'release_date' THEN d.release_date
+            ELSE d.accession END DESC
     """, passThrough: true)
 
     clinicalTrialOverViewPaged(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
