@@ -280,7 +280,7 @@ type SRAOverview {
     registration_date: Date
 }
 
-type DBGapOverview {
+type DBGAPOverview {
     accession: String
     title: String
     release_date: Date
@@ -291,6 +291,11 @@ type ClinicalTrialOverview {
     title: String
     last_update_posted: Date
     recruitment_status: String
+}
+
+type PatentOverview {
+    patent_id: String
+    fulfilled_date: Date
 }
 
 type SearchResult {
@@ -465,29 +470,19 @@ type QueryType {
     """, passThrough: true)
 
     numberOfDatasetsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pr:project)<--(:publication)<--(ds:geo)
-        WITH ds AS result, pr
-            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        UNION
-        MATCH (pr:project)<--(:publication)<--(ds:sra)
-        WITH ds AS result, pr
-            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        UNION
-        MATCH (pr:project)<--(:publication)<--(ds:dbgap)
-        WITH ds AS result, pr
-            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        return  COUNT(DISTINCT ds.accession)
+        MATCH (pr:project)<--(:publication)<--(ds)
+        WITH ds, pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids) AND
+                  (ds:geo OR ds:sra OR ds:dbgap)
+        RETURN COUNT(DISTINCT ds.accession)
     """, passThrough: true)
 
     numberOfPatentsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pr:project)<--(p:patent_application)
-        WITH p AS patents, pr
-            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        UNION
-        MATCH (pr:project)<--(p:granted_patent)
-        WITH p AS patents, pr
-            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        return  COUNT(DISTINCT patents.patent_id)
+        MATCH (pr:project)<--(p)
+        WITH p, pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids) AND
+                  (p:patent_application OR p:granted_patent)
+        return  COUNT(DISTINCT p.patent_id)
     """, passThrough: true)
 
     numberOfClinicalTrialsByProjects(project_ids: [String] = []): Int @cypher(statement: """
@@ -667,12 +662,15 @@ type QueryType {
         MATCH (g:geo)
           WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
         WITH g
+        MATCH (p:publication)<-(:geo {accession: g.accession})
+        WITH p.queried_project_ids as queriedProjectIds
         RETURN {
             accession: g.accession,
             title: g.title,
             status: g.status,
             submission_date: g.submission_date,
             last_update_date: g.last_update_date
+            queried_project_ids: queriedProjectIds
         }
         ORDER BY CASE $order_by
             WHEN 'accession' THEN g.accession
@@ -687,12 +685,15 @@ type QueryType {
         MATCH (g:geo)
           WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
         WITH g
+        MATCH (p:publication)<-(:geo {accession: g.accession})
+        WITH p.queried_project_ids as queriedProjectIds
         RETURN {
             accession: g.accession,
             title: g.title,
             status: g.status,
             submission_date: g.submission_date,
             last_update_date: g.last_update_date
+            queried_project_ids: queriedProjectIds
         }
         ORDER BY CASE $order_by
             WHEN 'accession' THEN g.accession
@@ -701,6 +702,175 @@ type QueryType {
             WHEN 'submission_date' THEN g.submission_date
             WHEN 'last_update_date' THEN g.last_update_date
             ELSE g.accession END DESC
+    """, passThrough: true)
+
+    sraOverViewPaged(accessions: [String] = [""], order_by: String = ""): [SRAOverview] @cypher(statement: """
+        MATCH (g:sra)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
+        WITH g
+        MATCH (p:publication)<-(:sra {accession: g.accession})
+        WITH p.queried_project_ids as queriedProjectIds
+        RETURN {
+            accession: g.accession,
+            title: g.study_title,
+            bioproject_accession: g.bioproject_accession,
+            registration_date: g.registration_date
+            queried_project_ids: queriedProjectIds
+        }
+        ORDER BY CASE $order_by
+            WHEN 'accession' THEN g.accession
+            WHEN 'title' THEN g.study_title
+            WHEN 'bioproject_accession' THEN g.bioproject_accession
+            WHEN 'registration_date' THEN g.registration_date
+            ELSE g.accession END
+    """, passThrough: true)
+
+    sraOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [SRAOverview] @cypher(statement: """
+        MATCH (g:sra)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
+        WITH g
+        MATCH (p:publication)<-(:sra {accession: g.accession})
+        WITH p.queried_project_ids as queriedProjectIds
+        RETURN {
+            accession: g.accession,
+            title: g.study_title,
+            bioproject_accession: g.bioproject_accession,
+            registration_date: g.registration_date
+            queried_project_ids: queriedProjectIds
+        }
+        ORDER BY CASE $order_by
+            WHEN 'accession' THEN g.accession
+            WHEN 'title' THEN g.study_title
+            WHEN 'bioproject_accession' THEN g.bioproject_accession
+            WHEN 'registration_date' THEN g.registration_date
+            ELSE g.accession END DESC
+    """, passThrough: true)
+
+    dbGapOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
+        MATCH (g:dbgap)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
+        WITH g
+        MATCH (p:publication)<-(:dbgap {accession: g.accession})
+        WITH p.queried_project_ids as queriedProjectIds
+        RETURN {
+            accession: g.accession,
+            title: g.title,
+            release_date: g.release_date
+            queried_project_ids: queriedProjectIds
+        }
+        ORDER BY CASE $order_by
+            WHEN 'accession' THEN g.accession
+            WHEN 'title' THEN g.study_title
+            WHEN 'release_date' THEN g.release_date
+            ELSE g.accession END
+    """, passThrough: true)
+
+    dbGapOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
+        MATCH (g:dbgap)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
+        WITH g
+        MATCH (p:publication)<-(:dbgap {accession: g.accession})
+        WITH p.queried_project_ids as queriedProjectIds
+         RETURN {
+            accession: g.accession,
+            title: g.title,
+            release_date: g.release_date
+            queried_project_ids: queriedProjectIds
+        }
+        ORDER BY CASE $order_by
+            WHEN 'accession' THEN g.accession
+            WHEN 'title' THEN g.study_title
+            WHEN 'release_date' THEN g.release_date
+            ELSE g.accession END DESC
+    """, passThrough: true)
+
+    clinicalTrialOverViewPaged(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
+        MATCH (g:clinical_trial)
+          WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR g.clinical_trial_id IN $clinical_trial_ids)
+        WITH g
+        MATCH (p:publication)<-(g)
+        WITH p.queried_project_ids as queriedProjectIds, g
+        UNION
+        MATCH (pr:project)<-(g)
+        WITH pr.queried_project_id as projectIds
+        RETURN {
+            clinical_trial_id: g.clinical_trial_id,
+            title: g.title,
+            last_update_posted: g.last_update_posted,
+            recruitment_status: g.recruitment_status,
+            queried_project_ids: queriedProjectIds
+        }
+        ORDER BY CASE $order_by
+            WHEN 'clinical_trial_id' THEN g.clinical_trial_id
+            WHEN 'title' THEN g.title
+            WHEN 'last_update_posted' THEN g.last_update_posted
+            WHEN 'recruitment_status' THEN g.recruitment_status
+            ELSE g.clinical_trial_id END
+    """, passThrough: true)
+
+    clinicalTrialOverViewPagedDesc(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
+        MATCH (g:clinical_trial)
+          WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR g.clinical_trial_id IN $clinical_trial_ids)
+        WITH g
+        MATCH (p:publication)<-(g)
+        WITH p.queried_project_ids as queriedProjectIds, g
+        UNION
+        MATCH (pr:project)<-(g)
+        WITH pr.queried_project_id as queriedProjectIds
+        RETURN {
+            clinical_trial_id: g.clinical_trial_id,
+            title: g.title,
+            last_update_posted: g.last_update_posted,
+            recruitment_status: g.recruitment_status,
+            queried_project_ids: queriedProjectIds,
+        }
+        ORDER BY CASE $order_by
+            WHEN 'clinical_trial_id' THEN g.clinical_trial_id
+            WHEN 'title' THEN g.title
+            WHEN 'last_update_posted' THEN g.last_update_posted
+            WHEN 'recruitment_status' THEN g.recruitment_status
+            ELSE g.clinical_trial_id END DESC
+    """, passThrough: true)
+
+    patentOverViewPaged(patent_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
+        MATCH (g:granted_patent)
+          WHERE ($patent_ids IS NULL OR $patent_ids = [""] OR g.patent_id IN $patent_ids)
+        WITH g as patent
+        UNION
+        MATCH (g:patent_application)
+          WHERE ($patent_ids IS NULL OR $patent_ids = [""] OR g.patent_id IN $patent_ids)
+        WITH g as patent
+        MATCH (pr:project)<-(g)
+        WITH pr.queried_project_id as queriedProjectIds
+        RETURN {
+            patent_id: patent.patent_id,
+            fulfilled_date: patent.fulfilled_date
+            queried_project_ids: queriedProjectIds
+        }
+        ORDER BY CASE $order_by
+            WHEN 'patent_id' THEN patent.patent_id
+            WHEN 'fulfilled_date' THEN patent.fulfilled_date
+            ELSE patent.patent_id END
+    """, passThrough: true)
+
+    patentOverViewPagedDesc(patent_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
+        MATCH (g:granted_patent)
+          WHERE ($patent_ids IS NULL OR $patent_ids = [""] OR g.patent_id IN $patent_ids)
+        WITH g as patent
+        UNION
+        MATCH (g:patent_application)
+          WHERE ($patent_ids IS NULL OR $patent_ids = [""] OR g.patent_id IN $patent_ids)
+        WITH g as patent
+        MATCH (pr:project)<-(g)
+        WITH pr.queried_project_id as queriedProjectIds
+        RETURN {
+            patent_id: patent.patent_id,
+            fulfilled_date: patent.fulfilled_date
+        }
+        ORDER BY CASE $order_by
+            WHEN 'patent_id' THEN patent.patent_id
+            WHEN 'fulfilled_date' THEN patent.fulfilled_date
+            ELSE patent.patent_id END DESC
     """, passThrough: true)
 
     "Facet search counts"
