@@ -421,7 +421,7 @@ type QueryType {
         MATCH (pr:project)
         WITH DISTINCT pr
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        RETURN { group: pr.award_amount,
+        RETURN { group: pr.award_amount_category,
                  subjects: COUNT(DISTINCT pr.project_id)}
     """, passThrough: true)
 
@@ -933,9 +933,9 @@ type QueryType {
           WHERE (size($programs) = 0 OR p.program_id IN $programs)
             AND (size($docs) = 0 OR pr.lead_doc IN $docs)
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
-            AND (size($award_amount) = 0 OR pr.award_amount_category IN $award_amount_category)
+            AND (size($award_amount_category) = 0 OR pr.award_amount_category IN $award_amount_category)
         WITH DISTINCT p, pr
-        RETURN {group: pr.award_amount , subjects: COUNT(DISTINCT pr.project_id)}
+        RETURN {group: pr.award_amount_category , subjects: COUNT(DISTINCT pr.project_id)}
     """, passThrough: true)
 
     searchProjects (
