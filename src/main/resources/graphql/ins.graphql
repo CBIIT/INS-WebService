@@ -724,24 +724,22 @@ type QueryType {
     """, passThrough: true)
 
     sraOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [SRAOverview] @cypher(statement: """
-        MATCH (g:sra)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
-        WITH g
-        MATCH (p:publication)<-(:sra {accession: g.accession})
-        WITH p.queried_project_ids as queriedProjectIds
+        MATCH (pr:project)<--(:publication)<--(s:sra)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR s.accession IN $accessions)
+        WITH s, pr
         RETURN {
-            accession: g.accession,
-            title: g.study_title,
-            bioproject_accession: g.bioproject_accession,
-            registration_date: g.registration_date
-            queried_project_ids: queriedProjectIds
+            accession: s.accession,
+            title: s.study_title,
+            bioproject_accession: s.bioproject_accession,
+            registration_date: s.registration_date,
+            queried_project_ids: pr.queried_project_id
         }
         ORDER BY CASE $order_by
-            WHEN 'accession' THEN g.accession
-            WHEN 'title' THEN g.study_title
-            WHEN 'bioproject_accession' THEN g.bioproject_accession
-            WHEN 'registration_date' THEN g.registration_date
-            ELSE g.accession END DESC
+            WHEN 'accession' THEN s.accession
+            WHEN 'title' THEN s.study_title
+            WHEN 'bioproject_accession' THEN s.bioproject_accession
+            WHEN 'registration_date' THEN s.registration_date
+            ELSE s.accession END DESC
     """, passThrough: true)
 
     dbGapOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
