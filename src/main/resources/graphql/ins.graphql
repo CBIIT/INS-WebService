@@ -252,6 +252,7 @@ type ProjectOverview {
 }
 
 type PublicationOverview {
+    queried_project_ids: String
     publication_id: String
     pmc_id: String
     year: Date
@@ -595,11 +596,11 @@ type QueryType {
     """, passThrough: true)
 
     publicationOverViewPaged(publication_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
-        MATCH (pub:publication)
+        MATCH (pub:publication)-->(pr:project)
           WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
-        WITH pub
+        WITH pub, pr
         RETURN {
-            queried_project_ids: pub.queried_project_ids
+            queried_project_ids: pr.queried_project_id,
             publication_id: pub.publication_id,
             pmc_id: pub.pmc_id,
             year: pub.year,
