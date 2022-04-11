@@ -509,7 +509,7 @@ type QueryType {
     projectOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [ProjectOverview] @cypher(statement: """
         MATCH (pr:project)-->(pg:program)
           WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
-        WITH pr, pg
+        WITH DISTINCT pr, pg
         RETURN {
             program: pg.program_id,
             project_id: pr.project_id,
@@ -559,10 +559,11 @@ type QueryType {
     """, passThrough: true)
 
     projectOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [ProjectOverview] @cypher(statement: """
-        MATCH (pr:project)
+        MATCH (pr:project)-->(pg:program)
           WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
-        WITH pr
+        WITH DISTINCT pr, pg
         RETURN {
+            program: pg.program_id,
             project_id: pr.project_id,
             application_id: pr.application_id,
             fiscal_year: pr.fiscal_year,
@@ -585,6 +586,7 @@ type QueryType {
             full_foa: pr.full_foa
         }
         ORDER BY CASE $order_by
+            WHEN 'program' THEN pg.program_id
             WHEN 'project_id' THEN pr.project_id
             WHEN 'application_id' THEN pr.application_id
             WHEN 'fiscal_year' THEN pr.fiscal_year
