@@ -446,6 +446,14 @@ type QueryType {
                  subjects: COUNT(DISTINCT pub.publication_id)}
     """, passThrough: true)
 
+    publicationCountByCitation(project_ids: [String] = []): [GroupCount] @cypher(statement: """
+        MATCH (pr:project)<--(pub:publication)
+        WITH DISTINCT pub, pr
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        RETURN { group: pub.citation_count_category,
+                 subjects: COUNT(DISTINCT pub.publication_id)}
+    """, passThrough: true)
+
     numberOfPublicationsByProjects(project_ids: [String] = []): Int @cypher(statement: """
         MATCH (pr:project)<--(pub:publication)
         WITH pub, pr
