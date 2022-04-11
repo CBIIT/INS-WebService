@@ -229,6 +229,7 @@ type ProjectDetail {
 }
 
 type ProjectOverview {
+    program: String
     project_id: String
     application_id: String
     fiscal_year: Date
@@ -870,30 +871,30 @@ type QueryType {
         programs: [String] = [],
         docs: [String] = [],
         fiscal_years: [String] = [],
-        award_amount_category: [String] = []
+        award_amount: [String] = []
     ): [GroupCount] @cypher(statement: """
         // Filtering subjects
         MATCH (p:program)<--(pr:project)
           WHERE (size($programs) = 0 OR p.program_id IN $programs)
             AND (size($docs) = 0 OR pr.lead_doc IN $docs)
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
-            AND (size($award_amount) = 0 OR pr.award_amount_category IN $award_amount_category)
+            AND (size($award_amount) = 0 OR pr.award_amount_category IN $award_amount)
         WITH DISTINCT p, pr
-        RETURN {group: p.program_id , subjects: count(pr)}
+        RETURN {group: p.program_id , subjects: count(DISTINCT pr)}
     """, passThrough: true)
 
     filterProjectCountByDOC(
         programs: [String] = [],
         docs: [String] = [],
         fiscal_years: [String] = [],
-        award_amount_category: [String] = []
+        award_amount: [String] = []
     ): [GroupCount] @cypher(statement: """
         // Filtering subjects
         MATCH (p:program)<--(pr:project)
           WHERE (size($programs) = 0 OR p.program_id IN $programs)
             AND (size($docs) = 0 OR pr.lead_doc IN $docs)
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
-            AND (size($award_amount) = 0 OR pr.award_amount_category IN $award_amount_category)
+            AND (size($award_amount) = 0 OR pr.award_amount_category IN $award_amount)
         WITH DISTINCT p, pr
         RETURN {group: pr.lead_doc , subjects: COUNT(DISTINCT pr.project_id)}
     """, passThrough: true)
@@ -902,14 +903,14 @@ type QueryType {
         programs: [String] = [],
         docs: [String] = [],
         fiscal_years: [String] = [],
-        award_amount_category: [String] = []
+        award_amount: [String] = []
     ): [GroupCount] @cypher(statement: """
         // Filtering subjects
         MATCH (p:program)<--(pr:project)
           WHERE (size($programs) = 0 OR p.program_id IN $programs)
             AND (size($docs) = 0 OR pr.lead_doc IN $docs)
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
-            AND (size($award_amount) = 0 OR pr.award_amount_category IN $award_amount_category)
+            AND (size($award_amount) = 0 OR pr.award_amount_category IN $award_amount)
         WITH DISTINCT p, pr
         RETURN {group: pr.fiscal_year , subjects: COUNT(DISTINCT pr.project_id)}
     """, passThrough: true)
@@ -918,14 +919,14 @@ type QueryType {
         programs: [String] = [],
         docs: [String] = [],
         fiscal_years: [String] = [],
-        award_amount_category: [String] = []
+        award_amount: [String] = []
     ): [GroupCount] @cypher(statement: """
         // Filtering subjects
         MATCH (p:program)<--(pr:project)
           WHERE (size($programs) = 0 OR p.program_id IN $programs)
             AND (size($docs) = 0 OR pr.lead_doc IN $docs)
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
-            AND (size($award_amount_category) = 0 OR pr.award_amount_category IN $award_amount_category)
+            AND (size($award_amount) = 0 OR pr.award_amount_category IN $award_amount)
         WITH DISTINCT p, pr
         RETURN {group: pr.award_amount_category , subjects: COUNT(DISTINCT pr.project_id)}
     """, passThrough: true)
