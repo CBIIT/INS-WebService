@@ -291,6 +291,18 @@ type DBGAPOverview {
     queried_project_ids: String
 }
 
+type DatasetOverview {
+    accession: String
+    title: String
+    release_date: Date
+    registration_date: Date
+    bioproject_accession: String
+    status: String
+    submission_date: Date
+    last_update_date: Date
+    queried_project_ids: String
+}
+
 type ClinicalTrialOverview {
     clinical_trial_id: String
     title: String
@@ -787,6 +799,58 @@ type QueryType {
             WHEN 'title' THEN d.study_title
             WHEN 'release_date' THEN d.release_date
             ELSE d.accession END DESC
+    """, passThrough: true)
+
+    datasetOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
+        MATCH (pr:project)<--(:publication)<--(dt)
+          WHERE (dt:geo OR dt:sra OR dt:dbgap) AND
+                ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
+        WITH dt, pr
+        ORDER BY CASE $order_by
+            WHEN 'accession' THEN dt.accession
+            WHEN 'title' THEN dt.study_title
+            WHEN 'release_date' THEN dt.release_date
+            WHEN 'registration_date' THEN dt.registration_date
+            WHEN 'submission_date' THEN dt.submission_date
+            WHEN 'last_update_date' THEN dt.last_update_date
+            ELSE dt.accession END
+        RETURN DISTINCT {
+            accession: dt.accession,
+            title: dt.title,
+            release_date: dt.release_date,
+            registration_date: dt.registration_date,
+            bioproject_accession: dt.bioproject_accession,
+            status: dt.status,
+            submission_date: dt.submission_date,
+            last_update_date: dt.last_update_date,
+            queried_project_ids: pr.queried_project_id
+        }
+    """, passThrough: true)
+
+    datasetOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
+        MATCH (pr:project)<--(:publication)<--(dt)
+          WHERE (dt:geo OR dt:sra OR dt:dbgap) AND
+                ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
+        WITH dt, pr
+        ORDER BY CASE $order_by
+            WHEN 'accession' THEN dt.accession
+            WHEN 'title' THEN dt.study_title
+            WHEN 'release_date' THEN dt.release_date
+            WHEN 'registration_date' THEN dt.registration_date
+            WHEN 'submission_date' THEN dt.submission_date
+            WHEN 'last_update_date' THEN dt.last_update_date
+            ELSE dt.accession END DESC
+        RETURN DISTINCT {
+            accession: dt.accession,
+            title: dt.title,
+            release_date: dt.release_date,
+            registration_date: dt.registration_date,
+            bioproject_accession: dt.bioproject_accession,
+            status: dt.status,
+            submission_date: dt.submission_date,
+            last_update_date: dt.last_update_date,
+            queried_project_ids: pr.queried_project_id
+        }
     """, passThrough: true)
 
     clinicalTrialOverViewPaged(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
