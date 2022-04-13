@@ -635,6 +635,7 @@ type QueryType {
           WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
         WITH pub, pr
         ORDER BY CASE $order_by
+            WHEN 'queried_project_ids' THEN pr.queried_project_id
             WHEN 'publication_id' THEN pub.publication_id
             WHEN 'pmc_id' THEN pub.pmc_id
             WHEN 'year' THEN pub.year
@@ -668,6 +669,7 @@ type QueryType {
           WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
         WITH pub, pr
         ORDER BY CASE $order_by
+            WHEN 'queried_project_ids' THEN pr.queried_project_id
             WHEN 'publication_id' THEN pub.publication_id
             WHEN 'pmc_id' THEN pub.pmc_id
             WHEN 'year' THEN pub.year
@@ -681,6 +683,7 @@ type QueryType {
             WHEN 'doi' THEN pub.doi
             ELSE pub.publication_id END DESC
         RETURN DISTINCT {
+            queried_project_ids: pr.queried_project_id,
             publication_id: pub.publication_id,
             pmc_id: pub.pmc_id,
             year: pub.year,
