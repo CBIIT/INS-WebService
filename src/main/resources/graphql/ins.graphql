@@ -820,7 +820,8 @@ type QueryType {
             WHEN 'registration_date' THEN dt.registration_date
             WHEN 'submission_date' THEN dt.submission_date
             WHEN 'last_update_date' THEN dt.last_update_date
-            ELSE dt.accession END
+            WHEN 'queried_project_ids' THEN pr.queried_project_id
+            ELSE pr.queried_project_id END
         RETURN DISTINCT {
             accession: dt.accession,
             title: dt.title,
@@ -846,7 +847,8 @@ type QueryType {
             WHEN 'registration_date' THEN dt.registration_date
             WHEN 'submission_date' THEN dt.submission_date
             WHEN 'last_update_date' THEN dt.last_update_date
-            ELSE dt.accession END DESC
+            WHEN 'queried_project_ids' THEN pr.queried_project_id
+            ELSE pr.queried_project_id END DESC
         RETURN DISTINCT {
             accession: dt.accession,
             title: dt.title,
