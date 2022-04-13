@@ -515,10 +515,14 @@ type QueryType {
     """, passThrough: true)
 
     numberOfClinicalTrialsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pr:project)<--(c:clinical_trial)
-        WITH c, pr
-            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        return  COUNT(DISTINCT c.clinical_trial_id)
+        MATCH (pra:project)<--(cta:clinical_trial)
+            WHERE (size($project_ids) = 0 OR pra.project_id IN $project_ids)
+        MATCH (prb:project)<--(:publication)<--(ctb:clinical_trial)
+            WHERE (size($project_ids) = 0 OR prb.project_id IN $project_ids)
+        WITH COLLECT(cta) AS ctas, COLLECT(ctb) AS ctbs
+        WITH ctas + ctbs AS cts
+        UNWIND cts as ct
+        RETURN COUNT(DISTINCT ct.clinical_trial_id)
     """, passThrough: true)
 
     projectOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [ProjectOverview] @cypher(statement: """
