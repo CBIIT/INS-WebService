@@ -628,7 +628,20 @@ type QueryType {
         MATCH (pub:publication)-->(pr:project)
           WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
         WITH pub, pr
-        RETURN {
+        ORDER BY CASE $order_by
+            WHEN 'publication_id' THEN pub.publication_id
+            WHEN 'pmc_id' THEN pub.pmc_id
+            WHEN 'year' THEN pub.year
+            WHEN 'journal' THEN pub.journal
+            WHEN 'title' THEN pub.title
+            WHEN 'authors' THEN pub.authors
+            WHEN 'publish_date' THEN pub.publish_date
+            WHEN 'citation_count' THEN pub.citation_count
+            WHEN 'relative_citation_ratio' THEN pub.relative_citation_ratio
+            WHEN 'nih_percentile' THEN pub.nih_percentile
+            WHEN 'doi' THEN pub.doi
+            ELSE pub.publication_id END        
+        RETURN DISTINCT {
             queried_project_ids: pr.queried_project_id,
             publication_id: pub.publication_id,
             pmc_id: pub.pmc_id,
@@ -642,38 +655,12 @@ type QueryType {
             nih_percentile: pub.nih_percentile,
             doi: pub.doi
         }
-        ORDER BY CASE $order_by
-            WHEN 'publication_id' THEN pub.publication_id
-            WHEN 'pmc_id' THEN pub.pmc_id
-            WHEN 'year' THEN pub.year
-            WHEN 'journal' THEN pub.journal
-            WHEN 'title' THEN pub.title
-            WHEN 'authors' THEN pub.authors
-            WHEN 'publish_date' THEN pub.publish_date
-            WHEN 'citation_count' THEN pub.citation_count
-            WHEN 'relative_citation_ratio' THEN pub.relative_citation_ratio
-            WHEN 'nih_percentile' THEN pub.nih_percentile
-            WHEN 'doi' THEN pub.doi
-            ELSE pub.publication_id END
     """, passThrough: true)
 
     publicationOverViewPagedDesc(publication_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
-        MATCH (pub:publication)
+        MATCH (pub:publication)-->(pr:project)
           WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
-        WITH pub
-        RETURN {
-            publication_id: pub.publication_id,
-            pmc_id: pub.pmc_id,
-            year: pub.year,
-            journal: pub.journal,
-            title: pub.title,
-            authors: pub.authors,
-            publish_date: pub.publish_date,
-            citation_count: pub.citation_count,
-            relative_citation_ratio: pub.relative_citation_ratio,
-            nih_percentile: pub.nih_percentile,
-            doi: pub.doi
-        }
+        WITH pub, pr
         ORDER BY CASE $order_by
             WHEN 'publication_id' THEN pub.publication_id
             WHEN 'pmc_id' THEN pub.pmc_id
@@ -687,12 +674,25 @@ type QueryType {
             WHEN 'nih_percentile' THEN pub.nih_percentile
             WHEN 'doi' THEN pub.doi
             ELSE pub.publication_id END DESC
+        RETURN DISTINCT {
+            publication_id: pub.publication_id,
+            pmc_id: pub.pmc_id,
+            year: pub.year,
+            journal: pub.journal,
+            title: pub.title,
+            authors: pub.authors,
+            publish_date: pub.publish_date,
+            citation_count: pub.citation_count,
+            relative_citation_ratio: pub.relative_citation_ratio,
+            nih_percentile: pub.nih_percentile,
+            doi: pub.doi
+        }
     """, passThrough: true)
 
     geoOverViewPaged(accessions: [String] = [""], order_by: String = ""): [GEOOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(g:geo)
           WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
-        WITH g, pr
+        WITH DISTINCT g, pr
         RETURN {
             accession: g.accession,
             title: g.title,
@@ -713,7 +713,7 @@ type QueryType {
     geoOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [GEOOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(g:geo)
           WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
-        WITH g, pr
+        WITH DISTINCT g, pr
         RETURN {
             accession: g.accession,
             title: g.title,
@@ -734,7 +734,7 @@ type QueryType {
     sraOverViewPaged(accessions: [String] = [""], order_by: String = ""): [SRAOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(s:sra)
           WHERE ($accessions IS NULL OR $accessions = [""] OR s.accession IN $accessions)
-        WITH s, pr
+        WITH DISTINCT s, pr
         RETURN {
             accession: s.accession,
             title: s.study_title,
@@ -753,7 +753,7 @@ type QueryType {
     sraOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [SRAOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(s:sra)
           WHERE ($accessions IS NULL OR $accessions = [""] OR s.accession IN $accessions)
-        WITH s, pr
+        WITH DISTINCT s, pr
         RETURN {
             accession: s.accession,
             title: s.study_title,
@@ -772,7 +772,7 @@ type QueryType {
     dbGapOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(d:dbgap)
           WHERE ($accessions IS NULL OR $accessions = [""] OR d.accession IN $accessions)
-        WITH d, pr
+        WITH DISTINCT d, pr
         RETURN {
             accession: d.accession,
             title: d.title,
@@ -789,7 +789,7 @@ type QueryType {
     dbGapOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(d:dbgap)
           WHERE ($accessions IS NULL OR $accessions = [""] OR d.accession IN $accessions)
-        WITH d, pr
+        WITH DISTINCT d, pr
          RETURN {
             accession: d.accession,
             title: d.title,
@@ -1011,6 +1011,7 @@ type QueryType {
           WHERE (size($programs) = 0 OR p.program_id IN $programs)
             AND (size($docs) = 0 OR pr.lead_doc IN $docs)
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
+            AND (size($award_amounts) = 0 OR pr.award_amount_category IN $award_amounts)
         OPTIONAL MATCH (pr)<--(pub:publication)
         OPTIONAL MATCH (pr)<--(g:geo)
         WITH DISTINCT p, pr, pub, g
