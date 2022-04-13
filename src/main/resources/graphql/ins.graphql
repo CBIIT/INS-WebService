@@ -294,6 +294,7 @@ type DBGAPOverview {
 }
 
 type DatasetOverview {
+    type: String
     accession: String
     title: String
     release_date: Date
@@ -814,6 +815,7 @@ type QueryType {
                 ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
         WITH dt, pr
         ORDER BY CASE $order_by
+            WHEN 'type' THEN LABELS(dt)
             WHEN 'accession' THEN dt.accession
             WHEN 'title' THEN dt.study_title
             WHEN 'release_date' THEN dt.release_date
@@ -823,6 +825,7 @@ type QueryType {
             WHEN 'queried_project_ids' THEN pr.queried_project_id
             ELSE pr.queried_project_id END
         RETURN DISTINCT {
+            type: LABELS(dt),
             accession: dt.accession,
             title: dt.title,
             release_date: dt.release_date,
@@ -841,6 +844,7 @@ type QueryType {
                 ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
         WITH dt, pr
         ORDER BY CASE $order_by
+            WHEN 'type' THEN LABELS(dt)
             WHEN 'accession' THEN dt.accession
             WHEN 'title' THEN dt.study_title
             WHEN 'release_date' THEN dt.release_date
@@ -850,6 +854,7 @@ type QueryType {
             WHEN 'queried_project_ids' THEN pr.queried_project_id
             ELSE pr.queried_project_id END DESC
         RETURN DISTINCT {
+            type: LABELS(dt),
             accession: dt.accession,
             title: dt.title,
             release_date: dt.release_date,
