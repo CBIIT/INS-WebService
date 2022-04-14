@@ -884,6 +884,7 @@ type QueryType {
             WHEN 'title' THEN ct.title
             WHEN 'last_update_posted' THEN ct.last_update_posted
             WHEN 'recruitment_status' THEN ct.recruitment_status
+            WHEN 'queried_project_ids' THEN pr.queried_project_id
             ELSE ct.clinical_trial_id END
         RETURN DISTINCT {
             clinical_trial_id: ct.clinical_trial_id,
@@ -908,6 +909,7 @@ type QueryType {
             WHEN 'title' THEN ct.title
             WHEN 'last_update_posted' THEN ct.last_update_posted
             WHEN 'recruitment_status' THEN ct.recruitment_status
+            WHEN 'queried_project_ids' THEN pr.queried_project_id
             ELSE ct.clinical_trial_id END DESC
         RETURN DISTINCT {
             clinical_trial_id: ct.clinical_trial_id,
@@ -926,6 +928,7 @@ type QueryType {
         ORDER BY CASE $order_by
             WHEN 'patent_id' THEN p.patent_id
             WHEN 'fulfilled_date' THEN p.fulfilled_date
+            WHEN 'queried_project_ids' THEN pr.queried_project_id
             ELSE p.patent_id END        
         RETURN DISTINCT {
             patent_id: p.patent_id,
@@ -942,6 +945,7 @@ type QueryType {
         ORDER BY CASE $order_by
             WHEN 'patent_id' THEN p.patent_id
             WHEN 'fulfilled_date' THEN p.fulfilled_date
+            WHEN 'queried_project_ids' THEN pr.queried_project_id
             ELSE p.patent_id END DESC
         RETURN DISTINCT {
             patent_id: p.patent_id,
