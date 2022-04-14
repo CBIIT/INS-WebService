@@ -392,6 +392,13 @@ type QueryType {
         RETURN count(DISTINCT d)
     """, passThrough: true)
 
+    programDatasetCount(program_id: String): Int @cypher(statement: """
+        MATCH (p:program {program_id: $program_id})
+        OPTIONAL MATCH (p)<--(:project)<--(:publication)<--(ds)
+        WHERE ds:geo OR ds:sra OR ds:dbgap
+        RETURN count(DISTINCT ds)
+    """, passThrough: true)
+
     programClinicalTrialCount(program_id: String): Int @cypher(statement: """
         MATCH (p:program {program_id: $program_id})
         OPTIONAL MATCH (p)<--(pr:project)
