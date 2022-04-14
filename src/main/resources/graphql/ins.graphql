@@ -650,9 +650,9 @@ type QueryType {
             ELSE pr.project_id END DESC
     """, passThrough: true)
 
-    publicationOverViewPaged(publication_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
+    publicationOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
         MATCH (pub:publication)-->(pr:project)
-          WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH pub, pr
         ORDER BY CASE $order_by
             WHEN 'queried_project_ids' THEN pr.queried_project_id
@@ -684,9 +684,9 @@ type QueryType {
         }
     """, passThrough: true)
 
-    publicationOverViewPagedDesc(publication_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
+    publicationOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
         MATCH (pub:publication)-->(pr:project)
-          WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH pub, pr
         ORDER BY CASE $order_by
             WHEN 'queried_project_ids' THEN pr.queried_project_id
@@ -718,9 +718,9 @@ type QueryType {
         }
     """, passThrough: true)
 
-    geoOverViewPaged(accessions: [String] = [""], order_by: String = ""): [GEOOverview] @cypher(statement: """
+    geoOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [GEOOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(g:geo)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH DISTINCT g, pr
         RETURN {
             accession: g.accession,
@@ -739,9 +739,9 @@ type QueryType {
             ELSE g.accession END
     """, passThrough: true)
 
-    geoOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [GEOOverview] @cypher(statement: """
+    geoOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [GEOOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(g:geo)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH DISTINCT g, pr
         RETURN {
             accession: g.accession,
@@ -760,9 +760,9 @@ type QueryType {
             ELSE g.accession END DESC
     """, passThrough: true)
 
-    sraOverViewPaged(accessions: [String] = [""], order_by: String = ""): [SRAOverview] @cypher(statement: """
+    sraOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [SRAOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(s:sra)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR s.accession IN $accessions)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH DISTINCT s, pr
         RETURN {
             accession: s.accession,
@@ -779,9 +779,9 @@ type QueryType {
             ELSE s.accession END
     """, passThrough: true)
 
-    sraOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [SRAOverview] @cypher(statement: """
+    sraOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [SRAOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(s:sra)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR s.accession IN $accessions)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH DISTINCT s, pr
         RETURN {
             accession: s.accession,
@@ -798,9 +798,9 @@ type QueryType {
             ELSE s.accession END DESC
     """, passThrough: true)
 
-    dbGapOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
+    dbGapOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(d:dbgap)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR d.accession IN $accessions)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH DISTINCT d, pr
         RETURN {
             accession: d.accession,
@@ -815,9 +815,9 @@ type QueryType {
             ELSE d.accession END
     """, passThrough: true)
 
-    dbGapOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
+    dbGapOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [DBGAPOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(d:dbgap)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR d.accession IN $accessions)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH DISTINCT d, pr
          RETURN {
             accession: d.accession,
@@ -832,10 +832,10 @@ type QueryType {
             ELSE d.accession END DESC
     """, passThrough: true)
 
-    datasetOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
+    datasetOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(dt)
           WHERE (dt:geo OR dt:sra OR dt:dbgap) AND
-                ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
+                ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH dt, pr
         ORDER BY CASE $order_by
             WHEN 'type' THEN LABELS(dt)
@@ -861,10 +861,10 @@ type QueryType {
         }
     """, passThrough: true)
 
-    datasetOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
+    datasetOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
         MATCH (pr:project)<--(:publication)<--(dt)
           WHERE (dt:geo OR dt:sra OR dt:dbgap) AND
-                ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
+                ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH dt, pr
         ORDER BY CASE $order_by
             WHEN 'type' THEN LABELS(dt)
@@ -890,11 +890,10 @@ type QueryType {
         }
     """, passThrough: true)
 
-    clinicalTrialOverViewPaged(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
+    clinicalTrialOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
         MATCH (pr:project)<--(cta:clinical_trial)
         MATCH (pr:project)<--(:publication)<--(ctb:clinical_trial)
-          WHERE $clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR 
-                (cta.clinical_trial_id IN $clinical_trial_ids AND ctb.clinical_trial_id IN $clinical_trial_ids)
+          WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH COLLECT(cta) AS ctas, COLLECT(ctb) AS ctbs, pr
         WITH ctas + ctbs AS cts, pr
         UNWIND cts AS ct
@@ -915,11 +914,10 @@ type QueryType {
         }
     """, passThrough: true)
 
-    clinicalTrialOverViewPagedDesc(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
+    clinicalTrialOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
         MATCH (pr:project)<--(cta:clinical_trial)
         MATCH (pr:project)<--(:publication)<--(ctb:clinical_trial)
-          WHERE $clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR 
-                (cta.clinical_trial_id IN $clinical_trial_ids AND ctb.clinical_trial_id IN $clinical_trial_ids)
+            WHERE ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH COLLECT(cta) AS ctas, COLLECT(ctb) AS ctbs, pr
         WITH ctas + ctbs AS cts, pr
         UNWIND cts AS ct
@@ -940,10 +938,10 @@ type QueryType {
         }
     """, passThrough: true)
 
-    patentOverViewPaged(patent_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
+    patentOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
         MATCH (pr:project)<--(p)
           WHERE (p:granted_patent OR p:patent_application) AND
-                ($patent_ids IS NULL OR $patent_ids = [""] OR p.patent_id IN $patent_ids)
+                ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH p, pr
         ORDER BY CASE $order_by
             WHEN 'patent_id' THEN p.patent_id
@@ -957,10 +955,10 @@ type QueryType {
         }
     """, passThrough: true)
 
-    patentOverViewPagedDesc(patent_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
+    patentOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
         MATCH (pr:project)<--(p)
           WHERE (p:granted_patent OR p:patent_application) AND
-                ($patent_ids IS NULL OR $patent_ids = [""] OR p.patent_id IN $patent_ids)
+                ($project_ids IS NULL OR $project_ids = [""] OR pr.project_id IN $project_ids)
         WITH p, pr
         ORDER BY CASE $order_by
             WHEN 'patent_id' THEN p.patent_id
