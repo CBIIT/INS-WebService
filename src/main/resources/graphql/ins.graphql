@@ -189,6 +189,11 @@ type ClinicalTrialInfo {
     recruitment_status: String
 }
 
+type PatentInfo {
+    patent_id: String
+    fulfilled_date: Date
+}
+
 type ProgramDetail {
     program_id: String
     program_name: String
@@ -228,6 +233,7 @@ type ProjectDetail {
     sras: [SRAInfo]
     dbgaps: [DBGapInfo]
     clinical_trials: [ClinicalTrialInfo]
+    patents: [PatentInfo]
 }
 
 type ProjectOverview {
@@ -1066,11 +1072,15 @@ type QueryType {
     projectDetail(project_id: String): ProjectDetail @cypher(statement:  """
         MATCH (pr:project {project_id: $project_id})
         OPTIONAL MATCH (pr)<--(pub:publication)
-        OPTIONAL MATCH (pr)<--(g:geo)
-        OPTIONAL MATCH (pr)<--(s:sra)
-        OPTIONAL MATCH (pr)<--(d:dbgap)
+        OPTIONAL MATCH (pr)<--(:publication)<--(g:geo)
+        OPTIONAL MATCH (pr)<--(:publication)<--(s:sra)
+        OPTIONAL MATCH (pr)<--(:publication)<--(d:dbgap)
         OPTIONAL MATCH (pr)<--(c:clinical_trial)
-        WITH pr, pub, g, s, d, c
+        OPTIONAL MATCH (pr)<--(:publication)<--(c:clinical_trial)
+        OPTIONAL MATCH (pr)<--(gp:granted_patent)
+        OPTIONAL MATCH (pr)<--(pa:patent_application)
+        WITH pr, pub, g, s, d, c, COLLECT(gp {.*}) AS gps, COLLECT(pa {.*}) AS pas
+        WITH pr, pub, g, s, d, c, gps + pas AS pat
         RETURN {
             project_id: pr.project_id,
             application_id: pr.application_id,
@@ -1096,7 +1106,8 @@ type QueryType {
             geos: COLLECT(DISTINCT g {.*}),
             sras: COLLECT(DISTINCT s {.*}),
             dbgaps: COLLECT(DISTINCT d {.*}),
-            clinical_trials: COLLECT(DISTINCT c {.*})
+            clinical_trials: COLLECT(DISTINCT c {.*}),
+            patents: pat
         }
     """, passThrough: true)
 
