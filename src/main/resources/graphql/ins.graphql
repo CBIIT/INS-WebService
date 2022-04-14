@@ -396,14 +396,21 @@ type QueryType {
         MATCH (p:program {program_id: $program_id})
         OPTIONAL MATCH (p)<--(:project)<--(:publication)<--(ds)
         WHERE ds:geo OR ds:sra OR ds:dbgap
-        RETURN count(DISTINCT ds)
+        RETURN COUNT(DISTINCT ds)
     """, passThrough: true)
 
     programClinicalTrialCount(program_id: String): Int @cypher(statement: """
         MATCH (p:program {program_id: $program_id})
         OPTIONAL MATCH (p)<--(pr:project)
         OPTIONAL MATCH (pr)<--(c:clinical_trial)
-        RETURN count(DISTINCT c)
+        RETURN COUNT(DISTINCT c)
+    """, passThrough: true)
+
+    programPatentCount(program_id: String): Int @cypher(statement: """
+        MATCH (p:program {program_id: $program_id})
+        OPTIONAL MATCH (p)<--(:project)<--(pat)
+        WHERE pat:granted_patent OR pat:patent_application
+        RETURN COUNT(DISTINCT pat)
     """, passThrough: true)
 
     "Group counts"
