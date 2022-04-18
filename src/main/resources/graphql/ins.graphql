@@ -523,28 +523,28 @@ type QueryType {
     numberOfDatasetsByProjects(project_ids: [String] = []): Int @cypher(statement: """
         MATCH (pr:project)
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        OPTIONAL MATCH (pr)<--(:publication)<--(dt:geo)
-        OPTIONAL MATCH (pr)<--(:publication)<--(dt:sra)
-        OPTIONAL MATCH (pr)<--(:publication)<--(dt:dbgap)
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt)
         WITH dt
+            WHERE (dt:geo OR dt:sra OR dt:dbgap)
         RETURN COUNT(DISTINCT dt.accession)
     """, passThrough: true)
 
     numberOfPatentsByProjects(project_ids: [String] = []): Int @cypher(statement: """
         MATCH (pr:project)
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        OPTIONAL MATCH (pr)<--(p:patent_application)
-        OPTIONAL MATCH (pr)<--(p:granted_patent)
+        OPTIONAL MATCH (pr)<--(p)
         WITH p
+            WHERE (p:patent_application OR p:granted_patent)
         return  COUNT(DISTINCT p.patent_id)
     """, passThrough: true)
 
     numberOfClinicalTrialsByProjects(project_ids: [String] = []): Int @cypher(statement: """
         MATCH (pr:project)
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
-        OPTIONAL MATCH (pr)<--(ct:clinical_trial)
-        OPTIONAL MATCH (pr)<--(:publication)<--(ct:clinical_trial)
-        WITH ct
+        OPTIONAL MATCH (pr)<--(cta:clinical_trial)
+        OPTIONAL MATCH (pr)<--(:publication)<--(ctb:clinical_trial)
+        WITH COLLECT(cta) + COLLECT(ctb) AS cts
+        UNWIND cts AS ct
         RETURN COUNT(DISTINCT ct.clinical_trial_id)
     """, passThrough: true)
 
