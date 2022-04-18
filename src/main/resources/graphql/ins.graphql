@@ -492,9 +492,10 @@ type QueryType {
     """, passThrough: true)
 
     numberOfPublicationsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pr:project)<--(pub:publication)
-        WITH pub, pr
+        MATCH (pr:project)
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        OPTIONAL MATCH (pr)<--(pub:publication)
+        WITH pub
         return COUNT(DISTINCT pub.publication_id)
     """, passThrough: true)
 
@@ -520,29 +521,30 @@ type QueryType {
     """, passThrough: true)
 
     numberOfDatasetsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pr:project)<--(:publication)<--(ds)
-        WITH ds, pr
-            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids) AND
-                  (ds:geo OR ds:sra OR ds:dbgap)
-        RETURN COUNT(DISTINCT ds.accession)
+        MATCH (pr:project)
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt:geo)
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt:sra)
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt:dbgap)
+        WITH dt
+        RETURN COUNT(DISTINCT dt.accession)
     """, passThrough: true)
 
     numberOfPatentsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pr:project)<--(p)
-        WITH p, pr
-            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids) AND
-                  (p:patent_application OR p:granted_patent)
+        MATCH (pr:project)
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        OPTIONAL MATCH (pr)<--(p:patent_application)
+        OPTIONAL MATCH (pr)<--(p:granted_patent)
+        WITH p
         return  COUNT(DISTINCT p.patent_id)
     """, passThrough: true)
 
     numberOfClinicalTrialsByProjects(project_ids: [String] = []): Int @cypher(statement: """
-        MATCH (pra:project)<--(cta:clinical_trial)
-            WHERE (size($project_ids) = 0 OR pra.project_id IN $project_ids)
-        MATCH (prb:project)<--(:publication)<--(ctb:clinical_trial)
-            WHERE (size($project_ids) = 0 OR prb.project_id IN $project_ids)
-        WITH COLLECT(cta) AS ctas, COLLECT(ctb) AS ctbs
-        WITH ctas + ctbs AS cts
-        UNWIND cts as ct
+        MATCH (pr:project)
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        OPTIONAL MATCH (pr)<--(ct:clinical_trial)
+        OPTIONAL MATCH (pr)<--(:publication)<--(ct:clinical_trial)
+        WITH ct
         RETURN COUNT(DISTINCT ct.clinical_trial_id)
     """, passThrough: true)
 
@@ -652,7 +654,7 @@ type QueryType {
 
     publicationOverViewPaged(publication_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
         MATCH (pub:publication)-->(pr:project)
-          WHERE ($publication_ids IS NULL OR $project_ids = [""] OR pub.publication_id IN $publication_ids)
+          WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
         WITH pub, pr
         ORDER BY CASE $order_by
             WHEN 'queried_project_ids' THEN pr.queried_project_id
@@ -686,7 +688,7 @@ type QueryType {
 
     publicationOverViewPagedDesc(publication_ids: [String] = [""], order_by: String = ""): [PublicationOverview] @cypher(statement: """
         MATCH (pub:publication)-->(pr:project)
-          WHERE ($publication_ids IS NULL OR $project_ids = [""] OR pub.publication_id IN $publication_ids)
+          WHERE ($publication_ids IS NULL OR $publication_ids = [""] OR pub.publication_id IN $publication_ids)
         WITH pub, pr
         ORDER BY CASE $order_by
             WHEN 'queried_project_ids' THEN pr.queried_project_id
@@ -1051,12 +1053,14 @@ type QueryType {
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
             AND (size($award_amounts) = 0 OR pr.award_amount_category IN $award_amounts)
         OPTIONAL MATCH (pr)<--(pub:publication)
-        OPTIONAL MATCH (pr)<--(g:geo)
-        WITH DISTINCT p, pr, pub, g
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt:geo)
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt:sra)
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt:dbgap)
+        WITH DISTINCT p, pr, pub, dt
         RETURN  {
             projectIds: COLLECT(DISTINCT pr.project_id),
             publicationIds: COLLECT(DISTINCT pub.publication_id),
-            accessions: COLLECT(DISTINCT g.accession),
+            accessions: COLLECT(DISTINCT dt.accession),
             numberOfPrograms: COUNT(DISTINCT p.program_id),
             numberOfProjects: COUNT(DISTINCT pr.project_id),
             firstPage: []
