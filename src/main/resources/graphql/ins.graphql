@@ -835,9 +835,20 @@ type QueryType {
     """, passThrough: true)
 
     datasetOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
-        MATCH (pr:project)<--(:publication)<--(dt)
-          WHERE (dt:geo OR dt:sra OR dt:dbgap) AND
-                ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
+        MATCH (prg:project)<--(:publication)<--(g:geo)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
+        WITH COLLECT(prg) AS prs, COLLECT(g) AS dts
+        WITH prs, dts
+        MATCH (prsr:project)<--(:publication)<--(s:sra)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR s.accession IN $accessions)
+        WITH COLLECT(prsr) AS prs, COLLECT(s) AS dts
+        WITH prs, dts
+        MATCH (prd:project)<--(:publication)<--(d:dbgap)
+          WHERE ($accessions IS NULL OR $accessions = [""] OR d.accession IN $accessions)
+        WITH COLLECT(prd) AS prs, COLLECT(d) AS dts
+        WITH prs, dts
+        UNWIND prs AS pr
+        UNWIND dts AS dt
         WITH dt, pr
         ORDER BY CASE $order_by
             WHEN 'type' THEN LABELS(dt)
@@ -1053,10 +1064,12 @@ type QueryType {
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
             AND (size($award_amounts) = 0 OR pr.award_amount_category IN $award_amounts)
         OPTIONAL MATCH (pr)<--(pub:publication)
-        OPTIONAL MATCH (pr)<--(:publication)<--(dt:geo)
-        OPTIONAL MATCH (pr)<--(:publication)<--(dt:sra)
-        OPTIONAL MATCH (pr)<--(:publication)<--(dt:dbgap)
-        WITH DISTINCT p, pr, pub, dt
+        OPTIONAL MATCH (pr)<--(:publication)<--(g:geo)
+        OPTIONAL MATCH (pr)<--(:publication)<--(s:sra)
+        OPTIONAL MATCH (pr)<--(:publication)<--(d:dbgap)
+        WITH p, pr, pub, COLLECT(g) + COLLECT(s) + COLLECT(d) AS dts
+        UNWIND dts AS dt
+        WITH p, pr, pub, dt
         RETURN  {
             projectIds: COLLECT(DISTINCT pr.project_id),
             publicationIds: COLLECT(DISTINCT pub.publication_id),
