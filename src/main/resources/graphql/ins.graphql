@@ -835,21 +835,10 @@ type QueryType {
     """, passThrough: true)
 
     datasetOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
-        MATCH (prg:project)<--(:publication)<--(g:geo)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR g.accession IN $accessions)
-        WITH COLLECT(prg) AS prs, COLLECT(g) AS dts
-        WITH prs, dts
-        MATCH (prsr:project)<--(:publication)<--(s:sra)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR s.accession IN $accessions)
-        WITH COLLECT(prsr) AS prs, COLLECT(s) AS dts
-        WITH prs, dts
-        MATCH (prd:project)<--(:publication)<--(d:dbgap)
-          WHERE ($accessions IS NULL OR $accessions = [""] OR d.accession IN $accessions)
-        WITH COLLECT(prd) AS prs, COLLECT(d) AS dts
-        WITH prs, dts
-        UNWIND prs AS pr
-        UNWIND dts AS dt
-        WITH dt, pr
+        MATCH (pr:project)<--(:publication)<--(dt)
+          WHERE (dt:geo OR dt:sra OR dt:dbgap)
+            AND ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
+        WITH pr, dt
         ORDER BY CASE $order_by
             WHEN 'type' THEN LABELS(dt)
             WHEN 'accession' THEN dt.accession
@@ -1063,12 +1052,13 @@ type QueryType {
             AND (size($docs) = 0 OR pr.lead_doc IN $docs)
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
             AND (size($award_amounts) = 0 OR pr.award_amount_category IN $award_amounts)
-        OPTIONAL MATCH (pr)<--(pub:publication)
-        OPTIONAL MATCH (pr)<--(:publication)<--(g:geo)
-        OPTIONAL MATCH (pr)<--(:publication)<--(s:sra)
-        OPTIONAL MATCH (pr)<--(:publication)<--(d:dbgap)
-        WITH p, pr, pub, COLLECT(g) + COLLECT(s) + COLLECT(d) AS dts
-        UNWIND dts AS dt
+        WITH p, pr, COLLECT(DISTINCT pr.project_id) AS targets
+        OPTIONAL MATCH (proj:project)<--(pub:publication)
+            WHERE proj.project_id IN targets
+        WITH p, pr, pub, targets
+        OPTIONAL MATCH (proj:project)<--(:publication)<--(dt)
+            WHERE proj.project_id IN targets
+              AND (dt:geo OR dt:sra OR dt:dbgap)
         WITH p, pr, pub, dt
         RETURN  {
             projectIds: COLLECT(DISTINCT pr.project_id),
