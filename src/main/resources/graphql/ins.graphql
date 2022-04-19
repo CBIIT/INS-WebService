@@ -905,10 +905,12 @@ type QueryType {
     """, passThrough: true)
 
     clinicalTrialOverViewPaged(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
-        MATCH (ctb:clinical_trial)-->(:publication)-->(pr:project)<--(cta:clinical_trial)
-            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR (cta.clinical_trial_id IN $clinical_trial_ids AND ctb.clinical_trial_id IN $clinical_trial_ids))
-        WITH COLLECT(cta) + COLLECT(ctb) AS cts, pr
-        UNWIND cts AS ct
+        MATCH (p:project)<--(cta:clinical_trial)
+            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR cta.clinical_trial_id IN $clinical_trial_ids)
+        WITH p AS pr, cta AS ct
+        MATCH (p:project)<--(:publication)<--(cta:clinical_trial)
+            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR cta.clinical_trial_id IN $clinical_trial_ids)
+        WITH p AS pr, cta AS ct
         WITH pr, ct
         ORDER BY CASE $order_by
             WHEN 'clinical_trial_id' THEN ct.clinical_trial_id
@@ -927,12 +929,13 @@ type QueryType {
     """, passThrough: true)
 
     clinicalTrialOverViewPagedDesc(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
-        MATCH (p:project)<--(c:clinical_trial)
-            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR c.clinical_trial_id IN $clinical_trial_ids)
-        WITH c AS ct, p AS pr
-        MATCH (p:project)<--(:publication)<--(c:clinical_trial)
-            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR c.clinical_trial_id IN $clinical_trial_ids)
-        WITH c AS ct, p AS pr
+        MATCH (p:project)<--(cta:clinical_trial)
+            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR cta.clinical_trial_id IN $clinical_trial_ids)
+        WITH p AS pr, cta AS ct
+        MATCH (p:project)<--(:publication)<--(cta:clinical_trial)
+            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR cta.clinical_trial_id IN $clinical_trial_ids)
+        WITH p AS pr, cta AS ct
+        WITH pr, ct
         ORDER BY CASE $order_by
             WHEN 'clinical_trial_id' THEN ct.clinical_trial_id
             WHEN 'title' THEN ct.title
@@ -1061,26 +1064,11 @@ type QueryType {
             AND (size($docs) = 0 OR pr.lead_doc IN $docs)
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
             AND (size($award_amounts) = 0 OR pr.award_amount_category IN $award_amounts)
-        WITH p, pr, COLLECT(DISTINCT pr.project_id) AS targets
-        OPTIONAL MATCH (proj:project)<--(pub:publication)
-            WHERE proj.project_id IN targets
-        WITH p, pr, pub, targets
-        OPTIONAL MATCH (proj:project)<--(:publication)<--(dt)
-            WHERE proj.project_id IN targets
-              AND (dt:geo OR dt:sra OR dt:dbgap)
-        WITH p, pr, pub, dt, targets
-        OPTIONAL MATCH (proj:project)<--(cta:clinical_trial)
-            WHERE proj.project_id IN targets
-        WITH p, pr, pub, dt, cta AS ct, targets
-        OPTIONAL MATCH (proj:project)<--(:publication)<--(ctb:clinical_trial)
-            WHERE proj.project_id IN targets
-        WITH p, pr, pub, dt, ctb AS ct, targets
-        OPTIONAL MATCH (proj:project)<--(gp:granted_patent)
-            WHERE proj.project_id IN targets
-        WITH p, pr, pub, dt, ct, gp AS pat, targets
-        OPTIONAL MATCH (proj:project)<--(pa:patent_application)
-            WHERE proj.project_id IN targets
-        WITH p, pr, pub, dt, ct, pa AS pat
+        OPTIONAL MATCH (pr)<--(pub:publication)
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt)
+        OPTIONAL MATCH (ct:clinical_trial)-->(:publication)-->(pr)<--(ct:clinical_trial)
+        OPTIONAL MATCH (pat:granted_patent)-->(pr)<--(pat:patent_application)
+        WITH p, pr, pub, dt, ct, pat
         RETURN  {
             projectIds: COLLECT(DISTINCT pr.project_id),
             publicationIds: COLLECT(DISTINCT pub.publication_id),
