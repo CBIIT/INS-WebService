@@ -1058,12 +1058,11 @@ type QueryType {
             AND (size($docs) = 0 OR pr.lead_doc IN $docs)
             AND (size($fiscal_years) = 0 OR pr.fiscal_year IN $fiscal_years)
             AND (size($award_amounts) = 0 OR pr.award_amount_category IN $award_amounts)
-        WITH p, pr, COLLECT(pr) AS prs
         OPTIONAL MATCH (pr)<--(pub:publication)
         OPTIONAL MATCH (pr)<--(:publication)<--(dt)
             WHERE dt:geo OR dt:sra OR dt:dbgap
         OPTIONAL MATCH (ct:clinical_trial)
-            WHERE ALL(proj IN prs WHERE (ct)-->(:publication)-->(proj) OR (proj)<--(ct))
+            WHERE (ct)-->(:publication)-->(pr) OR (pr)<--(ct)
         OPTIONAL MATCH (pr)<--(pat)
             WHERE pat:granted_patent OR pat:patent_application
         WITH p, pr, pub, dt, ct, pat
