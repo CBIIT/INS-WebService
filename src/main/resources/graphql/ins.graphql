@@ -899,13 +899,11 @@ type QueryType {
     """, passThrough: true)
 
     clinicalTrialOverViewPaged(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
-        MATCH (p:project)<--(cta:clinical_trial)
-            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR cta.clinical_trial_id IN $clinical_trial_ids)
-        WITH p AS pr, cta AS ct
-        MATCH (p:project)<--(:publication)<--(cta:clinical_trial)
-            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR cta.clinical_trial_id IN $clinical_trial_ids)
-        WITH p AS pr, cta AS ct
-        WITH pr, ct
+        MATCH (ct:clinical_trial)
+            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR ct.clinical_trial_id IN $clinical_trial_ids)
+        OPTIONAL MATCH (pr:project)
+            WHERE (pr)<--(:publication)<--(ct) OR (pr)<--(ct)
+        WITH ct, pr
         ORDER BY CASE $order_by
             WHEN 'clinical_trial_id' THEN ct.clinical_trial_id
             WHEN 'title' THEN ct.title
@@ -923,13 +921,11 @@ type QueryType {
     """, passThrough: true)
 
     clinicalTrialOverViewPagedDesc(clinical_trial_ids: [String] = [""], order_by: String = ""): [ClinicalTrialOverview] @cypher(statement: """
-        MATCH (p:project)<--(cta:clinical_trial)
-            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR cta.clinical_trial_id IN $clinical_trial_ids)
-        WITH p AS pr, cta AS ct
-        MATCH (p:project)<--(:publication)<--(cta:clinical_trial)
-            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR cta.clinical_trial_id IN $clinical_trial_ids)
-        WITH p AS pr, cta AS ct
-        WITH pr, ct
+        MATCH (ct:clinical_trial)
+            WHERE ($clinical_trial_ids IS NULL OR $clinical_trial_ids = [""] OR ct.clinical_trial_id IN $clinical_trial_ids)
+        OPTIONAL MATCH (pr:project)
+            WHERE (pr)<--(:publication)<--(ct) OR (pr)<--(ct)
+        WITH ct, pr
         ORDER BY CASE $order_by
             WHEN 'clinical_trial_id' THEN ct.clinical_trial_id
             WHEN 'title' THEN ct.title
