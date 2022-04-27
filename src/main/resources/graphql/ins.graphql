@@ -842,11 +842,12 @@ type QueryType {
             ELSE d.accession END DESC
     """, passThrough: true)
 
-    datasetOverViewPaged(accessions: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
-        MATCH (pr:project)<--(:publication)<--(dt)
-            WHERE ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
-              AND (dt:geo OR dt:sra OR dt:dbgap)
-        WITH dt, pr
+    datasetOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
+        MATCH (pr:project)
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt)
+            WHERE (dt:geo OR dt:sra OR dt:dbgap)
+        WITH pr, dt
         ORDER BY CASE $order_by
             WHEN 'type' THEN LABELS(dt)
             WHEN 'accession' THEN dt.accession
@@ -871,11 +872,12 @@ type QueryType {
         }
     """, passThrough: true)
 
-    datasetOverViewPagedDesc(accessions: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
-        MATCH (pr:project)<--(:publication)<--(dt)
-            WHERE ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
-              AND (dt:geo OR dt:sra OR dt:dbgap)
-        WITH dt, pr
+    datasetOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [DatasetOverview] @cypher(statement: """
+        MATCH (pr:project)
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        OPTIONAL MATCH (pr)<--(:publication)<--(dt)
+            WHERE (dt:geo OR dt:sra OR dt:dbgap)
+        WITH pr, dt
         ORDER BY CASE $order_by
             WHEN 'type' THEN LABELS(dt)
             WHEN 'accession' THEN dt.accession
