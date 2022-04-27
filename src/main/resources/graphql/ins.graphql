@@ -946,11 +946,12 @@ type QueryType {
         }
     """, passThrough: true)
 
-    patentOverViewPaged(patent_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
-        MATCH (pr:project)<--(p)
-          WHERE (p:granted_patent OR p:patent_application) AND
-                ($patent_ids IS NULL OR $patent_ids = [""] OR p.patent_id IN $patent_ids)
-        WITH p, pr
+    patentOverViewPaged(project_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
+        MATCH (pr:project)
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        OPTIONAL MATCH (pr)<--(p)
+            WHERE (p:patent_application OR p:granted_patent)
+        WITH pr, p
         ORDER BY CASE $order_by
             WHEN 'patent_id' THEN p.patent_id
             WHEN 'fulfilled_date' THEN p.fulfilled_date
@@ -963,11 +964,12 @@ type QueryType {
         }
     """, passThrough: true)
 
-    patentOverViewPagedDesc(patent_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
-        MATCH (pr:project)<--(p)
-          WHERE (p:granted_patent OR p:patent_application) AND
-                ($patent_ids IS NULL OR $patent_ids = [""] OR p.patent_id IN $patent_ids)
-        WITH p, pr
+    patentOverViewPagedDesc(project_ids: [String] = [""], order_by: String = ""): [PatentOverview] @cypher(statement: """
+        MATCH (pr:project)
+            WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
+        OPTIONAL MATCH (pr)<--(p)
+            WHERE (p:patent_application OR p:granted_patent)
+        WITH pr, p
         ORDER BY CASE $order_by
             WHEN 'patent_id' THEN p.patent_id
             WHEN 'fulfilled_date' THEN p.fulfilled_date
