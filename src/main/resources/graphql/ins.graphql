@@ -1058,7 +1058,7 @@ type QueryType {
         OPTIONAL MATCH (pr)<--(:publication)<--(dt)
             WHERE dt:geo OR dt:sra OR dt:dbgap
         OPTIONAL MATCH (ct:clinical_trial)
-            WHERE (ct)-->(:publication)-->(pr) OR (pr)<--(ct)
+            WHERE EXISTS((ct)-->(:publication)-->(pr)) OR EXISTS((pr)<--(ct))
         OPTIONAL MATCH (pr)<--(pat)
             WHERE pat:granted_patent OR pat:patent_application
         WITH p, pr, pub, dt, ct, pat
