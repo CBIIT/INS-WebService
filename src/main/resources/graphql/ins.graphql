@@ -301,6 +301,8 @@ type DBGAPOverview {
 
 type DatasetOverview {
     type: String
+    transformed_type: String
+    link: String
     accession: String
     title: String
     release_date: Date
@@ -844,9 +846,9 @@ type QueryType {
         MATCH (pr:project)<--(:publication)<--(dt)
             WHERE ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
               AND (dt:geo OR dt:sra OR dt:dbgap)
-        WITH dt, pr
+        WITH dt, pr, LABELS(dt) as types
         ORDER BY CASE $order_by
-            WHEN 'type' THEN LABELS(dt)
+            WHEN 'type' THEN types
             WHEN 'accession' THEN dt.accession
             WHEN 'title' THEN dt.study_title
             WHEN 'release_date' THEN dt.release_date
@@ -856,7 +858,17 @@ type QueryType {
             WHEN 'queried_project_ids' THEN pr.queried_project_id
             ELSE pr.queried_project_id END
         RETURN DISTINCT {
-            type: LABELS(dt),
+            type: types,
+            transformed_type: CASE
+                                WHEN 'geo' IN types THEN 'GEO'
+                                WHEN 'sra' IN types THEN 'SRA'
+                                ELSE 'dbGap'
+                            END,
+            link: CASE
+                    WHEN 'geo' IN types THEN 'https://www.ncbi.nlm.nih.gov/gds/?term=' + dt.accession
+                    WHEN 'sra' IN types THEN 'https://www.ncbi.nlm.nih.gov/sra/?term=' + dt.accession
+                    ELSE 'https://www.ncbi.nlm.nih.gov/gap/?term='+dt.accession
+                END,
             accession: dt.accession,
             title: dt.title,
             release_date: dt.release_date,
@@ -873,9 +885,9 @@ type QueryType {
         MATCH (pr:project)<--(:publication)<--(dt)
             WHERE ($accessions IS NULL OR $accessions = [""] OR dt.accession IN $accessions)
               AND (dt:geo OR dt:sra OR dt:dbgap)
-        WITH dt, pr
+        WITH dt, pr, LABELS(dt) as types
         ORDER BY CASE $order_by
-            WHEN 'type' THEN LABELS(dt)
+            WHEN 'type' THEN types
             WHEN 'accession' THEN dt.accession
             WHEN 'title' THEN dt.study_title
             WHEN 'release_date' THEN dt.release_date
@@ -885,7 +897,17 @@ type QueryType {
             WHEN 'queried_project_ids' THEN pr.queried_project_id
             ELSE pr.queried_project_id END DESC
         RETURN DISTINCT {
-            type: LABELS(dt),
+            type: types,
+            transformed_type: CASE
+                                WHEN 'geo' IN types THEN 'GEO'
+                                WHEN 'sra' IN types THEN 'SRA'
+                                ELSE 'dbGap'
+                            END,
+            link: CASE
+                    WHEN 'geo' IN types THEN 'https://www.ncbi.nlm.nih.gov/gds/?term=' + dt.accession
+                    WHEN 'sra' IN types THEN 'https://www.ncbi.nlm.nih.gov/sra/?term=' + dt.accession
+                    ELSE 'https://www.ncbi.nlm.nih.gov/gap/?term='+dt.accession
+                END,
             accession: dt.accession,
             title: dt.title,
             release_date: dt.release_date,
