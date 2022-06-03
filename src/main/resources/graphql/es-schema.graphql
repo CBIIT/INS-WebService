@@ -65,49 +65,6 @@ type FileOverview2 {
     diagnosis: String
 }
 
-type SearchResult {
-    numberOfPrograms: Int
-    numberOfStudies: Int
-    numberOfSubjects: Int
-    numberOfSamples: Int
-    numberOfLabProcedures: Int
-    numberOfFiles: Int
-
-    subjectCountByProgram: [GroupCount2]
-    subjectCountByStudy: [GroupCount2]
-    subjectCountByDiagnoses: [GroupCount2]
-    subjectCountByRecurrenceScore: [GroupCount2]
-    subjectCountByTumorSize: [GroupCount2]
-    subjectCountByTumorGrade: [GroupCount2]
-    subjectCountByErStatus: [GroupCount2]
-    subjectCountByPrStatus: [GroupCount2]
-    subjectCountByChemotherapyRegimen: [GroupCount2]
-    subjectCountByEndocrineTherapy: [GroupCount2]
-    subjectCountByMenopauseStatus: [GroupCount2]
-    subjectCountByTissueType: [GroupCount2]
-    subjectCountByTissueComposition: [GroupCount2]
-    subjectCountByFileAssociation: [GroupCount2]
-    subjectCountByFileType: [GroupCount2]
-    armsByPrograms: [ProgramArms2]
-
-    filterSubjectCountByProgram: [GroupCount2]
-    filterSubjectCountByStudy: [GroupCount2]
-    filterSubjectCountByDiagnoses: [GroupCount2]
-    filterSubjectCountByRecurrenceScore: [GroupCount2]
-    filterSubjectCountByTumorSize: [GroupCount2]
-    filterSubjectCountByTumorGrade: [GroupCount2]
-    filterSubjectCountByErStatus: [GroupCount2]
-    filterSubjectCountByPrStatus: [GroupCount2]
-    filterSubjectCountByChemotherapyRegimen: [GroupCount2]
-    filterSubjectCountByEndocrineTherapy: [GroupCount2]
-    filterSubjectCountByMenopauseStatus: [GroupCount2]
-    filterSubjectCountByTissueType: [GroupCount2]
-    filterSubjectCountByTissueComposition: [GroupCount2]
-    filterSubjectCountByFileAssociation: [GroupCount2]
-    filterSubjectCountByFileType: [GroupCount2]
-    filterSubjectCountByAge: RangeCount
-}
-
 type GroupCount2 {
     group: String
     subjects: Int
@@ -236,31 +193,25 @@ type SubjectResult {
     program_id: String
 }
 
+type SearchResult {
+    projectIds: [String]
+    publicationIds: [String]
+    accessions: [String]
+    clinicalTrialIds: [String]
+    patentIds: [String]
+    numberOfPrograms: Int
+    numberOfProjects: Int
+    numberOfPublications: Int
+    numberOfAccessions: Int
+    numberOfClinicalTrials: Int
+    numberOfPatents: Int
+}
+
 schema {
     query: QueryType
 }
 
 type QueryType {
-    searchSubjects (
-        subject_ids: [String] = [],
-        programs: [String] = [],
-        studies: [String] = [],
-        diagnoses: [String] = [],
-        rc_scores: [String] = [],
-        tumor_sizes: [String] = [],
-        chemo_regimen: [String] = [],
-        tumor_grades: [String] = [],
-        er_status: [String] = [],
-        pr_status: [String] = [],
-        endo_therapies: [String] = [],
-        meno_status: [String] = [],
-        tissue_type: [String] = [],
-        composition: [String] = [],
-        association: [String] = [],
-        file_type: [String] = [],
-        age_at_index: [Float] = []
-    ): SearchResult
-
     subjectOverview (
         subject_ids: [String] = [],
         programs: [String] = [],
@@ -352,5 +303,7 @@ type QueryType {
     findSubjectIdsInList(subject_ids: [String] = []): [SubjectResult]
 
     globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
+
+    searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchResult
 
 }
