@@ -123,7 +123,7 @@ public class ESService {
                 }
             }
             filter.add(Map.of(
-                    "terms", Map.of( key, valueSet)
+                "terms", Map.of( key, valueSet)
             ));
         }
 
@@ -274,7 +274,8 @@ public class ESService {
     public List<String> collectField(Request request, String fieldName) throws IOException {
         List<String> results = new ArrayList<>();
 
-        request.addParameter("scroll", "10S");
+        if (!request.getParameters().containsKey("scroll"))
+            request.addParameter("scroll", "10S");
         JsonObject jsonObject = send(request);
         JsonArray searchHits = jsonObject.getAsJsonObject("hits").getAsJsonArray("hits");
 
@@ -283,6 +284,42 @@ public class ESService {
             for (int i = 0; i < searchHits.size(); i++) {
                 String value = searchHits.get(i).getAsJsonObject().get("_source").getAsJsonObject().get(fieldName).getAsString();
                 results.add(value);
+            }
+
+            Request scrollRequest = new Request("POST", SCROLL_ENDPOINT);
+            String scrollId = jsonObject.get("_scroll_id").getAsString();
+            Map<String, Object> scrollQuery = Map.of(
+                    "scroll", "10S",
+                    "scroll_id", scrollId
+            );
+            scrollRequest.setJsonEntity(gson.toJson(scrollQuery));
+            jsonObject = send(scrollRequest);
+            searchHits = jsonObject.getAsJsonObject("hits").getAsJsonArray("hits");
+        }
+
+        String scrollId = jsonObject.get("_scroll_id").getAsString();
+        Request clearScrollRequest = new Request("DELETE", SCROLL_ENDPOINT);
+        clearScrollRequest.setJsonEntity("{\"scroll_id\":\"" + scrollId +"\"}");
+        send(clearScrollRequest);
+
+        return results;
+    }
+
+    public List<String> collectFieldForArray(Request request, String fieldName) throws IOException {
+        List<String> results = new ArrayList<>();
+
+        if (!request.getParameters().containsKey("scroll"))
+            request.addParameter("scroll", "10S");
+        JsonObject jsonObject = send(request);
+        JsonArray searchHits = jsonObject.getAsJsonObject("hits").getAsJsonArray("hits");
+
+        while (searchHits != null && searchHits.size() > 0) {
+            logger.info("Current " + fieldName + " records: " + results.size() + " collecting...");
+            for (int i = 0; i < searchHits.size(); i++) {
+                JsonArray values = searchHits.get(i).getAsJsonObject().get("_source").getAsJsonObject().get(fieldName).getAsJsonArray();
+                for (int j = 0; j < values.size(); j++) {
+                    results.add(values.get(j).getAsString());
+                }
             }
 
             Request scrollRequest = new Request("POST", SCROLL_ENDPOINT);

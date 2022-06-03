@@ -5,11 +5,14 @@ import gov.nih.nci.bento.service.ESService;
 import graphql.schema.idl.RuntimeWiring;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
 import org.opensearch.client.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 
@@ -42,6 +45,8 @@ public class BentoEsFilter implements DataFetcher {
     final String VALUES_COUNT_END_POINT = "/model_values/_count";
     final String GS_ABOUT_END_POINT = "/about_page/_search";
     final String GS_MODEL_END_POINT = "/data_model/_search";
+    final String SEARCH_PROJECTS_ES_END_POINT = "/filter_ids/_search";
+    final String SEARCH_PROJECTS_ES_COUNT_END_POINT = "/filter_ids/_count";
 
     final int GS_LIMIT = 10;
     final String GS_END_POINT = "endpoint";
@@ -98,6 +103,10 @@ public class BentoEsFilter implements DataFetcher {
                         .dataFetcher("findSubjectIdsInList", env -> {
                             Map<String, Object> args = env.getArguments();
                             return findSubjectIdsInList(args);
+                        })
+                        .dataFetcher("searchProjects", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return searchProjects(args);
                         })
                 )
                 .build();
@@ -889,5 +898,42 @@ public class BentoEsFilter implements DataFetcher {
         request.setJsonEntity(gson.toJson(query));
         JsonObject jsonObject = esService.send(request);
         return esService.collectTerms(jsonObject, collectField);
+    }
+
+    private Map<String, Object> searchProjects(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildListQuery(params, Set.of());
+        Request request = new Request("GET", SEARCH_PROJECTS_ES_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put(GS_CATEGORY_TYPE, SEARCH_PROJECTS_ES_END_POINT);
+
+        List<String> programs = esService.collectField(request, "programs").stream().distinct().collect(Collectors.toList());
+        List<String> projectIds = esService.collectFieldForArray(request, "project_ids").stream().distinct().collect(Collectors.toList());
+        List<String> publicationIds = esService.collectFieldForArray(request, "publication_ids").stream().distinct().collect(Collectors.toList());
+        List<String> accessions = esService.collectFieldForArray(request, "accessions").stream().distinct().collect(Collectors.toList());
+        List<String> clinicalTrialIds = esService.collectFieldForArray(request, "clinical_trial_ids").stream().distinct().collect(Collectors.toList());
+        List<String> patentIds = esService.collectFieldForArray(request, "patent_ids").stream().distinct().collect(Collectors.toList());
+
+        result.put("projectIds", projectIds);
+        result.put("publicationIds", publicationIds);
+        result.put("accessions", accessions);
+        result.put("clinicalTrialIds", clinicalTrialIds);
+        result.put("patentIds", patentIds);
+        
+        Integer numberOfPrograms = programs.size();
+        result.put("numberOfPrograms", numberOfPrograms);
+        Integer numberOfProjects = projectIds.size();
+        result.put("numberOfProjects", numberOfProjects);
+        Integer numberOfPublications = publicationIds.size();
+        result.put("numberOfPublications", numberOfPublications);
+        Integer numberOfAccessions = accessions.size();
+        result.put("numberOfAccessions", numberOfAccessions);
+        Integer numberOfClinicalTrials = clinicalTrialIds.size();
+        result.put("numberOfClinicalTrials", numberOfClinicalTrials);
+        Integer numberOfPatents = patentIds.size();
+        result.put("numberOfPatents", numberOfPatents);
+
+        return result;
     }
 }
