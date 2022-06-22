@@ -65,6 +65,20 @@ type FileOverview2 {
     diagnosis: String
 }
 
+type PublicationOverViewResult {
+    publication_id: String
+    pmc_id: String
+    year: String
+    journal: String
+    title: String
+    authors: String
+    publish_date: String
+    citation_count: Int
+    relative_citation_ratio: Float
+    nih_percentile: Float
+    doi: String
+}
+
 type GroupCount2 {
     group: String
     subjects: Int
@@ -305,5 +319,7 @@ type QueryType {
     globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
 
     searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchResult
+
+    publicationOverView (publication_ids: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PublicationOverViewResult]
 
 }
