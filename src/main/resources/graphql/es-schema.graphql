@@ -101,6 +101,12 @@ type FileDetail {
     md5sum: String
 }
 
+type GS_Project {
+    project_id: String
+    application_id: String
+    highlight: String
+}
+
 type GS_Program {
     type: String
     program_id: String
@@ -166,6 +172,11 @@ type GS_About {
 }
 
 type GlobalSearchResult {
+    project_count: Int
+    projects: [GS_Project]
+}
+
+type DEPRECATEDGlobalSearchResult {
     program_count: Int
     programs: [GS_Program]
 
@@ -302,7 +313,7 @@ type QueryType {
 
     findSubjectIdsInList(subject_ids: [String] = []): [SubjectResult]
 
-    globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
+    globalSearch (input: String = "", first: Int = 10, offset: Int = 0): GlobalSearchResult
 
     searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchResult
 
