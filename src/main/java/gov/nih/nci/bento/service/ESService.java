@@ -172,7 +172,8 @@ public class ESService {
             } else {
                 // Term parameters (default)
                 List<String> valueSet = (List<String>) params.get(key);
-                if (valueSet.size() > 0) {
+                // if the valueSet is [""] then we want to skip the term
+                if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
                     filter.add(Map.of(
                             "terms", Map.of( key, valueSet)
                     ));
