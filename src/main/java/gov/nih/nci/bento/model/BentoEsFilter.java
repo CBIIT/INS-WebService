@@ -30,6 +30,7 @@ public class BentoEsFilter implements DataFetcher {
     final String STUDIES_END_POINT = "/studies/_search";
     final String STUDIES_COUNT_END_POINT = "/studies/_count";
 
+    final String DATASETS_END_POINT = "/datasets/_search";
     final String SUBJECTS_END_POINT = "/subjects/_search";
     final String SUBJECTS_COUNT_END_POINT = "/subjects/_count";
     final String SUBJECT_IDS_END_POINT = "/subject_ids/_search";
@@ -107,6 +108,10 @@ public class BentoEsFilter implements DataFetcher {
                         .dataFetcher("searchProjects", env -> {
                             Map<String, Object> args = env.getArguments();
                             return searchProjects(args);
+                        })
+                        .dataFetcher("datasetOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return datasetOverView(args);
                         })
                 )
                 .build();
@@ -935,5 +940,34 @@ public class BentoEsFilter implements DataFetcher {
         result.put("numberOfPatents", numberOfPatents);
 
         return result;
+    }
+    private List<Map<String, Object>> datasetOverView(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"type", "type"},
+                new String[]{"accession", "accession"},
+                new String[]{"title", "title"},
+                new String[]{"release_date", "registration_date"},
+                new String[]{"registration_date", "registration_date"},
+                new String[]{"bioproject_accession", "bioproject_accession"},
+                new String[]{"status", "status"},
+                new String[]{"submission_date", "submission_date"},
+                new String[]{"last_update_date", "last_update_date"},
+        };
+
+        String defaultSort = "accession"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("type", "type"),
+                Map.entry("accession", "accession"),
+                Map.entry("title", "title"),
+                Map.entry("release_date", "release_date"),
+                Map.entry("registration_date", "registration_date"),
+                Map.entry("bioproject_accession", "bioproject_accession"),
+                Map.entry("status", "status"),
+                Map.entry("submission_date", "submission_date"),
+                Map.entry("last_update_date", "last_update_date")
+        );
+
+        return overview(DATASETS_END_POINT, params, PROPERTIES, defaultSort, mapping);
     }
 }

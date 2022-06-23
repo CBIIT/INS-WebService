@@ -65,6 +65,18 @@ type FileOverview2 {
     diagnosis: String
 }
 
+type DatasetOverViewResult {
+    type: String
+    accession: String
+    title: String
+    release_date: String
+    registration_date: String
+    bioproject_accession: String
+    status: String
+    submission_date: String
+    last_update_date: String
+}
+
 type GroupCount2 {
     group: String
     subjects: Int
@@ -306,4 +318,5 @@ type QueryType {
 
     searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchResult
 
+    datasetOverView (accessions: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [DatasetOverViewResult]
 }
