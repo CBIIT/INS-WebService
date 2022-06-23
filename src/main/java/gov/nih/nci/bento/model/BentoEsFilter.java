@@ -956,6 +956,7 @@ public class BentoEsFilter implements DataFetcher {
                 new String[]{"tumor_grade", "tumor_grades"},
                 new String[]{"nih_percentile", "nih_percentile"},
                 new String[]{"doi", "doi"},
+                new String[]{"queried_project_id", "queried_project_id"},
         };
 
         String defaultSort = "publication_id"; // Default sort order
@@ -971,7 +972,8 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("citation_count", "citation_count"),
                 Map.entry("relative_citation_ratio", "relative_citation_ratio"),
                 Map.entry("nih_percentile", "nih_percentile"),
-                Map.entry("doi", "doi")
+                Map.entry("doi", "doi"),
+                Map.entry("queried_project_id", "queried_project_id")
         );
 
         return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping);
