@@ -30,6 +30,7 @@ public class BentoEsFilter implements DataFetcher {
     final String STUDIES_END_POINT = "/studies/_search";
     final String STUDIES_COUNT_END_POINT = "/studies/_count";
 
+    final String PATENTS_END_POINT = "/patents/_search";
     final String SUBJECTS_END_POINT = "/subjects/_search";
     final String SUBJECTS_COUNT_END_POINT = "/subjects/_count";
     final String SUBJECT_IDS_END_POINT = "/subject_ids/_search";
@@ -107,6 +108,10 @@ public class BentoEsFilter implements DataFetcher {
                         .dataFetcher("searchProjects", env -> {
                             Map<String, Object> args = env.getArguments();
                             return searchProjects(args);
+                        })
+                        .dataFetcher("patentOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return patentOverView(args);
                         })
                 )
                 .build();
@@ -935,5 +940,24 @@ public class BentoEsFilter implements DataFetcher {
         result.put("numberOfPatents", numberOfPatents);
 
         return result;
+    }
+
+    private List<Map<String, Object>> patentOverView(Map<String, Object> params) throws IOException {
+        // Following String array of arrays should be in form of "GraphQL_field_name", "ES_field_name"
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"patent_id", "patent_id"},
+                new String[]{"fulfilled_date", "fulfilled_date"},
+                new String[]{"queried_project_id", "queried_project_id"}
+        };
+
+        String defaultSort = "patent_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("patent_id", "patent_id"),
+                Map.entry("fulfilled_date", "fulfilled_date"),
+                Map.entry("queried_project_id", "queried_project_id")
+        );
+
+        return overview(PATENTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
     }
 }

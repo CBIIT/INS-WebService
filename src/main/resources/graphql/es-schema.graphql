@@ -65,6 +65,12 @@ type FileOverview2 {
     diagnosis: String
 }
 
+type PatentOverViewResult {
+    patent_id: String
+    fulfilled_date: String
+    queried_project_id: String
+}
+
 type GroupCount2 {
     group: String
     subjects: Int
@@ -306,4 +312,5 @@ type QueryType {
 
     searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchResult
 
+    patentOverView (patent_ids: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PatentOverViewResult]
 }
