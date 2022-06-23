@@ -75,6 +75,7 @@ type DatasetOverViewResult {
     status: String
     submission_date: String
     last_update_date: String
+    queried_project_id: String
 }
 
 type GroupCount2 {
