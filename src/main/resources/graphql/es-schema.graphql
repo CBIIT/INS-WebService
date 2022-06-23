@@ -65,6 +65,14 @@ type FileOverview2 {
     diagnosis: String
 }
 
+type ClinicalTrialOverViewResult {
+    clinical_trial_id: String
+    title: String
+    last_update_posted: String
+    recruitment_status: String
+    queried_project_id: String
+}
+
 type GroupCount2 {
     group: String
     subjects: Int
@@ -306,4 +314,5 @@ type QueryType {
 
     searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchResult
 
+    clinicalTrialOverView (clinical_trial_ids: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [ClinicalTrialOverViewResult]
 }

@@ -30,6 +30,7 @@ public class BentoEsFilter implements DataFetcher {
     final String STUDIES_END_POINT = "/studies/_search";
     final String STUDIES_COUNT_END_POINT = "/studies/_count";
 
+    final String CLINICAL_TRIALS_END_POINT = "/clinical_trials/_search";
     final String SUBJECTS_END_POINT = "/subjects/_search";
     final String SUBJECTS_COUNT_END_POINT = "/subjects/_count";
     final String SUBJECT_IDS_END_POINT = "/subject_ids/_search";
@@ -107,6 +108,10 @@ public class BentoEsFilter implements DataFetcher {
                         .dataFetcher("searchProjects", env -> {
                             Map<String, Object> args = env.getArguments();
                             return searchProjects(args);
+                        })
+                        .dataFetcher("clinicalTrialOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return clinicalTrialOverView(args);
                         })
                 )
                 .build();
@@ -935,5 +940,28 @@ public class BentoEsFilter implements DataFetcher {
         result.put("numberOfPatents", numberOfPatents);
 
         return result;
+    }
+
+    private List<Map<String, Object>> clinicalTrialOverView(Map<String, Object> params) throws IOException {
+        // Following String array of arrays should be in form of "GraphQL_field_name", "ES_field_name"
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"clinical_trial_id", "clinical_trial_id"},
+                new String[]{"title", "title"},
+                new String[]{"last_update_posted", "last_update_posted"},
+                new String[]{"recruitment_status", "recruitment_status"},
+                new String[]{"queried_project_id", "queried_project_id"}
+        };
+
+        String defaultSort = "clinical_trial_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("clinical_trial_id", "clinical_trial_id"),
+                Map.entry("title", "title"),
+                Map.entry("last_update_posted", "last_update_posted"),
+                Map.entry("recruitment_status", "recruitment_status"),
+                Map.entry("queried_project_id", "queried_project_id")
+        );
+
+        return overview(CLINICAL_TRIALS_END_POINT, params, PROPERTIES, defaultSort, mapping);
     }
 }
