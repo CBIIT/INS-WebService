@@ -1075,6 +1075,7 @@ public class BentoEsFilter implements DataFetcher {
     
     private List<Map<String, Object>> projectOverView(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
+            new String[]{"program", "program"},
             new String[]{"project_id", "project_id"},
             new String[]{"application_id", "application_id"},
             new String[]{"fiscal_year", "fiscal_year"},
@@ -1085,7 +1086,7 @@ public class BentoEsFilter implements DataFetcher {
             new String[]{"org_name", "org_name"},
             new String[]{"org_city", "org_citie"},
             new String[]{"org_state", "org_state"},
-            new String[]{"org_country", "org_countrie"},
+            new String[]{"org_country", "org_country"},
             new String[]{"principal_investigators", "principal_investigators"},
             new String[]{"lead_doc", "lead_doc"},
             new String[]{"program_officers", "program_officers"},
@@ -1100,6 +1101,7 @@ public class BentoEsFilter implements DataFetcher {
         String defaultSort = "project_id"; // Default sort order
 
         Map<String, String> mapping = Map.ofEntries(
+                Map.entry("program", "program"),        
                 Map.entry("project_id", "project_id"),
                 Map.entry("application_id", "application_id"),
                 Map.entry("fiscal_year", "fiscal_year"),
