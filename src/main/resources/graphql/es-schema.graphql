@@ -65,6 +65,19 @@ type FileOverview2 {
     diagnosis: String
 }
 
+type DatasetOverViewResult {
+    type: String
+    accession: String
+    title: String
+    release_date: String
+    registration_date: String
+    bioproject_accession: String
+    status: String
+    submission_date: String
+    last_update_date: String
+    queried_project_id: String
+}
+
 type PublicationOverViewResult {
     publication_id: String
     pmc_id: String
@@ -349,4 +362,5 @@ type QueryType {
 
     publicationOverView (publication_ids: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PublicationOverViewResult]
 
+    datasetOverView (accessions: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [DatasetOverViewResult]
 }
