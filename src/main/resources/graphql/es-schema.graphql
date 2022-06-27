@@ -65,6 +65,21 @@ type FileOverview2 {
     diagnosis: String
 }
 
+type PublicationOverViewResult {
+    publication_id: String
+    pmc_id: String
+    year: String
+    journal: String
+    title: String
+    authors: String
+    publish_date: String
+    citation_count: Int
+    relative_citation_ratio: Float
+    nih_percentile: Float
+    doi: String
+    queried_project_id: String
+}
+
 type ProjectOverViewResult {
     program: String
     project_id: String
@@ -331,5 +346,7 @@ type QueryType {
     searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchProjectsResult
 
     projectOverViewPaged (project_ids: [String] = [""], offset: Int = 0, first: Int = 10, order_by: String = "", sort_direction: String = ""): [ProjectOverViewResult]
+
+    publicationOverView (publication_ids: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PublicationOverViewResult]
 
 }

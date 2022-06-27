@@ -30,6 +30,7 @@ public class BentoEsFilter implements DataFetcher {
     final String STUDIES_END_POINT = "/studies/_search";
     final String STUDIES_COUNT_END_POINT = "/studies/_count";
 
+    final String PUBLICATIONS_END_POINT = "/publications/_search";
     final String SUBJECTS_END_POINT = "/subjects/_search";
     final String SUBJECTS_COUNT_END_POINT = "/subjects/_count";
     final String SUBJECT_IDS_END_POINT = "/subject_ids/_search";
@@ -109,6 +110,10 @@ public class BentoEsFilter implements DataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return searchProjects(args);
                         })
+                        .dataFetcher("publicationOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return publicationOverview(args);
+                         })
                         .dataFetcher("projectOverViewPaged", env -> {
                             Map<String, Object> args = env.getArguments();
                             return projectOverView(args);
@@ -942,6 +947,43 @@ public class BentoEsFilter implements DataFetcher {
         return result;
     }
 
+    private List<Map<String, Object>> publicationOverview(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"publication_id", "publication_id"},
+                new String[]{"pmc_id", "pmc_id"},
+                new String[]{"year", "year"},
+                new String[]{"journal", "journal"},
+                new String[]{"title", "title"},
+                new String[]{"authors", "authors"},
+                new String[]{"publish_date", "publish_date"},
+                new String[]{"citation_count", "citation_count"},
+                new String[]{"relative_citation_ratio", "relative_citation_ratio"},
+                new String[]{"tumor_grade", "tumor_grades"},
+                new String[]{"nih_percentile", "nih_percentile"},
+                new String[]{"doi", "doi"},
+                new String[]{"queried_project_id", "queried_project_id"},
+        };
+
+        String defaultSort = "publication_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("publication_id", "publication_id"),
+                Map.entry("pmc_id", "pmc_id"),
+                Map.entry("year", "year"),
+                Map.entry("journal", "journal"),
+                Map.entry("title", "title"),
+                Map.entry("authors", "authors"),
+                Map.entry("publish_date", "publish_date"),
+                Map.entry("citation_count", "citation_count"),
+                Map.entry("relative_citation_ratio", "relative_citation_ratio"),
+                Map.entry("nih_percentile", "nih_percentile"),
+                Map.entry("doi", "doi"),
+                Map.entry("queried_project_id", "queried_project_id")
+        );
+
+        return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+    
     private List<Map<String, Object>> projectOverView(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
             new String[]{"project_id", "project_id"},
@@ -991,7 +1033,6 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("full_foa", "full_foa")
         );
 
-        List<Map<String, Object>> stuff = overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
-        return stuff;
+        return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
     }
 }
