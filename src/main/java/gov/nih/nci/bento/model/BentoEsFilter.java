@@ -967,7 +967,7 @@ public class BentoEsFilter implements DataFetcher {
         final String[][] PROPERTIES = new String[][]{
                 new String[]{"patent_id", "patent_id"},
                 new String[]{"fulfilled_date", "fulfilled_date"},
-                new String[]{"queried_project_id", "queried_project_id"}
+                new String[]{"queried_project_ids", "queried_project_ids"}
         };
 
         String defaultSort = "patent_id"; // Default sort order
@@ -975,7 +975,7 @@ public class BentoEsFilter implements DataFetcher {
         Map<String, String> mapping = Map.ofEntries(
                 Map.entry("patent_id", "patent_id"),
                 Map.entry("fulfilled_date", "fulfilled_date"),
-                Map.entry("queried_project_id", "queried_project_id")
+                Map.entry("queried_project_ids", "queried_project_ids")
         );
 
         return overview(PATENTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
@@ -988,7 +988,7 @@ public class BentoEsFilter implements DataFetcher {
                 new String[]{"title", "title"},
                 new String[]{"last_update_posted", "last_update_posted"},
                 new String[]{"recruitment_status", "recruitment_status"},
-                new String[]{"queried_project_id", "queried_project_id"}
+                new String[]{"queried_project_ids", "queried_project_ids"}
         };
 
         String defaultSort = "clinical_trial_id"; // Default sort order
@@ -998,7 +998,7 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("title", "title"),
                 Map.entry("last_update_posted", "last_update_posted"),
                 Map.entry("recruitment_status", "recruitment_status"),
-                Map.entry("queried_project_id", "queried_project_id")
+                Map.entry("queried_project_ids", "queried_project_ids")
         );
 
         return overview(CLINICAL_TRIALS_END_POINT, params, PROPERTIES, defaultSort, mapping);
@@ -1015,7 +1015,7 @@ public class BentoEsFilter implements DataFetcher {
                 new String[]{"status", "status"},
                 new String[]{"submission_date", "submission_date"},
                 new String[]{"last_update_date", "last_update_date"},
-                new String[]{"queried_project_id", "queried_project_id"},
+                new String[]{"queried_project_ids", "queried_project_ids"},
         };
 
         String defaultSort = "accession"; // Default sort order
@@ -1030,7 +1030,7 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("status", "status"),
                 Map.entry("submission_date", "submission_date"),
                 Map.entry("last_update_date", "last_update_date"),
-                Map.entry("queried_project_id", "queried_project_id")
+                Map.entry("queried_project_ids", "queried_project_ids")
         );
 
         return overview(DATASETS_END_POINT, params, PROPERTIES, defaultSort, mapping);
@@ -1050,7 +1050,7 @@ public class BentoEsFilter implements DataFetcher {
                 new String[]{"tumor_grade", "tumor_grades"},
                 new String[]{"nih_percentile", "nih_percentile"},
                 new String[]{"doi", "doi"},
-                new String[]{"queried_project_id", "queried_project_id"},
+                new String[]{"queried_project_ids", "queried_project_ids"},
         };
 
         String defaultSort = "publication_id"; // Default sort order
@@ -1067,7 +1067,7 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("relative_citation_ratio", "relative_citation_ratio"),
                 Map.entry("nih_percentile", "nih_percentile"),
                 Map.entry("doi", "doi"),
-                Map.entry("queried_project_id", "queried_project_id")
+                Map.entry("queried_project_ids", "queried_project_ids")
         );
 
         return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping);
