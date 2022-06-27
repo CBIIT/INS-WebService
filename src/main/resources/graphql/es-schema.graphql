@@ -90,6 +90,8 @@ type DatasetOverViewResult {
     submission_date: String
     last_update_date: String
     queried_project_ids: String
+    link: String
+    transformed_type: String
 }
 
 type PublicationOverViewResult {
