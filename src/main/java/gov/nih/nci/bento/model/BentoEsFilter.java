@@ -48,6 +48,7 @@ public class BentoEsFilter implements DataFetcher {
     final String GS_MODEL_END_POINT = "/data_model/_search";
     final String SEARCH_PROJECTS_ES_END_POINT = "/filter_ids/_search";
     final String SEARCH_PROJECTS_ES_COUNT_END_POINT = "/filter_ids/_count";
+    final String PROJECTS_END_POINT = "/projects/_search";
 
     final int GS_LIMIT = 10;
     final String GS_END_POINT = "endpoint";
@@ -112,6 +113,10 @@ public class BentoEsFilter implements DataFetcher {
                         .dataFetcher("publicationOverView", env -> {
                             Map<String, Object> args = env.getArguments();
                             return publicationOverview(args);
+                         })
+                        .dataFetcher("projectOverViewPaged", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return projectOverView(args);
                         })
                 )
                 .build();
@@ -977,5 +982,57 @@ public class BentoEsFilter implements DataFetcher {
         );
 
         return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+    
+    private List<Map<String, Object>> projectOverView(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+            new String[]{"project_id", "project_id"},
+            new String[]{"application_id", "application_id"},
+            new String[]{"fiscal_year", "fiscal_year"},
+            new String[]{"project_title", "project_title"},
+            new String[]{"project_type", "project_type"},
+            new String[]{"abstract_text", "abstract_text"},
+            new String[]{"keywords", "keywords"},
+            new String[]{"org_name", "org_name"},
+            new String[]{"org_city", "org_citie"},
+            new String[]{"org_state", "org_state"},
+            new String[]{"org_country", "org_countrie"},
+            new String[]{"principal_investigators", "principal_investigators"},
+            new String[]{"lead_doc", "lead_doc"},
+            new String[]{"program_officers", "program_officers"},
+            new String[]{"award_amount", "award_amount"},
+            new String[]{"nci_funded_amount", "nci_funded_amount"},
+            new String[]{"award_notice_date", "award_notice_date"},
+            new String[]{"project_start_date", "project_start_date"},
+            new String[]{"project_end_date", "project_end_date"},
+            new String[]{"full_foa", "full_foa"},
+        };
+
+        String defaultSort = "project_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("project_id", "project_id"),
+                Map.entry("application_id", "application_id"),
+                Map.entry("fiscal_year", "fiscal_year"),
+                Map.entry("project_title", "project_title"),
+                Map.entry("project_type", "project_type"),
+                Map.entry("abstract_text", "abstract_text"),
+                Map.entry("keywords", "keywords"),
+                Map.entry("org_name", "org_name"),
+                Map.entry("org_city", "org_city"),
+                Map.entry("org_state", "org_state"),
+                Map.entry("org_country", "org_country"),
+                Map.entry("principal_investigators", "principal_investigators"),
+                Map.entry("lead_doc", "lead_doc"),
+                Map.entry("program_officers", "program_officers"),
+                Map.entry("award_amount", "award_amount"),
+                Map.entry("nci_funded_amount", "nci_funded_amount"),
+                Map.entry("award_notice_date", "award_notice_date"),
+                Map.entry("project_start_date", "project_start_date"),
+                Map.entry("project_end_date", "project_end_date"),
+                Map.entry("full_foa", "full_foa")
+        );
+
+        return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
     }
 }
