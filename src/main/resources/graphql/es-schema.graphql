@@ -193,18 +193,18 @@ type SubjectResult {
     program_id: String
 }
 
-type SearchResult {
-    projectIds: [String]
-    publicationIds: [String]
-    accessions: [String]
-    clinicalTrialIds: [String]
-    patentIds: [String]
-    numberOfPrograms: Int
-    numberOfProjects: Int
-    numberOfPublications: Int
-    numberOfAccessions: Int
-    numberOfClinicalTrials: Int
-    numberOfPatents: Int
+type SearchProjectsResult {
+        filterProjectCountByProgram: [String]
+        filterProjectCountByDoc: [String]
+        filterProjectCountByFiscalYear: [String]
+        filterProjectCountByAwardAmount: [String]
+
+        numberOfPrograms: Int
+        numberOfProjects: Int
+        numberOfPublications: Int
+        numberOfDatasets: Int
+        numberOfClinicalTrials: Int
+        numberOfPatents: Int
 }
 
 schema {
@@ -304,6 +304,6 @@ type QueryType {
 
     globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
 
-    searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchResult
+    searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchProjectsResult
 
 }

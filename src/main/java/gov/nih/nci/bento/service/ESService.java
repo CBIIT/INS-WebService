@@ -7,6 +7,7 @@ import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joda.time.chrono.AssembledChronology.Fields;
 import org.opensearch.client.*;
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -172,15 +173,19 @@ public class ESService {
             } else {
                 // Term parameters (default)
                 List<String> valueSet = (List<String>) params.get(key);
-                if (valueSet.size() > 0) {
+                // list with only one empty string [""] means return all records
+                if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
                     filter.add(Map.of(
                             "terms", Map.of( key, valueSet)
                     ));
                 }
             }
         }
-
-        result.put("query", Map.of("bool", Map.of("filter", filter)));
+        if (filter.size() == 0) {
+            result.put("query", Map.of("match_all", Map.of()));    
+        } else {
+            result.put("query", Map.of("bool", Map.of("filter", filter)));
+        }
         return result;
     }
 
@@ -190,8 +195,13 @@ public class ESService {
 
     public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames, String[] rangeAggNames) {
         Map<String, Object> newQuery = new HashMap<>(query);
-        newQuery.put("size", 0);
-        newQuery.put("aggregations", getAllAggregations(termAggNames, rangeAggNames));
+        // newQuery.put("size", 0);
+        newQuery.put("aggs", getAllAggregations(termAggNames, rangeAggNames));
+        // List<Map<String, Object>> fields = new LinkedList<Map<String, Object>>();
+        // for (String field: termAggNames) {
+        //     fields.add(Map.of("field", Map.of("field", field)));
+        // }
+        // newQuery.put("aggs", fields);
         return newQuery;
     }
 
@@ -221,7 +231,8 @@ public class ESService {
 
     private Map<String, Object> getTermAggregation(String aggName) {
         Map<String, Object> agg = new HashMap<>();
-        agg.put("terms", Map.of("field", aggName, "size", MAX_ES_SIZE));
+        // agg.put("terms", Map.of("field", aggName, "size", MAX_ES_SIZE));
+        agg.put("terms", Map.of("field", aggName));
         return agg;
     }
 
