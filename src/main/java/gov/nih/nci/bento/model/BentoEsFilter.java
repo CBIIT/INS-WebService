@@ -1016,6 +1016,8 @@ public class BentoEsFilter implements DataFetcher {
                 new String[]{"submission_date", "submission_date"},
                 new String[]{"last_update_date", "last_update_date"},
                 new String[]{"queried_project_ids", "queried_project_ids"},
+                new String[]{"link", "link"},
+                new String[]{"transformed_type", "transformed_type"},
         };
 
         String defaultSort = "accession"; // Default sort order
@@ -1030,7 +1032,9 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("status", "status"),
                 Map.entry("submission_date", "submission_date"),
                 Map.entry("last_update_date", "last_update_date"),
-                Map.entry("queried_project_ids", "queried_project_ids")
+                Map.entry("queried_project_ids", "queried_project_ids"),
+                Map.entry("link", "link"),
+                Map.entry("transformed_type", "transformed_type")
         );
 
         return overview(DATASETS_END_POINT, params, PROPERTIES, defaultSort, mapping);
