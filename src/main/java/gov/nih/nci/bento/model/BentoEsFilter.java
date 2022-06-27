@@ -31,6 +31,9 @@ public class BentoEsFilter implements DataFetcher {
     final String STUDIES_COUNT_END_POINT = "/studies/_count";
 
     final String PATENTS_END_POINT = "/patents/_search";
+    final String CLINICAL_TRIALS_END_POINT = "/clinical_trials/_search";
+    final String DATASETS_END_POINT = "/datasets/_search";
+    final String PUBLICATIONS_END_POINT = "/publications/_search";
     final String SUBJECTS_END_POINT = "/subjects/_search";
     final String SUBJECTS_COUNT_END_POINT = "/subjects/_count";
     final String SUBJECT_IDS_END_POINT = "/subject_ids/_search";
@@ -48,6 +51,7 @@ public class BentoEsFilter implements DataFetcher {
     final String GS_MODEL_END_POINT = "/data_model/_search";
     final String SEARCH_PROJECTS_ES_END_POINT = "/filter_ids/_search";
     final String SEARCH_PROJECTS_ES_COUNT_END_POINT = "/filter_ids/_count";
+    final String PROJECTS_END_POINT = "/projects/_search";
 
     final int GS_LIMIT = 10;
     final String GS_END_POINT = "endpoint";
@@ -112,6 +116,22 @@ public class BentoEsFilter implements DataFetcher {
                         .dataFetcher("patentOverView", env -> {
                             Map<String, Object> args = env.getArguments();
                             return patentOverView(args);
+                        })
+                        .dataFetcher("clinicalTrialOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return clinicalTrialOverView(args);
+                        })
+                        .dataFetcher("datasetOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return datasetOverView(args);
+                          })
+                        .dataFetcher("publicationOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return publicationOverview(args);
+                         })
+                        .dataFetcher("projectOverViewPaged", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return projectOverView(args);
                         })
                 )
                 .build();
@@ -959,5 +979,149 @@ public class BentoEsFilter implements DataFetcher {
         );
 
         return overview(PATENTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+    
+    private List<Map<String, Object>> clinicalTrialOverView(Map<String, Object> params) throws IOException {
+        // Following String array of arrays should be in form of "GraphQL_field_name", "ES_field_name"
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"clinical_trial_id", "clinical_trial_id"},
+                new String[]{"title", "title"},
+                new String[]{"last_update_posted", "last_update_posted"},
+                new String[]{"recruitment_status", "recruitment_status"},
+                new String[]{"queried_project_id", "queried_project_id"}
+        };
+
+        String defaultSort = "clinical_trial_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("clinical_trial_id", "clinical_trial_id"),
+                Map.entry("title", "title"),
+                Map.entry("last_update_posted", "last_update_posted"),
+                Map.entry("recruitment_status", "recruitment_status"),
+                Map.entry("queried_project_id", "queried_project_id")
+        );
+
+        return overview(CLINICAL_TRIALS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+    
+    private List<Map<String, Object>> datasetOverView(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"type", "type"},
+                new String[]{"accession", "accession"},
+                new String[]{"title", "title"},
+                new String[]{"release_date", "registration_date"},
+                new String[]{"registration_date", "registration_date"},
+                new String[]{"bioproject_accession", "bioproject_accession"},
+                new String[]{"status", "status"},
+                new String[]{"submission_date", "submission_date"},
+                new String[]{"last_update_date", "last_update_date"},
+                new String[]{"queried_project_id", "queried_project_id"},
+        };
+
+        String defaultSort = "accession"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("type", "type"),
+                Map.entry("accession", "accession"),
+                Map.entry("title", "title"),
+                Map.entry("release_date", "release_date"),
+                Map.entry("registration_date", "registration_date"),
+                Map.entry("bioproject_accession", "bioproject_accession"),
+                Map.entry("status", "status"),
+                Map.entry("submission_date", "submission_date"),
+                Map.entry("last_update_date", "last_update_date"),
+                Map.entry("queried_project_id", "queried_project_id")
+        );
+
+        return overview(DATASETS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+
+    private List<Map<String, Object>> publicationOverview(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"publication_id", "publication_id"},
+                new String[]{"pmc_id", "pmc_id"},
+                new String[]{"year", "year"},
+                new String[]{"journal", "journal"},
+                new String[]{"title", "title"},
+                new String[]{"authors", "authors"},
+                new String[]{"publish_date", "publish_date"},
+                new String[]{"citation_count", "citation_count"},
+                new String[]{"relative_citation_ratio", "relative_citation_ratio"},
+                new String[]{"tumor_grade", "tumor_grades"},
+                new String[]{"nih_percentile", "nih_percentile"},
+                new String[]{"doi", "doi"},
+                new String[]{"queried_project_id", "queried_project_id"},
+        };
+
+        String defaultSort = "publication_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("publication_id", "publication_id"),
+                Map.entry("pmc_id", "pmc_id"),
+                Map.entry("year", "year"),
+                Map.entry("journal", "journal"),
+                Map.entry("title", "title"),
+                Map.entry("authors", "authors"),
+                Map.entry("publish_date", "publish_date"),
+                Map.entry("citation_count", "citation_count"),
+                Map.entry("relative_citation_ratio", "relative_citation_ratio"),
+                Map.entry("nih_percentile", "nih_percentile"),
+                Map.entry("doi", "doi"),
+                Map.entry("queried_project_id", "queried_project_id")
+        );
+
+        return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+    
+    private List<Map<String, Object>> projectOverView(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+            new String[]{"project_id", "project_id"},
+            new String[]{"application_id", "application_id"},
+            new String[]{"fiscal_year", "fiscal_year"},
+            new String[]{"project_title", "project_title"},
+            new String[]{"project_type", "project_type"},
+            new String[]{"abstract_text", "abstract_text"},
+            new String[]{"keywords", "keywords"},
+            new String[]{"org_name", "org_name"},
+            new String[]{"org_city", "org_citie"},
+            new String[]{"org_state", "org_state"},
+            new String[]{"org_country", "org_countrie"},
+            new String[]{"principal_investigators", "principal_investigators"},
+            new String[]{"lead_doc", "lead_doc"},
+            new String[]{"program_officers", "program_officers"},
+            new String[]{"award_amount", "award_amount"},
+            new String[]{"nci_funded_amount", "nci_funded_amount"},
+            new String[]{"award_notice_date", "award_notice_date"},
+            new String[]{"project_start_date", "project_start_date"},
+            new String[]{"project_end_date", "project_end_date"},
+            new String[]{"full_foa", "full_foa"},
+        };
+
+        String defaultSort = "project_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("project_id", "project_id"),
+                Map.entry("application_id", "application_id"),
+                Map.entry("fiscal_year", "fiscal_year"),
+                Map.entry("project_title", "project_title"),
+                Map.entry("project_type", "project_type"),
+                Map.entry("abstract_text", "abstract_text"),
+                Map.entry("keywords", "keywords"),
+                Map.entry("org_name", "org_name"),
+                Map.entry("org_city", "org_city"),
+                Map.entry("org_state", "org_state"),
+                Map.entry("org_country", "org_country"),
+                Map.entry("principal_investigators", "principal_investigators"),
+                Map.entry("lead_doc", "lead_doc"),
+                Map.entry("program_officers", "program_officers"),
+                Map.entry("award_amount", "award_amount"),
+                Map.entry("nci_funded_amount", "nci_funded_amount"),
+                Map.entry("award_notice_date", "award_notice_date"),
+                Map.entry("project_start_date", "project_start_date"),
+                Map.entry("project_end_date", "project_end_date"),
+                Map.entry("full_foa", "full_foa")
+        );
+
+        return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
     }
 }
