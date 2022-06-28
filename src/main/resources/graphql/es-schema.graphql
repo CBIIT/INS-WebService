@@ -65,6 +65,74 @@ type FileOverview2 {
     diagnosis: String
 }
 
+type PatentOverViewResult {
+    patent_id: String
+    fulfilled_date: String
+    queried_project_ids: String
+}
+
+type ClinicalTrialOverViewResult {
+    clinical_trial_id: String
+    title: String
+    last_update_posted: String
+    recruitment_status: String
+    queried_project_ids: String
+}
+
+type DatasetOverViewResult {
+    type: String
+    accession: String
+    title: String
+    release_date: String
+    registration_date: String
+    bioproject_accession: String
+    status: String
+    submission_date: String
+    last_update_date: String
+    queried_project_ids: String
+    link: String
+    transformed_type: String
+}
+
+type PublicationOverViewResult {
+    publication_id: String
+    pmc_id: String
+    year: String
+    journal: String
+    title: String
+    authors: String
+    publish_date: String
+    citation_count: Int
+    relative_citation_ratio: Float
+    nih_percentile: Float
+    doi: String
+    queried_project_ids: String
+}
+
+type ProjectOverViewResult {
+    program: String
+    project_id: String
+    application_id: String
+    fiscal_year: String
+    project_title: String
+    project_type: String
+    abstract_text: String
+    keywords: String
+    org_name: String
+    org_city: String
+    org_state: String
+    org_country: String
+    principal_investigators: String
+    lead_doc: String
+    program_officers: String
+    award_amount: Int
+    nci_funded_amount: Int
+    award_notice_date: String
+    project_start_date: String
+    project_end_date: String
+    full_foa: String
+}
+
 type GroupCount2 {
     group: String
     subjects: Int
@@ -194,17 +262,17 @@ type SubjectResult {
 }
 
 type SearchProjectsResult {
-        filterProjectCountByProgram: [String]
-        filterProjectCountByDoc: [String]
-        filterProjectCountByFiscalYear: [String]
-        filterProjectCountByAwardAmount: [String]
+    filterProjectCountByProgram: [String]
+    filterProjectCountByDoc: [String]
+    filterProjectCountByFiscalYear: [String]
+    filterProjectCountByAwardAmount: [String]
 
-        numberOfPrograms: Int
-        numberOfProjects: Int
-        numberOfPublications: Int
-        numberOfDatasets: Int
-        numberOfClinicalTrials: Int
-        numberOfPatents: Int
+    numberOfPrograms: Int
+    numberOfProjects: Int
+    numberOfPublications: Int
+    numberOfDatasets: Int
+    numberOfClinicalTrials: Int
+    numberOfPatents: Int
 }
 
 schema {
@@ -305,5 +373,15 @@ type QueryType {
     globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
 
     searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchProjectsResult
+
+    projectOverViewPaged (project_ids: [String] = [""], offset: Int = 0, first: Int = 10, order_by: String = "", sort_direction: String = ""): [ProjectOverViewResult]
+
+    publicationOverView (publication_ids: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PublicationOverViewResult]
+
+    clinicalTrialOverView (clinical_trial_ids: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [ClinicalTrialOverViewResult]
+
+    patentOverView (patent_ids: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PatentOverViewResult]
+
+    datasetOverView (accessions: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [DatasetOverViewResult]
 
 }
