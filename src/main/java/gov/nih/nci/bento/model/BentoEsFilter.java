@@ -135,7 +135,7 @@ public class BentoEsFilter implements DataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return publicationOverview(args);
                          })
-                        .dataFetcher("projectOverViewPaged", env -> {
+                        .dataFetcher("projectOverView", env -> {
                             Map<String, Object> args = env.getArguments();
                             return projectOverView(args);
                         })
