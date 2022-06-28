@@ -41,10 +41,6 @@ public class BentoEsFilter implements DataFetcher {
     final String STUDIES_END_POINT = "/studies/_search";
     final String STUDIES_COUNT_END_POINT = "/studies/_count";
 
-    final String PATENTS_END_POINT = "/patents/_search";
-    final String CLINICAL_TRIALS_END_POINT = "/clinical_trials/_search";
-    final String DATASETS_END_POINT = "/datasets/_search";
-    final String PUBLICATIONS_END_POINT = "/publications/_search";
     final String SUBJECTS_END_POINT = "/subjects/_search";
     final String SUBJECTS_COUNT_END_POINT = "/subjects/_count";
     final String SUBJECT_IDS_END_POINT = "/subject_ids/_search";
@@ -62,7 +58,6 @@ public class BentoEsFilter implements DataFetcher {
     final String GS_MODEL_END_POINT = "/data_model/_search";
     final String SEARCH_PROJECTS_ES_END_POINT = "/filter_ids/_search";
     final String SEARCH_PROJECTS_ES_COUNT_END_POINT = "/filter_ids/_count";
-    final String PROJECTS_END_POINT = "/projects/_search";
 
     final int GS_LIMIT = 10;
     final String GS_END_POINT = "endpoint";
