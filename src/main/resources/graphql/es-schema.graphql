@@ -262,17 +262,25 @@ type SubjectResult {
 }
 
 type SearchProjectsResult {
-    projectIds: [String]
-    publicationIds: [String]
-    accessions: [String]
-    clinicalTrialIds: [String]
-    patentIds: [String]
+    filterProjectCountByProgram: [String]
+    filterProjectCountByDoc: [String]
+    filterProjectCountByFiscalYear: [String]
+    filterProjectCountByAwardAmount: [String]
+
     numberOfPrograms: Int
     numberOfProjects: Int
     numberOfPublications: Int
-    numberOfAccessions: Int
+    numberOfDatasets: Int
     numberOfClinicalTrials: Int
     numberOfPatents: Int
+
+    projectCountByProgram: [String]
+    projectCountByDoc: [String]
+    projectCountByFiscalYear: [String]
+    projectCountByAwardAmount: [String]
+    publicationCountByCitation: [String]
+    publicationCountByRCR: [String]
+    publicationCountByYear: [String]
 }
 
 schema {

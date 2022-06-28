@@ -27,13 +27,20 @@ public class BentoEsFilter implements DataFetcher {
 
     final String PROGRAMS_END_POINT = "/programs/_search";
     final String PROGRAMS_COUNT_END_POINT = "/programs/_count";
+    final String PROJECTS_END_POINT = "/projects/_search";
+    final String PROJECTS_COUNT_END_POINT = "/projects/_count";
+    final String PUBLICATIONS_END_POINT = "/publications/_search";
+    final String PUBLICATIONS_COUNT_END_POINT = "/publications/_count";
+    final String DATASETS_END_POINT = "/datasets/_search";
+    final String DATASETS_COUNT_END_POINT = "/datasets/_count";
+    final String CLINICAL_TRIALS_END_POINT = "/clinical_trials/_search";
+    final String CLINICAL_TRIALS_COUNT_END_POINT = "/clinical_trials/_count";
+    final String PATENTS_END_POINT = "/patents/_search";
+    final String PATENTS_COUNT_END_POINT = "/patents/_count";
+
     final String STUDIES_END_POINT = "/studies/_search";
     final String STUDIES_COUNT_END_POINT = "/studies/_count";
 
-    final String PATENTS_END_POINT = "/patents/_search";
-    final String CLINICAL_TRIALS_END_POINT = "/clinical_trials/_search";
-    final String DATASETS_END_POINT = "/datasets/_search";
-    final String PUBLICATIONS_END_POINT = "/publications/_search";
     final String SUBJECTS_END_POINT = "/subjects/_search";
     final String SUBJECTS_COUNT_END_POINT = "/subjects/_count";
     final String SUBJECT_IDS_END_POINT = "/subject_ids/_search";
@@ -51,7 +58,6 @@ public class BentoEsFilter implements DataFetcher {
     final String GS_MODEL_END_POINT = "/data_model/_search";
     final String SEARCH_PROJECTS_ES_END_POINT = "/filter_ids/_search";
     final String SEARCH_PROJECTS_ES_COUNT_END_POINT = "/filter_ids/_count";
-    final String PROJECTS_END_POINT = "/projects/_search";
 
     final int GS_LIMIT = 10;
     final String GS_END_POINT = "endpoint";
@@ -925,41 +931,207 @@ public class BentoEsFilter implements DataFetcher {
         return esService.collectTerms(jsonObject, collectField);
     }
 
-    private Map<String, Object> searchProjects(Map<String, Object> params) throws IOException {
-        Map<String, Object> query = esService.buildListQuery(params, Set.of());
-        Request request = new Request("GET", SEARCH_PROJECTS_ES_END_POINT);
-        request.setJsonEntity(gson.toJson(query));
+    // private Map<String, Object> searchProjects(Map<String, Object> params) throws IOException {
+    //     Map<String, Object> query = esService.buildListQuery(params, Set.of());
+    //     Request request = new Request("GET", SEARCH_PROJECTS_ES_END_POINT);
+    //     request.setJsonEntity(gson.toJson(query));
 
-        Map<String, Object> result = new HashMap<String, Object>();
-        result.put(GS_CATEGORY_TYPE, SEARCH_PROJECTS_ES_END_POINT);
+    //     Map<String, Object> result = new HashMap<String, Object>();
+    //     result.put(GS_CATEGORY_TYPE, SEARCH_PROJECTS_ES_END_POINT);
 
-        List<String> programs = esService.collectField(request, "programs").stream().distinct().collect(Collectors.toList());
-        List<String> projectIds = esService.collectFieldForArray(request, "project_ids").stream().distinct().collect(Collectors.toList());
-        List<String> publicationIds = esService.collectFieldForArray(request, "publication_ids").stream().distinct().collect(Collectors.toList());
-        List<String> accessions = esService.collectFieldForArray(request, "accessions").stream().distinct().collect(Collectors.toList());
-        List<String> clinicalTrialIds = esService.collectFieldForArray(request, "clinical_trial_ids").stream().distinct().collect(Collectors.toList());
-        List<String> patentIds = esService.collectFieldForArray(request, "patent_ids").stream().distinct().collect(Collectors.toList());
+    //     List<String> programs = esService.collectField(request, "programs").stream().distinct().collect(Collectors.toList());
+    //     List<String> projectIds = esService.collectFieldForArray(request, "project_ids").stream().distinct().collect(Collectors.toList());
+    //     List<String> publicationIds = esService.collectFieldForArray(request, "publication_ids").stream().distinct().collect(Collectors.toList());
+    //     List<String> accessions = esService.collectFieldForArray(request, "accessions").stream().distinct().collect(Collectors.toList());
+    //     List<String> clinicalTrialIds = esService.collectFieldForArray(request, "clinical_trial_ids").stream().distinct().collect(Collectors.toList());
+    //     List<String> patentIds = esService.collectFieldForArray(request, "patent_ids").stream().distinct().collect(Collectors.toList());
 
-        result.put("projectIds", projectIds);
-        result.put("publicationIds", publicationIds);
-        result.put("accessions", accessions);
-        result.put("clinicalTrialIds", clinicalTrialIds);
-        result.put("patentIds", patentIds);
+    //     result.put("projectIds", projectIds);
+    //     result.put("publicationIds", publicationIds);
+    //     result.put("accessions", accessions);
+    //     result.put("clinicalTrialIds", clinicalTrialIds);
+    //     result.put("patentIds", patentIds);
         
-        Integer numberOfPrograms = programs.size();
-        result.put("numberOfPrograms", numberOfPrograms);
-        Integer numberOfProjects = projectIds.size();
-        result.put("numberOfProjects", numberOfProjects);
-        Integer numberOfPublications = publicationIds.size();
-        result.put("numberOfPublications", numberOfPublications);
-        Integer numberOfAccessions = accessions.size();
-        result.put("numberOfAccessions", numberOfAccessions);
-        Integer numberOfClinicalTrials = clinicalTrialIds.size();
-        result.put("numberOfClinicalTrials", numberOfClinicalTrials);
-        Integer numberOfPatents = patentIds.size();
-        result.put("numberOfPatents", numberOfPatents);
+    //     Integer numberOfPrograms = programs.size();
+    //     result.put("numberOfPrograms", numberOfPrograms);
+    //     Integer numberOfProjects = projectIds.size();
+    //     result.put("numberOfProjects", numberOfProjects);
+    //     Integer numberOfPublications = publicationIds.size();
+    //     result.put("numberOfPublications", numberOfPublications);
+    //     Integer numberOfAccessions = accessions.size();
+    //     result.put("numberOfAccessions", numberOfAccessions);
+    //     Integer numberOfClinicalTrials = clinicalTrialIds.size();
+    //     result.put("numberOfClinicalTrials", numberOfClinicalTrials);
+    //     Integer numberOfPatents = patentIds.size();
+    //     result.put("numberOfPatents", numberOfPatents);
 
-        return result;
+    //     return result;
+    // }
+
+    private Map<String, Object> searchProjects(Map<String, Object> params) throws IOException {
+        final String AGG_NAME = "agg_name";
+        final String AGG_ENDPOINT = "agg_endpoint";
+        final String WIDGET_QUERY = "widgetQueryName";
+        final String FILTER_COUNT_QUERY = "filterCountQueryName";
+        // Query related values
+        final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "program",
+                WIDGET_QUERY, "projectCountByProgram",
+                FILTER_COUNT_QUERY, "filterProjectCountByProgram",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "lead_doc",
+                WIDGET_QUERY, "projectCountByDoc",
+                FILTER_COUNT_QUERY, "filterProjectCountByDoc",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "fiscal_year",
+                WIDGET_QUERY, "projectCountByFiscalYear",
+                FILTER_COUNT_QUERY, "filterProjectCountByFiscalYear",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "award_amount_category",
+                WIDGET_QUERY,"projectCountByAwardAmount",
+                FILTER_COUNT_QUERY, "filterProjectCountByAwardAmount",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        List<String> project_agg_names = new ArrayList<>();
+        for (var agg: PROJECT_TERM_AGGS) {
+            project_agg_names.add(agg.get(AGG_NAME));
+        }
+        final String[] PROJECTS_TERM_AGG_NAMES = project_agg_names.toArray(new String[PROJECT_TERM_AGGS.size()]);
+
+        final List<Map<String, String>> PUBLICATION_TERM_AGGS = new ArrayList<>();
+        PUBLICATION_TERM_AGGS.add(Map.of(
+                AGG_NAME, "citation_count_category",
+                WIDGET_QUERY, "projectCountByProgram",
+                FILTER_COUNT_QUERY, "filterProjectCountByProgram",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PUBLICATION_TERM_AGGS.add(Map.of(
+                AGG_NAME, "rcr_range",
+                WIDGET_QUERY, "projectCountByDoc",
+                FILTER_COUNT_QUERY, "filterProjectCountByDoc",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PUBLICATION_TERM_AGGS.add(Map.of(
+                AGG_NAME, "year",
+                WIDGET_QUERY, "projectCountByFiscalYear",
+                FILTER_COUNT_QUERY, "filterProjectCountByFiscalYear",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        List<String> publication_agg_names = new ArrayList<>();
+        for (var agg: PUBLICATION_TERM_AGGS) {
+            publication_agg_names.add(agg.get(AGG_NAME));
+        }
+        final String[] PUBLICATIONS_TERM_AGG_NAMES = publication_agg_names.toArray(new String[PUBLICATION_TERM_AGGS.size()]);
+
+        Map<String, Object> query = esService.buildFacetFilterQuery(params, Set.of());  // RANGE_PARAMS
+
+        Request programsCountRequest = new Request("GET", PROGRAMS_COUNT_END_POINT);
+        programsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject programsCountResult = esService.send(programsCountRequest);
+        int numberOfPrograms = programsCountResult.get("count").getAsInt();
+
+        Request projectsCountRequest = new Request("GET", PROJECTS_COUNT_END_POINT);
+        projectsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject projectsCountResult = esService.send(projectsCountRequest);
+        int numberOfProjects = projectsCountResult.get("count").getAsInt();
+
+        Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
+        publicationsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject publicationsCountResult = esService.send(publicationsCountRequest);
+        int numberOfPublications = publicationsCountResult.get("count").getAsInt();
+
+        Request datasetsCountRequest = new Request("GET", DATASETS_COUNT_END_POINT);
+        datasetsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject datasetsCountResult = esService.send(datasetsCountRequest);
+        int numberOfDatasets = datasetsCountResult.get("count").getAsInt();
+
+        Request clinicalTrialsCountRequest = new Request("GET", CLINICAL_TRIALS_COUNT_END_POINT);
+        clinicalTrialsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject clinicalTrialsCountResult = esService.send(clinicalTrialsCountRequest);
+        int numberOfClinicalTrials = clinicalTrialsCountResult.get("count").getAsInt();
+
+        Request patentsCountRequest = new Request("GET", PATENTS_COUNT_END_POINT);
+        patentsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject patentsCountResult = esService.send(patentsCountRequest);
+        int numberOfPatents = patentsCountResult.get("count").getAsInt();
+
+        // Get aggregations
+        Map<String, Object> projectAggQuery = esService.addAggregations(query, PROJECTS_TERM_AGG_NAMES, new String[]{});
+        Request projectRequest = new Request("GET", PROJECTS_END_POINT);
+        projectRequest.setJsonEntity(gson.toJson(projectAggQuery));
+        JsonObject projectResult = esService.send(projectRequest);
+        Map<String, JsonArray> projectAggs = esService.collectTermAggs(projectResult, PROJECTS_TERM_AGG_NAMES);
+
+        Map<String, Object> publicationAggQuery = esService.addAggregations(query, PUBLICATIONS_TERM_AGG_NAMES, new String[]{});
+        Request publicationRequest = new Request("GET", PUBLICATIONS_END_POINT);
+        publicationRequest.setJsonEntity(gson.toJson(publicationAggQuery));
+        JsonObject publicationResult = esService.send(publicationRequest);
+        Map<String, JsonArray> publicationAggs = esService.collectTermAggs(publicationResult, PUBLICATIONS_TERM_AGG_NAMES);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("filterProjectCountByDoc", projectAggs.get("lead_doc"));
+        data.put("filterProjectCountByFiscalYear", projectAggs.get("fiscal_year"));
+        data.put("filterProjectCountByAwardAmount", projectAggs.get("award_amount_category"));
+        data.put("filterProjectCountByProgram", projectAggs.get("program"));
+        data.put("numberOfPrograms", numberOfPrograms);
+        data.put("numberOfProjects", numberOfProjects);
+        data.put("numberOfPublications", numberOfPublications);
+        data.put("numberOfDatasets", numberOfDatasets);
+        data.put("numberOfClinicalTrials", numberOfClinicalTrials);
+        data.put("numberOfPatents", numberOfPatents);
+        data.put("projectCountByDoc", projectAggs.get("lead_doc"));
+        data.put("projectCountByFiscalYear", projectAggs.get("fiscal_year"));
+        data.put("projectCountByAwardAmount", projectAggs.get("award_amount_category"));
+        data.put("projectCountByProgram", projectAggs.get("program"));
+        data.put("publicationCountByCitation", publicationAggs.get("citation_count_category"));
+        data.put("publicationCountByRCR", publicationAggs.get("rcr_range"));
+        data.put("publicationCountByYear", publicationAggs.get("year"));
+
+        // data.put("armsByPrograms", armsByPrograms(params));
+        // widgets data and facet filter counts
+        // for (var agg: TERM_AGGS) {
+        //     String field = agg.get(AGG_NAME);
+        //     String widgetQueryName = agg.get(WIDGET_QUERY);
+        //     String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
+        //     String endpoint = agg.get(AGG_ENDPOINT);
+        //     // subjectCountByXXXX
+        //     List<Map<String, Object>> widgetData;
+        //     if (endpoint.equals(SUBJECTS_END_POINT)) {
+        //         widgetData = getGroupCountHelper(aggs.get(field));
+        //         data.put(widgetQueryName, widgetData);
+        //     } else {
+        //         widgetData = subjectCountBy(field, params, endpoint);;
+        //         data.put(widgetQueryName, widgetData);
+        //     }
+        //     // filterSubjectCountByXXXX
+        //     if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
+        //         List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint);;
+        //         data.put(filterCountQueryName, filterCount);
+        //     } else {
+        //         data.put(filterCountQueryName, widgetData);
+        //     }
+        // }
+
+        // Map<String, JsonObject> rangeAggs = esService.collectRangeAggs(subjectResult, RANGE_AGG_NAMES);
+
+        // for (String field: RANGE_AGG_NAMES) {
+        //     String filterCountQueryName = RANGE_AGGS.get(field);
+        //     if (params.containsKey(field) && ((List<Double>)params.get(field)).size() >= 2) {
+        //         Map<String, Object> filterCount = rangeFilterSubjectCountBy(field, params);;
+        //         data.put(filterCountQueryName, filterCount);
+        //     } else {
+        //         data.put(filterCountQueryName, getRange(rangeAggs.get(field)));
+        //     }
+        // }
+
+        return data;
     }
 
     private List<Map<String, Object>> patentOverView(Map<String, Object> params) throws IOException {
