@@ -273,6 +273,14 @@ type SearchProjectsResult {
     numberOfDatasets: Int
     numberOfClinicalTrials: Int
     numberOfPatents: Int
+
+    projectCountByProgram: [String]
+    projectCountByDoc: [String]
+    projectCountByFiscalYear: [String]
+    projectCountByAwardAmount: [String]
+    publicationCountByCitation: [String]
+    publicationCountByRCR: [String]
+    publicationCountByYear: [String]
 }
 
 schema {

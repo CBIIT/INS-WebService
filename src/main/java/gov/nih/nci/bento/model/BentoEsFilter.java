@@ -974,41 +974,61 @@ public class BentoEsFilter implements DataFetcher {
         final String WIDGET_QUERY = "widgetQueryName";
         final String FILTER_COUNT_QUERY = "filterCountQueryName";
         // Query related values
-        final List<Map<String, String>> TERM_AGGS = new ArrayList<>();
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "program_id",
+        final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "program",
                 WIDGET_QUERY, "projectCountByProgram",
                 FILTER_COUNT_QUERY, "filterProjectCountByProgram",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
-        TERM_AGGS.add(Map.of(
+        PROJECT_TERM_AGGS.add(Map.of(
                 AGG_NAME, "lead_doc",
                 WIDGET_QUERY, "projectCountByDoc",
                 FILTER_COUNT_QUERY, "filterProjectCountByDoc",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
-        TERM_AGGS.add(Map.of(
+        PROJECT_TERM_AGGS.add(Map.of(
                 AGG_NAME, "fiscal_year",
                 WIDGET_QUERY, "projectCountByFiscalYear",
                 FILTER_COUNT_QUERY, "filterProjectCountByFiscalYear",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "award_amount",
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "award_amount_category",
                 WIDGET_QUERY,"projectCountByAwardAmount",
                 FILTER_COUNT_QUERY, "filterProjectCountByAwardAmount",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
-
-        List<String> agg_names = new ArrayList<>();
-        for (var agg: TERM_AGGS) {
-            agg_names.add(agg.get(AGG_NAME));
+        List<String> project_agg_names = new ArrayList<>();
+        for (var agg: PROJECT_TERM_AGGS) {
+            project_agg_names.add(agg.get(AGG_NAME));
         }
-        final String[] TERM_AGG_NAMES = agg_names.toArray(new String[TERM_AGGS.size()]);
+        final String[] PROJECTS_TERM_AGG_NAMES = project_agg_names.toArray(new String[PROJECT_TERM_AGGS.size()]);
 
-        // final Map<String, String> RANGE_AGGS = new HashMap<>();
-        // RANGE_AGGS.put("age_at_index",  "filterSubjectCountByAge");
-        // final String[] RANGE_AGG_NAMES = RANGE_AGGS.keySet().toArray(new String[0]);
+        final List<Map<String, String>> PUBLICATION_TERM_AGGS = new ArrayList<>();
+        PUBLICATION_TERM_AGGS.add(Map.of(
+                AGG_NAME, "citation_count_category",
+                WIDGET_QUERY, "projectCountByProgram",
+                FILTER_COUNT_QUERY, "filterProjectCountByProgram",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PUBLICATION_TERM_AGGS.add(Map.of(
+                AGG_NAME, "rcr_range",
+                WIDGET_QUERY, "projectCountByDoc",
+                FILTER_COUNT_QUERY, "filterProjectCountByDoc",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PUBLICATION_TERM_AGGS.add(Map.of(
+                AGG_NAME, "year",
+                WIDGET_QUERY, "projectCountByFiscalYear",
+                FILTER_COUNT_QUERY, "filterProjectCountByFiscalYear",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        List<String> publication_agg_names = new ArrayList<>();
+        for (var agg: PUBLICATION_TERM_AGGS) {
+            publication_agg_names.add(agg.get(AGG_NAME));
+        }
+        final String[] PUBLICATIONS_TERM_AGG_NAMES = publication_agg_names.toArray(new String[PUBLICATION_TERM_AGGS.size()]);
 
         Map<String, Object> query = esService.buildFacetFilterQuery(params, Set.of());  // RANGE_PARAMS
 
@@ -1043,24 +1063,36 @@ public class BentoEsFilter implements DataFetcher {
         int numberOfPatents = patentsCountResult.get("count").getAsInt();
 
         // Get aggregations
-        Map<String, Object> aggQuery = esService.addAggregations(query, TERM_AGG_NAMES, new String[]{});  // RANGE_AGG_NAMES
-        System.out.println(aggQuery.toString());
-        Request subjectRequest = new Request("GET", PROJECTS_END_POINT);
-        subjectRequest.setJsonEntity(gson.toJson(aggQuery));
-        JsonObject subjectResult = esService.send(subjectRequest);
-        Map<String, JsonArray> aggs = esService.collectTermAggs(subjectResult, TERM_AGG_NAMES);
+        Map<String, Object> projectAggQuery = esService.addAggregations(query, PROJECTS_TERM_AGG_NAMES, new String[]{});
+        Request projectRequest = new Request("GET", PROJECTS_END_POINT);
+        projectRequest.setJsonEntity(gson.toJson(projectAggQuery));
+        JsonObject projectResult = esService.send(projectRequest);
+        Map<String, JsonArray> projectAggs = esService.collectTermAggs(projectResult, PROJECTS_TERM_AGG_NAMES);
+
+        Map<String, Object> publicationAggQuery = esService.addAggregations(query, PUBLICATIONS_TERM_AGG_NAMES, new String[]{});
+        Request publicationRequest = new Request("GET", PUBLICATIONS_END_POINT);
+        publicationRequest.setJsonEntity(gson.toJson(publicationAggQuery));
+        JsonObject publicationResult = esService.send(publicationRequest);
+        Map<String, JsonArray> publicationAggs = esService.collectTermAggs(publicationResult, PUBLICATIONS_TERM_AGG_NAMES);
 
         Map<String, Object> data = new HashMap<>();
-        data.put("filterProjectCountByDoc", aggs.get("lead_doc"));
-        data.put("filterProjectCountByFiscalYear", aggs.get("fiscal_year"));
-        data.put("filterProjectCountByAwardAmount", aggs.get("award_amount"));
-        data.put("filterProjectCountByProgram", aggs.get("program_id"));
+        data.put("filterProjectCountByDoc", projectAggs.get("lead_doc"));
+        data.put("filterProjectCountByFiscalYear", projectAggs.get("fiscal_year"));
+        data.put("filterProjectCountByAwardAmount", projectAggs.get("award_amount_category"));
+        data.put("filterProjectCountByProgram", projectAggs.get("program"));
         data.put("numberOfPrograms", numberOfPrograms);
         data.put("numberOfProjects", numberOfProjects);
         data.put("numberOfPublications", numberOfPublications);
         data.put("numberOfDatasets", numberOfDatasets);
         data.put("numberOfClinicalTrials", numberOfClinicalTrials);
         data.put("numberOfPatents", numberOfPatents);
+        data.put("projectCountByDoc", projectAggs.get("lead_doc"));
+        data.put("projectCountByFiscalYear", projectAggs.get("fiscal_year"));
+        data.put("projectCountByAwardAmount", projectAggs.get("award_amount_category"));
+        data.put("projectCountByProgram", projectAggs.get("program"));
+        data.put("publicationCountByCitation", publicationAggs.get("citation_count_category"));
+        data.put("publicationCountByRCR", publicationAggs.get("rcr_range"));
+        data.put("publicationCountByYear", publicationAggs.get("year"));
 
         // data.put("armsByPrograms", armsByPrograms(params));
         // widgets data and facet filter counts
