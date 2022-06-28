@@ -261,11 +261,16 @@ type SubjectResult {
     program_id: String
 }
 
+type SearchProjectsReturnObject {
+    key: String
+    doc_count: Int
+}
+
 type SearchProjectsResult {
-    filterProjectCountByProgram: [String]
-    filterProjectCountByDoc: [String]
-    filterProjectCountByFiscalYear: [String]
-    filterProjectCountByAwardAmount: [String]
+    filterProjectCountByProgram: [SearchProjectsReturnObject]
+    filterProjectCountByDOC: [SearchProjectsReturnObject]
+    filterProjectCountByFiscalYear: [SearchProjectsReturnObject]
+    filterProjectCountByAwardAmount: [SearchProjectsReturnObject]
 
     numberOfPrograms: Int
     numberOfProjects: Int
@@ -274,13 +279,13 @@ type SearchProjectsResult {
     numberOfClinicalTrials: Int
     numberOfPatents: Int
 
-    projectCountByProgram: [String]
-    projectCountByDoc: [String]
-    projectCountByFiscalYear: [String]
-    projectCountByAwardAmount: [String]
-    publicationCountByCitation: [String]
-    publicationCountByRCR: [String]
-    publicationCountByYear: [String]
+    projectCountByProgram: [SearchProjectsReturnObject]
+    projectCountByDOC: [SearchProjectsReturnObject]
+    projectCountByFiscalYear: [SearchProjectsReturnObject]
+    projectCountByAwardAmount: [SearchProjectsReturnObject]
+    publicationCountByCitation: [SearchProjectsReturnObject]
+    publicationCountByRCR: [SearchProjectsReturnObject]
+    publicationCountByYear: [SearchProjectsReturnObject]
 }
 
 schema {

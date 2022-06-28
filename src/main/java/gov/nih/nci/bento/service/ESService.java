@@ -242,12 +242,17 @@ public class ESService {
         return agg;
     }
 
-    public Map<String, JsonArray> collectTermAggs(JsonObject jsonObject, String[] termAggNames) {
-        Map<String, JsonArray> data = new HashMap<>();
+    public Map<String, List<Map<String, Object>>> collectTermAggs(JsonObject jsonObject, String[] termAggNames) {
+        Map<String, List<Map<String, Object>>> data = new HashMap<>();
         JsonObject aggs = jsonObject.getAsJsonObject("aggregations");
         for (String aggName: termAggNames) {
             // Terms buckets
-            data.put(aggName, aggs.getAsJsonObject(aggName).getAsJsonArray("buckets"));
+            // data.put(aggName, aggs.getAsJsonObject(aggName).getAsJsonArray("buckets"));
+            JsonArray buckets = aggs.getAsJsonObject(aggName).getAsJsonArray("buckets");
+            data.put(aggName, new LinkedList<Map<String, Object>>());
+            for (var bucket: buckets) {
+                data.get(aggName).add(Map.of("key", bucket.getAsJsonObject().get("key").getAsString(), "doc_count", bucket.getAsJsonObject().get("doc_count").getAsInt()));
+            }
         }
         return data;
     }
