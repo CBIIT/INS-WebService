@@ -262,8 +262,8 @@ type SubjectResult {
 }
 
 type SearchProjectsReturnObject {
-    key: String
-    doc_count: Int
+    group: String
+    subjects: Int
 }
 
 type SearchProjectsResult {

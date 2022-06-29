@@ -251,7 +251,7 @@ public class ESService {
             JsonArray buckets = aggs.getAsJsonObject(aggName).getAsJsonArray("buckets");
             data.put(aggName, new LinkedList<Map<String, Object>>());
             for (var bucket: buckets) {
-                data.get(aggName).add(Map.of("key", bucket.getAsJsonObject().get("key").getAsString(), "doc_count", bucket.getAsJsonObject().get("doc_count").getAsInt()));
+                data.get(aggName).add(Map.of("group", bucket.getAsJsonObject().get("key").getAsString(), "subjects", bucket.getAsJsonObject().get("doc_count").getAsInt()));
             }
         }
         return data;
