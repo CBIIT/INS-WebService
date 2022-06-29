@@ -976,25 +976,25 @@ public class BentoEsFilter implements DataFetcher {
         // Query related values
         final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
         PROJECT_TERM_AGGS.add(Map.of(
-                AGG_NAME, "program_id",
+                AGG_NAME, "programs",
                 WIDGET_QUERY, "projectCountByProgram",
                 FILTER_COUNT_QUERY, "filterProjectCountByProgram",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
         PROJECT_TERM_AGGS.add(Map.of(
-                AGG_NAME, "lead_doc",
+                AGG_NAME, "docs",
                 WIDGET_QUERY, "projectCountByDoc",
                 FILTER_COUNT_QUERY, "filterProjectCountByDoc",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
         PROJECT_TERM_AGGS.add(Map.of(
-                AGG_NAME, "fiscal_year",
+                AGG_NAME, "fiscal_years",
                 WIDGET_QUERY, "projectCountByFiscalYear",
                 FILTER_COUNT_QUERY, "filterProjectCountByFiscalYear",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
         PROJECT_TERM_AGGS.add(Map.of(
-                AGG_NAME, "award_amount_category",
+                AGG_NAME, "award_amounts",
                 WIDGET_QUERY,"projectCountByAwardAmount",
                 FILTER_COUNT_QUERY, "filterProjectCountByAwardAmount",
                 AGG_ENDPOINT, PROJECTS_END_POINT
@@ -1076,20 +1076,20 @@ public class BentoEsFilter implements DataFetcher {
         Map<String, List<Map<String, Object>>> publicationAggs = esService.collectTermAggs(publicationResult, PUBLICATIONS_TERM_AGG_NAMES);
 
         Map<String, Object> data = new HashMap<>();
-        data.put("filterProjectCountByDOC", projectAggs.get("lead_doc"));
-        data.put("filterProjectCountByFiscalYear", projectAggs.get("fiscal_year"));
-        data.put("filterProjectCountByAwardAmount", projectAggs.get("award_amount_category"));
-        data.put("filterProjectCountByProgram", projectAggs.get("program_id"));
+        data.put("filterProjectCountByDOC", projectAggs.get("docs"));
+        data.put("filterProjectCountByFiscalYear", projectAggs.get("fiscal_years"));
+        data.put("filterProjectCountByAwardAmount", projectAggs.get("award_amounts"));
+        data.put("filterProjectCountByProgram", projectAggs.get("programs"));
         data.put("numberOfPrograms", numberOfPrograms);
         data.put("numberOfProjects", numberOfProjects);
         data.put("numberOfPublications", numberOfPublications);
         data.put("numberOfDatasets", numberOfDatasets);
         data.put("numberOfClinicalTrials", numberOfClinicalTrials);
         data.put("numberOfPatents", numberOfPatents);
-        data.put("projectCountByDOC", projectAggs.get("lead_doc"));
-        data.put("projectCountByFiscalYear", projectAggs.get("fiscal_year"));
-        data.put("projectCountByAwardAmount", projectAggs.get("award_amount_category"));
-        data.put("projectCountByProgram", projectAggs.get("program_id"));
+        data.put("projectCountByDOC", projectAggs.get("docs"));
+        data.put("projectCountByFiscalYear", projectAggs.get("fiscal_years"));
+        data.put("projectCountByAwardAmount", projectAggs.get("award_amounts"));
+        data.put("projectCountByProgram", projectAggs.get("programs"));
         data.put("publicationCountByCitation", publicationAggs.get("citation_count_category"));
         data.put("publicationCountByRCR", publicationAggs.get("rcr_range"));
         data.put("publicationCountByYear", publicationAggs.get("year"));
