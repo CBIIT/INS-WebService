@@ -976,7 +976,7 @@ public class BentoEsFilter implements DataFetcher {
         // Query related values
         final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
         PROJECT_TERM_AGGS.add(Map.of(
-                AGG_NAME, "program",
+                AGG_NAME, "program_id",
                 WIDGET_QUERY, "projectCountByProgram",
                 FILTER_COUNT_QUERY, "filterProjectCountByProgram",
                 AGG_ENDPOINT, PROJECTS_END_POINT
@@ -1079,7 +1079,7 @@ public class BentoEsFilter implements DataFetcher {
         data.put("filterProjectCountByDOC", projectAggs.get("lead_doc"));
         data.put("filterProjectCountByFiscalYear", projectAggs.get("fiscal_year"));
         data.put("filterProjectCountByAwardAmount", projectAggs.get("award_amount_category"));
-        data.put("filterProjectCountByProgram", projectAggs.get("program"));
+        data.put("filterProjectCountByProgram", projectAggs.get("program_id"));
         data.put("numberOfPrograms", numberOfPrograms);
         data.put("numberOfProjects", numberOfProjects);
         data.put("numberOfPublications", numberOfPublications);
@@ -1089,7 +1089,7 @@ public class BentoEsFilter implements DataFetcher {
         data.put("projectCountByDOC", projectAggs.get("lead_doc"));
         data.put("projectCountByFiscalYear", projectAggs.get("fiscal_year"));
         data.put("projectCountByAwardAmount", projectAggs.get("award_amount_category"));
-        data.put("projectCountByProgram", projectAggs.get("program"));
+        data.put("projectCountByProgram", projectAggs.get("program_id"));
         data.put("publicationCountByCitation", publicationAggs.get("citation_count_category"));
         data.put("publicationCountByRCR", publicationAggs.get("rcr_range"));
         data.put("publicationCountByYear", publicationAggs.get("year"));
