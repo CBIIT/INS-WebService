@@ -2,6 +2,7 @@ package gov.nih.nci.bento.model;
 
 import com.google.gson.*;
 import gov.nih.nci.bento.service.ESService;
+import graphql.schema.GraphQLScalarType;
 import graphql.schema.idl.RuntimeWiring;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1246,7 +1247,8 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("queried_project_ids", "queried_project_ids")
         );
 
-        return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+        List<Map<String, Object>> stuff = overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+        return stuff;
     }
     
     private List<Map<String, Object>> projectOverView(Map<String, Object> params) throws IOException {
