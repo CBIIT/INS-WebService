@@ -76,7 +76,7 @@ type ClinicalTrialOverViewResult {
     title: String
     last_update_posted: String
     recruitment_status: String
-    queried_project_ids: String
+    queried_project_ids: [String]
 }
 
 type DatasetOverViewResult {
