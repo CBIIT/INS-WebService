@@ -68,7 +68,7 @@ type FileOverview2 {
 type PatentOverViewResult {
     patent_id: String
     fulfilled_date: String
-    queried_project_ids: String
+    queried_project_ids: [String]
 }
 
 type ClinicalTrialOverViewResult {
