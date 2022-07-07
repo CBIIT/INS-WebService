@@ -1178,10 +1178,10 @@ public class BentoEsFilter implements DataFetcher {
     
     private List<Map<String, Object>> datasetOverView(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
-                new String[]{"type", "type"},
+                new String[]{"type", "transformed_type"},
                 new String[]{"accession", "accession"},
                 new String[]{"title", "title"},
-                new String[]{"release_date", "registration_date"},
+                new String[]{"release_date", "release_date"},
                 new String[]{"registration_date", "registration_date"},
                 new String[]{"bioproject_accession", "bioproject_accession"},
                 new String[]{"status", "status"},
@@ -1195,7 +1195,7 @@ public class BentoEsFilter implements DataFetcher {
         String defaultSort = "accession"; // Default sort order
 
         Map<String, String> mapping = Map.ofEntries(
-                Map.entry("type", "type"),
+                Map.entry("type", "transformed_type"),
                 Map.entry("accession", "accession"),
                 Map.entry("title", "title"),
                 Map.entry("release_date", "release_date"),
@@ -1251,10 +1251,10 @@ public class BentoEsFilter implements DataFetcher {
     
     private List<Map<String, Object>> projectOverView(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
-            new String[]{"program", "program"},
+            new String[]{"program", "programs"},
             new String[]{"project_id", "project_id"},
             new String[]{"application_id", "application_id"},
-            new String[]{"fiscal_year", "fiscal_year"},
+            new String[]{"fiscal_year", "fiscal_years"},
             new String[]{"project_title", "project_title"},
             new String[]{"project_type", "project_type"},
             new String[]{"abstract_text", "abstract_text"},
@@ -1264,7 +1264,7 @@ public class BentoEsFilter implements DataFetcher {
             new String[]{"org_state", "org_state"},
             new String[]{"org_country", "org_country"},
             new String[]{"principal_investigators", "principal_investigators"},
-            new String[]{"lead_doc", "lead_doc"},
+            new String[]{"lead_doc", "docs"},
             new String[]{"program_officers", "program_officers"},
             new String[]{"award_amount", "award_amount"},
             new String[]{"nci_funded_amount", "nci_funded_amount"},
@@ -1276,28 +1276,20 @@ public class BentoEsFilter implements DataFetcher {
 
         String defaultSort = "project_id"; // Default sort order
 
+        // the indexes in ES are named after what is passed as filter params, the sorting params have different names for the same index properties
+        // we need to translate 'fiscal_year'(sort param) to 'fiscal_years.raw'(index property) for sorting
+        // we need to translate 'lead_doc'(sort param) to 'docs'(index property) for sorting
+        // we need to translate 'program'(sort param) to 'programs'(index property) for sorting
+        // we can leave 'award_amount'(sort param) alone for now, until we change how we handle the 'award_amount/award_amounts' index
         Map<String, String> mapping = Map.ofEntries(
-                Map.entry("program", "program"),        
-                Map.entry("project_id", "project_id"),
-                Map.entry("application_id", "application_id"),
-                Map.entry("fiscal_year", "fiscal_year"),
-                Map.entry("project_title", "project_title"),
-                Map.entry("project_type", "project_type"),
-                Map.entry("abstract_text", "abstract_text"),
-                Map.entry("keywords", "keywords"),
-                Map.entry("org_name", "org_name"),
-                Map.entry("org_city", "org_city"),
-                Map.entry("org_state", "org_state"),
-                Map.entry("org_country", "org_country"),
-                Map.entry("principal_investigators", "principal_investigators"),
-                Map.entry("lead_doc", "lead_doc"),
-                Map.entry("program_officers", "program_officers"),
+                Map.entry("program", "programs"),
+                Map.entry("lead_doc", "docs"),
+                Map.entry("fiscal_year", "fiscal_years.raw"),
                 Map.entry("award_amount", "award_amount"),
-                Map.entry("nci_funded_amount", "nci_funded_amount"),
-                Map.entry("award_notice_date", "award_notice_date"),
-                Map.entry("project_start_date", "project_start_date"),
-                Map.entry("project_end_date", "project_end_date"),
-                Map.entry("full_foa", "full_foa")
+                Map.entry("project_id", "project_id"),
+                Map.entry("project_title", "project_title"),
+                Map.entry("principal_investigators", "principal_investigators"),
+                Map.entry("project_end_date", "project_end_date")
         );
 
         return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
