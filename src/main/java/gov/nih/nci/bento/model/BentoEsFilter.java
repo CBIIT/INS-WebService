@@ -1178,7 +1178,7 @@ public class BentoEsFilter implements DataFetcher {
     
     private List<Map<String, Object>> datasetOverView(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
-                new String[]{"type", "type"},
+                new String[]{"type", "transformed_type"},
                 new String[]{"accession", "accession"},
                 new String[]{"title", "title"},
                 new String[]{"release_date", "registration_date"},
@@ -1195,7 +1195,7 @@ public class BentoEsFilter implements DataFetcher {
         String defaultSort = "accession"; // Default sort order
 
         Map<String, String> mapping = Map.ofEntries(
-                Map.entry("type", "type"),
+                Map.entry("type", "transformed_type"),
                 Map.entry("accession", "accession"),
                 Map.entry("title", "title"),
                 Map.entry("release_date", "release_date"),
