@@ -102,11 +102,11 @@ type PublicationOverViewResult {
     title: String
     authors: String
     publish_date: String
-    citation_count: Int
-    relative_citation_ratio: Float
-    nih_percentile: Float
+    citation_count: String
+    relative_citation_ratio: String
+    nih_percentile: String
     doi: String
-    queried_project_ids: String
+    queried_project_ids: [String]
 }
 
 type ProjectOverViewResult {
