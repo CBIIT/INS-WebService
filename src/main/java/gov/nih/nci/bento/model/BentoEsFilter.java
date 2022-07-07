@@ -1181,7 +1181,7 @@ public class BentoEsFilter implements DataFetcher {
                 new String[]{"type", "transformed_type"},
                 new String[]{"accession", "accession"},
                 new String[]{"title", "title"},
-                new String[]{"release_date", "registration_date"},
+                new String[]{"release_date", "release_date"},
                 new String[]{"registration_date", "registration_date"},
                 new String[]{"bioproject_accession", "bioproject_accession"},
                 new String[]{"status", "status"},
