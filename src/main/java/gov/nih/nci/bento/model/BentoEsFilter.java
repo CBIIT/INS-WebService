@@ -28,7 +28,6 @@ public class BentoEsFilter implements DataFetcher {
     final String PROJECTS_END_POINT = "/projects/_search";
     final String PROGRAMS_END_POINT = "/programs/_search";
     final String PROGRAMS_COUNT_END_POINT = "/programs/_count";
-    final String PROJECTS_END_POINT = "/projects/_search";
     final String PROJECTS_COUNT_END_POINT = "/projects/_count";
     final String PUBLICATIONS_END_POINT = "/publications/_search";
     final String PUBLICATIONS_COUNT_END_POINT = "/publications/_count";
