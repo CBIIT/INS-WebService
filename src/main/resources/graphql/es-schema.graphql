@@ -125,8 +125,8 @@ type ProjectOverViewResult {
     principal_investigators: String
     lead_doc: String
     program_officers: String
-    award_amount: Int
-    nci_funded_amount: Int
+    award_amount: String
+    nci_funded_amount: String
     award_notice_date: String
     project_start_date: String
     project_end_date: String
