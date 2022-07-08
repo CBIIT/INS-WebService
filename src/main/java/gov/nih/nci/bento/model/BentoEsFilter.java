@@ -28,6 +28,17 @@ public class BentoEsFilter implements DataFetcher {
     final String PROJECTS_END_POINT = "/projects/_search";
     final String PROGRAMS_END_POINT = "/programs/_search";
     final String PROGRAMS_COUNT_END_POINT = "/programs/_count";
+    final String PROJECTS_END_POINT = "/projects/_search";
+    final String PROJECTS_COUNT_END_POINT = "/projects/_count";
+    final String PUBLICATIONS_END_POINT = "/publications/_search";
+    final String PUBLICATIONS_COUNT_END_POINT = "/publications/_count";
+    final String DATASETS_END_POINT = "/datasets/_search";
+    final String DATASETS_COUNT_END_POINT = "/datasets/_count";
+    final String CLINICAL_TRIALS_END_POINT = "/clinical_trials/_search";
+    final String CLINICAL_TRIALS_COUNT_END_POINT = "/clinical_trials/_count";
+    final String PATENTS_END_POINT = "/patents/_search";
+    final String PATENTS_COUNT_END_POINT = "/patents/_count";
+
     final String STUDIES_END_POINT = "/studies/_search";
     final String STUDIES_COUNT_END_POINT = "/studies/_count";
 
@@ -73,10 +84,10 @@ public class BentoEsFilter implements DataFetcher {
     public RuntimeWiring buildRuntimeWiring() {
         return RuntimeWiring.newRuntimeWiring()
                 .type(newTypeWiring("QueryType")
-                        .dataFetcher("searchSubjects", env -> {
-                            Map<String, Object> args = env.getArguments();
-                            return searchSubjects(args);
-                        })
+                        // .dataFetcher("searchSubjects", env -> {
+                        //     Map<String, Object> args = env.getArguments();
+                        //     return searchSubjects(args);
+                        // })
                         .dataFetcher("subjectOverview", env -> {
                             Map<String, Object> args = env.getArguments();
                             return subjectOverview(args);
@@ -109,195 +120,215 @@ public class BentoEsFilter implements DataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return searchProjects(args);
                         })
+                        .dataFetcher("patentOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return patentOverView(args);
+                        })
+                        .dataFetcher("clinicalTrialOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return clinicalTrialOverView(args);
+                        })
+                        .dataFetcher("datasetOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return datasetOverView(args);
+                          })
+                        .dataFetcher("publicationOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return publicationOverview(args);
+                         })
+                        .dataFetcher("projectOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return projectOverView(args);
+                        })
                 )
                 .build();
     }
 
-    private Map<String, Object> searchSubjects(Map<String, Object> params) throws IOException {
-        final String AGG_NAME = "agg_name";
-        final String AGG_ENDPOINT = "agg_endpoint";
-        final String WIDGET_QUERY = "widgetQueryName";
-        final String FILTER_COUNT_QUERY = "filterCountQueryName";
-        // Query related values
-        final List<Map<String, String>> TERM_AGGS = new ArrayList<>();
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "programs",
-                WIDGET_QUERY, "subjectCountByProgram",
-                FILTER_COUNT_QUERY, "filterSubjectCountByProgram",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "studies",
-                WIDGET_QUERY, "subjectCountByStudy",
-                FILTER_COUNT_QUERY, "filterSubjectCountByStudy",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "diagnoses",
-                WIDGET_QUERY, "subjectCountByDiagnoses",
-                FILTER_COUNT_QUERY, "filterSubjectCountByDiagnoses",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "rc_scores",
-                WIDGET_QUERY,"subjectCountByRecurrenceScore",
-                FILTER_COUNT_QUERY, "filterSubjectCountByRecurrenceScore",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "tumor_sizes",
-                WIDGET_QUERY, "subjectCountByTumorSize",
-                FILTER_COUNT_QUERY, "filterSubjectCountByTumorSize",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "tumor_grades",
-                WIDGET_QUERY, "subjectCountByTumorGrade",
-                FILTER_COUNT_QUERY, "filterSubjectCountByTumorGrade",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "er_status",
-                WIDGET_QUERY, "subjectCountByErStatus",
-                FILTER_COUNT_QUERY, "filterSubjectCountByErStatus",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "pr_status",
-                WIDGET_QUERY, "subjectCountByPrStatus",
-                FILTER_COUNT_QUERY, "filterSubjectCountByPrStatus",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "chemo_regimen",
-                WIDGET_QUERY, "subjectCountByChemotherapyRegimen",
-                FILTER_COUNT_QUERY, "filterSubjectCountByChemotherapyRegimen",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "endo_therapies",
-                WIDGET_QUERY, "subjectCountByEndocrineTherapy",
-                FILTER_COUNT_QUERY, "filterSubjectCountByEndocrineTherapy",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "meno_status",
-                WIDGET_QUERY, "subjectCountByMenopauseStatus",
-                FILTER_COUNT_QUERY, "filterSubjectCountByMenopauseStatus",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "tissue_type",
-                WIDGET_QUERY, "subjectCountByTissueType",
-                FILTER_COUNT_QUERY, "filterSubjectCountByTissueType",
-                AGG_ENDPOINT, SAMPLES_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "composition",
-                WIDGET_QUERY, "subjectCountByTissueComposition",
-                FILTER_COUNT_QUERY, "filterSubjectCountByTissueComposition",
-                AGG_ENDPOINT, SAMPLES_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "association",
-                WIDGET_QUERY, "subjectCountByFileAssociation",
-                FILTER_COUNT_QUERY, "filterSubjectCountByFileAssociation",
-                AGG_ENDPOINT, FILES_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "file_type",
-                WIDGET_QUERY, "subjectCountByFileType",
-                FILTER_COUNT_QUERY, "filterSubjectCountByFileType",
-                AGG_ENDPOINT, FILES_END_POINT
-        ));
-        TERM_AGGS.add(Map.of(
-                AGG_NAME, "lab_procedures",
-                WIDGET_QUERY, "subjectCountByLabProcedures",
-                FILTER_COUNT_QUERY, "filterSubjectCountByLabProcedures",
-                AGG_ENDPOINT, SUBJECTS_END_POINT
-        ));
+    // private Map<String, Object> searchSubjects(Map<String, Object> params) throws IOException {
+    //     final String AGG_NAME = "agg_name";
+    //     final String AGG_ENDPOINT = "agg_endpoint";
+    //     final String WIDGET_QUERY = "widgetQueryName";
+    //     final String FILTER_COUNT_QUERY = "filterCountQueryName";
+    //     // Query related values
+    //     final List<Map<String, String>> TERM_AGGS = new ArrayList<>();
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "programs",
+    //             WIDGET_QUERY, "subjectCountByProgram",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByProgram",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "studies",
+    //             WIDGET_QUERY, "subjectCountByStudy",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByStudy",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "diagnoses",
+    //             WIDGET_QUERY, "subjectCountByDiagnoses",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByDiagnoses",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "rc_scores",
+    //             WIDGET_QUERY,"subjectCountByRecurrenceScore",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByRecurrenceScore",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "tumor_sizes",
+    //             WIDGET_QUERY, "subjectCountByTumorSize",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByTumorSize",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "tumor_grades",
+    //             WIDGET_QUERY, "subjectCountByTumorGrade",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByTumorGrade",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "er_status",
+    //             WIDGET_QUERY, "subjectCountByErStatus",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByErStatus",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "pr_status",
+    //             WIDGET_QUERY, "subjectCountByPrStatus",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByPrStatus",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "chemo_regimen",
+    //             WIDGET_QUERY, "subjectCountByChemotherapyRegimen",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByChemotherapyRegimen",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "endo_therapies",
+    //             WIDGET_QUERY, "subjectCountByEndocrineTherapy",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByEndocrineTherapy",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "meno_status",
+    //             WIDGET_QUERY, "subjectCountByMenopauseStatus",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByMenopauseStatus",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "tissue_type",
+    //             WIDGET_QUERY, "subjectCountByTissueType",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByTissueType",
+    //             AGG_ENDPOINT, SAMPLES_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "composition",
+    //             WIDGET_QUERY, "subjectCountByTissueComposition",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByTissueComposition",
+    //             AGG_ENDPOINT, SAMPLES_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "association",
+    //             WIDGET_QUERY, "subjectCountByFileAssociation",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByFileAssociation",
+    //             AGG_ENDPOINT, FILES_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "file_type",
+    //             WIDGET_QUERY, "subjectCountByFileType",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByFileType",
+    //             AGG_ENDPOINT, FILES_END_POINT
+    //     ));
+    //     TERM_AGGS.add(Map.of(
+    //             AGG_NAME, "lab_procedures",
+    //             WIDGET_QUERY, "subjectCountByLabProcedures",
+    //             FILTER_COUNT_QUERY, "filterSubjectCountByLabProcedures",
+    //             AGG_ENDPOINT, SUBJECTS_END_POINT
+    //     ));
 
-        List<String> agg_names = new ArrayList<>();
-        for (var agg: TERM_AGGS) {
-            agg_names.add(agg.get(AGG_NAME));
-        }
-        final String[] TERM_AGG_NAMES = agg_names.toArray(new String[TERM_AGGS.size()]);
+    //     List<String> agg_names = new ArrayList<>();
+    //     for (var agg: TERM_AGGS) {
+    //         agg_names.add(agg.get(AGG_NAME));
+    //     }
+    //     final String[] TERM_AGG_NAMES = agg_names.toArray(new String[TERM_AGGS.size()]);
 
-        final Map<String, String> RANGE_AGGS = new HashMap<>();
-        RANGE_AGGS.put("age_at_index",  "filterSubjectCountByAge");
-        final String[] RANGE_AGG_NAMES = RANGE_AGGS.keySet().toArray(new String[0]);
+    //     final Map<String, String> RANGE_AGGS = new HashMap<>();
+    //     RANGE_AGGS.put("age_at_index",  "filterSubjectCountByAge");
+    //     final String[] RANGE_AGG_NAMES = RANGE_AGGS.keySet().toArray(new String[0]);
 
-        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS);
-        Request sampleCountRequest = new Request("GET", SAMPLES_COUNT_END_POINT);
-        sampleCountRequest.setJsonEntity(gson.toJson(query));
-        JsonObject sampleCountResult = esService.send(sampleCountRequest);
-        int numberOfSamples = sampleCountResult.get("count").getAsInt();
+    //     Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS);
+    //     Request sampleCountRequest = new Request("GET", SAMPLES_COUNT_END_POINT);
+    //     sampleCountRequest.setJsonEntity(gson.toJson(query));
+    //     JsonObject sampleCountResult = esService.send(sampleCountRequest);
+    //     int numberOfSamples = sampleCountResult.get("count").getAsInt();
 
-        Request fileCountRequest = new Request("GET", FILES_COUNT_END_POINT);
-        fileCountRequest.setJsonEntity(gson.toJson(query));
-        JsonObject fileCountResult = esService.send(fileCountRequest);
-        int numberOfFiles = fileCountResult.get("count").getAsInt();
+    //     Request fileCountRequest = new Request("GET", FILES_COUNT_END_POINT);
+    //     fileCountRequest.setJsonEntity(gson.toJson(query));
+    //     JsonObject fileCountResult = esService.send(fileCountRequest);
+    //     int numberOfFiles = fileCountResult.get("count").getAsInt();
 
-        Request subjectCountRequest = new Request("GET", SUBJECTS_COUNT_END_POINT);
-        subjectCountRequest.setJsonEntity(gson.toJson(query));
-        JsonObject subjectCountResult = esService.send(subjectCountRequest);
-        int numberOfSubjects = subjectCountResult.get("count").getAsInt();
+    //     Request subjectCountRequest = new Request("GET", SUBJECTS_COUNT_END_POINT);
+    //     subjectCountRequest.setJsonEntity(gson.toJson(query));
+    //     JsonObject subjectCountResult = esService.send(subjectCountRequest);
+    //     int numberOfSubjects = subjectCountResult.get("count").getAsInt();
 
 
-        // Get aggregations
-        Map<String, Object> aggQuery = esService.addAggregations(query, TERM_AGG_NAMES, RANGE_AGG_NAMES);
-        Request subjectRequest = new Request("GET", SUBJECTS_END_POINT);
-        subjectRequest.setJsonEntity(gson.toJson(aggQuery));
-        JsonObject subjectResult = esService.send(subjectRequest);
-        Map<String, JsonArray> aggs = esService.collectTermAggs(subjectResult, TERM_AGG_NAMES);
+    //     // Get aggregations
+    //     Map<String, Object> aggQuery = esService.addAggregations(query, TERM_AGG_NAMES, RANGE_AGG_NAMES);
+    //     Request subjectRequest = new Request("GET", SUBJECTS_END_POINT);
+    //     subjectRequest.setJsonEntity(gson.toJson(aggQuery));
+    //     JsonObject subjectResult = esService.send(subjectRequest);
+    //     Map<String, JsonArray> aggs = esService.collectTermAggs(subjectResult, TERM_AGG_NAMES);
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("numberOfPrograms", aggs.get("programs").size());
-        data.put("numberOfStudies", aggs.get("studies").size());
-        data.put("numberOfLabProcedures", aggs.get("lab_procedures").size());
-        data.put("numberOfSubjects", numberOfSubjects);
-        data.put("numberOfSamples", numberOfSamples);
-        data.put("numberOfFiles", numberOfFiles);
+    //     Map<String, Object> data = new HashMap<>();
+    //     data.put("numberOfPrograms", aggs.get("programs").size());
+    //     data.put("numberOfStudies", aggs.get("studies").size());
+    //     data.put("numberOfLabProcedures", aggs.get("lab_procedures").size());
+    //     data.put("numberOfSubjects", numberOfSubjects);
+    //     data.put("numberOfSamples", numberOfSamples);
+    //     data.put("numberOfFiles", numberOfFiles);
 
-        data.put("armsByPrograms", armsByPrograms(params));
-        // widgets data and facet filter counts
-        for (var agg: TERM_AGGS) {
-            String field = agg.get(AGG_NAME);
-            String widgetQueryName = agg.get(WIDGET_QUERY);
-            String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
-            String endpoint = agg.get(AGG_ENDPOINT);
-            // subjectCountByXXXX
-            List<Map<String, Object>> widgetData;
-            if (endpoint.equals(SUBJECTS_END_POINT)) {
-                widgetData = getGroupCountHelper(aggs.get(field));
-                data.put(widgetQueryName, widgetData);
-            } else {
-                widgetData = subjectCountBy(field, params, endpoint);;
-                data.put(widgetQueryName, widgetData);
-            }
-            // filterSubjectCountByXXXX
-            if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
-                List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint);;
-                data.put(filterCountQueryName, filterCount);
-            } else {
-                data.put(filterCountQueryName, widgetData);
-            }
-        }
+    //     data.put("armsByPrograms", armsByPrograms(params));
+    //     // widgets data and facet filter counts
+    //     for (var agg: TERM_AGGS) {
+    //         String field = agg.get(AGG_NAME);
+    //         String widgetQueryName = agg.get(WIDGET_QUERY);
+    //         String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
+    //         String endpoint = agg.get(AGG_ENDPOINT);
+    //         // subjectCountByXXXX
+    //         List<Map<String, Object>> widgetData;
+    //         if (endpoint.equals(SUBJECTS_END_POINT)) {
+    //             widgetData = getGroupCountHelper(aggs.get(field));
+    //             data.put(widgetQueryName, widgetData);
+    //         } else {
+    //             widgetData = subjectCountBy(field, params, endpoint);;
+    //             data.put(widgetQueryName, widgetData);
+    //         }
+    //         // filterSubjectCountByXXXX
+    //         if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
+    //             List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint);;
+    //             data.put(filterCountQueryName, filterCount);
+    //         } else {
+    //             data.put(filterCountQueryName, widgetData);
+    //         }
+    //     }
 
-        Map<String, JsonObject> rangeAggs = esService.collectRangeAggs(subjectResult, RANGE_AGG_NAMES);
+    //     Map<String, JsonObject> rangeAggs = esService.collectRangeAggs(subjectResult, RANGE_AGG_NAMES);
 
-        for (String field: RANGE_AGG_NAMES) {
-            String filterCountQueryName = RANGE_AGGS.get(field);
-            if (params.containsKey(field) && ((List<Double>)params.get(field)).size() >= 2) {
-                Map<String, Object> filterCount = rangeFilterSubjectCountBy(field, params);;
-                data.put(filterCountQueryName, filterCount);
-            } else {
-                data.put(filterCountQueryName, getRange(rangeAggs.get(field)));
-            }
-        }
+    //     for (String field: RANGE_AGG_NAMES) {
+    //         String filterCountQueryName = RANGE_AGGS.get(field);
+    //         if (params.containsKey(field) && ((List<Double>)params.get(field)).size() >= 2) {
+    //             Map<String, Object> filterCount = rangeFilterSubjectCountBy(field, params);;
+    //             data.put(filterCountQueryName, filterCount);
+    //         } else {
+    //             data.put(filterCountQueryName, getRange(rangeAggs.get(field)));
+    //         }
+    //     }
 
-        return data;
-    }
+    //     return data;
+    // }
 
     private List<Map<String, Object>> subjectOverview(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
@@ -447,64 +478,64 @@ public class BentoEsFilter implements DataFetcher {
         return Map.of(sortOrder, sortDirection);
     }
 
-    private List<Map<String, Object>> armsByPrograms(Map<String, Object> params) throws IOException {
-        final String category = "programs";
-        final String subCategory = "study_acronym";
+    // private List<Map<String, Object>> armsByPrograms(Map<String, Object> params) throws IOException {
+    //     final String category = "programs";
+    //     final String subCategory = "study_acronym";
 
-        String[] subCategories = new String[] { subCategory };
-        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE));
-        String[] AGG_NAMES = new String[] {category};
-        query = esService.addAggregations(query, AGG_NAMES);
-        esService.addSubAggregations(query, category, subCategories);
-        Request request = new Request("GET", SUBJECTS_END_POINT);
-        request.setJsonEntity(gson.toJson(query));
-        JsonObject jsonObject = esService.send(request);
-        Map<String, JsonArray> aggs = esService.collectTermAggs(jsonObject, AGG_NAMES);
-        JsonArray buckets = aggs.get(category);
+    //     String[] subCategories = new String[] { subCategory };
+    //     Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE));
+    //     String[] AGG_NAMES = new String[] {category};
+    //     query = esService.addAggregations(query, AGG_NAMES);
+    //     esService.addSubAggregations(query, category, subCategories);
+    //     Request request = new Request("GET", SUBJECTS_END_POINT);
+    //     request.setJsonEntity(gson.toJson(query));
+    //     JsonObject jsonObject = esService.send(request);
+    //     Map<String, JsonArray> aggs = esService.collectTermAggs(jsonObject, AGG_NAMES);
+    //     JsonArray buckets = aggs.get(category);
 
-        List<Map<String, Object>> data = new ArrayList<>();
-        for (JsonElement group: buckets) {
-            List<Map<String, Object>> studies = new ArrayList<>();
+    //     List<Map<String, Object>> data = new ArrayList<>();
+    //     for (JsonElement group: buckets) {
+    //         List<Map<String, Object>> studies = new ArrayList<>();
 
-            for (JsonElement studyElement: group.getAsJsonObject().get(subCategory).getAsJsonObject().get("buckets").getAsJsonArray()) {
-                JsonObject study = studyElement.getAsJsonObject();
-                int size = study.get("doc_count").getAsInt();
-                studies.add(Map.of(
-                        "arm", study.get("key").getAsString(),
-                        "caseSize", size,
-                        "size", size
-                ));
-            }
-            data.add(Map.of("program", group.getAsJsonObject().get("key").getAsString(),
-                    "caseSize", group.getAsJsonObject().get("doc_count").getAsInt(),
-                    "children", studies
-            ));
+    //         for (JsonElement studyElement: group.getAsJsonObject().get(subCategory).getAsJsonObject().get("buckets").getAsJsonArray()) {
+    //             JsonObject study = studyElement.getAsJsonObject();
+    //             int size = study.get("doc_count").getAsInt();
+    //             studies.add(Map.of(
+    //                     "arm", study.get("key").getAsString(),
+    //                     "caseSize", size,
+    //                     "size", size
+    //             ));
+    //         }
+    //         data.add(Map.of("program", group.getAsJsonObject().get("key").getAsString(),
+    //                 "caseSize", group.getAsJsonObject().get("doc_count").getAsInt(),
+    //                 "children", studies
+    //         ));
 
-        }
-        return data;
-    }
+    //     }
+    //     return data;
+    // }
 
-    private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint) throws IOException {
-        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE));
-        return getGroupCount(category, query, endpoint);
-    }
+    // private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint) throws IOException {
+    //     Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE));
+    //     return getGroupCount(category, query, endpoint);
+    // }
 
-    private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint) throws IOException {
-        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, category));
-        return getGroupCount(category, query, endpoint);
-    }
+    // private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint) throws IOException {
+    //     Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, category));
+    //     return getGroupCount(category, query, endpoint);
+    // }
 
-    private List<Map<String, Object>> getGroupCount(String category, Map<String, Object> query, String endpoint) throws IOException {
-        String[] AGG_NAMES = new String[] {category};
-        query = esService.addAggregations(query, AGG_NAMES);
-        Request request = new Request("GET", endpoint);
-        request.setJsonEntity(gson.toJson(query));
-        JsonObject jsonObject = esService.send(request);
-        Map<String, JsonArray> aggs = esService.collectTermAggs(jsonObject, AGG_NAMES);
-        JsonArray buckets = aggs.get(category);
+    // private List<Map<String, Object>> getGroupCount(String category, Map<String, Object> query, String endpoint) throws IOException {
+    //     String[] AGG_NAMES = new String[] {category};
+    //     query = esService.addAggregations(query, AGG_NAMES);
+    //     Request request = new Request("GET", endpoint);
+    //     request.setJsonEntity(gson.toJson(query));
+    //     JsonObject jsonObject = esService.send(request);
+    //     Map<String, JsonArray> aggs = esService.collectTermAggs(jsonObject, AGG_NAMES);
+    //     JsonArray buckets = aggs.get(category);
 
-        return getGroupCountHelper(buckets);
-    }
+    //     return getGroupCountHelper(buckets);
+    // }
 
     private List<Map<String, Object>> getGroupCountHelper(JsonArray buckets) throws IOException {
         List<Map<String, Object>> data = new ArrayList<>();
@@ -768,40 +799,367 @@ public class BentoEsFilter implements DataFetcher {
         return esService.collectTerms(jsonObject, collectField);
     }
 
-    private Map<String, Object> searchProjects(Map<String, Object> params) throws IOException {
-        Map<String, Object> query = esService.buildListQuery(params, Set.of());
-        Request request = new Request("GET", SEARCH_PROJECTS_ES_END_POINT);
-        request.setJsonEntity(gson.toJson(query));
+    // private Map<String, Object> searchProjects(Map<String, Object> params) throws IOException {
+    //     Map<String, Object> query = esService.buildListQuery(params, Set.of());
+    //     Request request = new Request("GET", SEARCH_PROJECTS_ES_END_POINT);
+    //     request.setJsonEntity(gson.toJson(query));
 
-        Map<String, Object> result = new HashMap<String, Object>();
-        result.put(GS_CATEGORY_TYPE, SEARCH_PROJECTS_ES_END_POINT);
+    //     Map<String, Object> result = new HashMap<String, Object>();
+    //     result.put(GS_CATEGORY_TYPE, SEARCH_PROJECTS_ES_END_POINT);
 
-        List<String> programs = esService.collectField(request, "programs").stream().distinct().collect(Collectors.toList());
-        List<String> projectIds = esService.collectFieldForArray(request, "project_ids").stream().distinct().collect(Collectors.toList());
-        List<String> publicationIds = esService.collectFieldForArray(request, "publication_ids").stream().distinct().collect(Collectors.toList());
-        List<String> accessions = esService.collectFieldForArray(request, "accessions").stream().distinct().collect(Collectors.toList());
-        List<String> clinicalTrialIds = esService.collectFieldForArray(request, "clinical_trial_ids").stream().distinct().collect(Collectors.toList());
-        List<String> patentIds = esService.collectFieldForArray(request, "patent_ids").stream().distinct().collect(Collectors.toList());
+    //     List<String> programs = esService.collectField(request, "programs").stream().distinct().collect(Collectors.toList());
+    //     List<String> projectIds = esService.collectFieldForArray(request, "project_ids").stream().distinct().collect(Collectors.toList());
+    //     List<String> publicationIds = esService.collectFieldForArray(request, "publication_ids").stream().distinct().collect(Collectors.toList());
+    //     List<String> accessions = esService.collectFieldForArray(request, "accessions").stream().distinct().collect(Collectors.toList());
+    //     List<String> clinicalTrialIds = esService.collectFieldForArray(request, "clinical_trial_ids").stream().distinct().collect(Collectors.toList());
+    //     List<String> patentIds = esService.collectFieldForArray(request, "patent_ids").stream().distinct().collect(Collectors.toList());
 
-        result.put("projectIds", projectIds);
-        result.put("publicationIds", publicationIds);
-        result.put("accessions", accessions);
-        result.put("clinicalTrialIds", clinicalTrialIds);
-        result.put("patentIds", patentIds);
+    //     result.put("projectIds", projectIds);
+    //     result.put("publicationIds", publicationIds);
+    //     result.put("accessions", accessions);
+    //     result.put("clinicalTrialIds", clinicalTrialIds);
+    //     result.put("patentIds", patentIds);
         
-        Integer numberOfPrograms = programs.size();
-        result.put("numberOfPrograms", numberOfPrograms);
-        Integer numberOfProjects = projectIds.size();
-        result.put("numberOfProjects", numberOfProjects);
-        Integer numberOfPublications = publicationIds.size();
-        result.put("numberOfPublications", numberOfPublications);
-        Integer numberOfAccessions = accessions.size();
-        result.put("numberOfAccessions", numberOfAccessions);
-        Integer numberOfClinicalTrials = clinicalTrialIds.size();
-        result.put("numberOfClinicalTrials", numberOfClinicalTrials);
-        Integer numberOfPatents = patentIds.size();
-        result.put("numberOfPatents", numberOfPatents);
+    //     Integer numberOfPrograms = programs.size();
+    //     result.put("numberOfPrograms", numberOfPrograms);
+    //     Integer numberOfProjects = projectIds.size();
+    //     result.put("numberOfProjects", numberOfProjects);
+    //     Integer numberOfPublications = publicationIds.size();
+    //     result.put("numberOfPublications", numberOfPublications);
+    //     Integer numberOfAccessions = accessions.size();
+    //     result.put("numberOfAccessions", numberOfAccessions);
+    //     Integer numberOfClinicalTrials = clinicalTrialIds.size();
+    //     result.put("numberOfClinicalTrials", numberOfClinicalTrials);
+    //     Integer numberOfPatents = patentIds.size();
+    //     result.put("numberOfPatents", numberOfPatents);
 
-        return result;
+    //     return result;
+    // }
+
+    private Map<String, Object> searchProjects(Map<String, Object> params) throws IOException {
+        final String AGG_NAME = "agg_name";
+        final String AGG_ENDPOINT = "agg_endpoint";
+        final String WIDGET_QUERY = "widgetQueryName";
+        final String FILTER_COUNT_QUERY = "filterCountQueryName";
+        // Query related values
+        final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "programs",
+                WIDGET_QUERY, "projectCountByProgram",
+                FILTER_COUNT_QUERY, "filterProjectCountByProgram",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "docs",
+                WIDGET_QUERY, "projectCountByDoc",
+                FILTER_COUNT_QUERY, "filterProjectCountByDoc",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "fiscal_years",
+                WIDGET_QUERY, "projectCountByFiscalYear",
+                FILTER_COUNT_QUERY, "filterProjectCountByFiscalYear",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+                AGG_NAME, "award_amounts",
+                WIDGET_QUERY,"projectCountByAwardAmount",
+                FILTER_COUNT_QUERY, "filterProjectCountByAwardAmount",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        List<String> project_agg_names = new ArrayList<>();
+        for (var agg: PROJECT_TERM_AGGS) {
+            project_agg_names.add(agg.get(AGG_NAME));
+        }
+        final String[] PROJECTS_TERM_AGG_NAMES = project_agg_names.toArray(new String[PROJECT_TERM_AGGS.size()]);
+
+        final List<Map<String, String>> PUBLICATION_TERM_AGGS = new ArrayList<>();
+        PUBLICATION_TERM_AGGS.add(Map.of(
+                AGG_NAME, "citation_count_category",
+                WIDGET_QUERY, "projectCountByProgram",
+                FILTER_COUNT_QUERY, "filterProjectCountByProgram",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PUBLICATION_TERM_AGGS.add(Map.of(
+                AGG_NAME, "rcr_range",
+                WIDGET_QUERY, "projectCountByDoc",
+                FILTER_COUNT_QUERY, "filterProjectCountByDoc",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PUBLICATION_TERM_AGGS.add(Map.of(
+                AGG_NAME, "year",
+                WIDGET_QUERY, "projectCountByFiscalYear",
+                FILTER_COUNT_QUERY, "filterProjectCountByFiscalYear",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        List<String> publication_agg_names = new ArrayList<>();
+        for (var agg: PUBLICATION_TERM_AGGS) {
+            publication_agg_names.add(agg.get(AGG_NAME));
+        }
+        final String[] PUBLICATIONS_TERM_AGG_NAMES = publication_agg_names.toArray(new String[PUBLICATION_TERM_AGGS.size()]);
+
+        Map<String, Object> query = esService.buildFacetFilterQuery(params, Set.of());  // RANGE_PARAMS
+
+        Request programsCountRequest = new Request("GET", PROGRAMS_COUNT_END_POINT);
+        programsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject programsCountResult = esService.send(programsCountRequest);
+        int numberOfPrograms = programsCountResult.get("count").getAsInt();
+
+        Request projectsCountRequest = new Request("GET", PROJECTS_COUNT_END_POINT);
+        projectsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject projectsCountResult = esService.send(projectsCountRequest);
+        int numberOfProjects = projectsCountResult.get("count").getAsInt();
+
+        Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
+        publicationsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject publicationsCountResult = esService.send(publicationsCountRequest);
+        int numberOfPublications = publicationsCountResult.get("count").getAsInt();
+
+        Request datasetsCountRequest = new Request("GET", DATASETS_COUNT_END_POINT);
+        datasetsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject datasetsCountResult = esService.send(datasetsCountRequest);
+        int numberOfDatasets = datasetsCountResult.get("count").getAsInt();
+
+        Request clinicalTrialsCountRequest = new Request("GET", CLINICAL_TRIALS_COUNT_END_POINT);
+        clinicalTrialsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject clinicalTrialsCountResult = esService.send(clinicalTrialsCountRequest);
+        int numberOfClinicalTrials = clinicalTrialsCountResult.get("count").getAsInt();
+
+        Request patentsCountRequest = new Request("GET", PATENTS_COUNT_END_POINT);
+        patentsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject patentsCountResult = esService.send(patentsCountRequest);
+        int numberOfPatents = patentsCountResult.get("count").getAsInt();
+
+        // Get aggregations
+        Map<String, Object> projectAggQuery = esService.addAggregations(query, PROJECTS_TERM_AGG_NAMES, new String[]{});
+        Request projectRequest = new Request("GET", PROJECTS_END_POINT);
+        projectRequest.setJsonEntity(gson.toJson(projectAggQuery));
+        JsonObject projectResult = esService.send(projectRequest);
+        Map<String, List<Map<String, Object>>> projectAggs = esService.collectTermAggs(projectResult, PROJECTS_TERM_AGG_NAMES);
+
+        Map<String, Object> publicationAggQuery = esService.addAggregations(query, PUBLICATIONS_TERM_AGG_NAMES, new String[]{});
+        Request publicationRequest = new Request("GET", PUBLICATIONS_END_POINT);
+        publicationRequest.setJsonEntity(gson.toJson(publicationAggQuery));
+        JsonObject publicationResult = esService.send(publicationRequest);
+        Map<String, List<Map<String, Object>>> publicationAggs = esService.collectTermAggs(publicationResult, PUBLICATIONS_TERM_AGG_NAMES);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("filterProjectCountByDOC", projectAggs.get("docs"));
+        data.put("filterProjectCountByFiscalYear", projectAggs.get("fiscal_years"));
+        data.put("filterProjectCountByAwardAmount", projectAggs.get("award_amounts"));
+        data.put("filterProjectCountByProgram", projectAggs.get("programs"));
+        data.put("numberOfPrograms", numberOfPrograms);
+        data.put("numberOfProjects", numberOfProjects);
+        data.put("numberOfPublications", numberOfPublications);
+        data.put("numberOfDatasets", numberOfDatasets);
+        data.put("numberOfClinicalTrials", numberOfClinicalTrials);
+        data.put("numberOfPatents", numberOfPatents);
+        data.put("projectCountByDOC", projectAggs.get("docs"));
+        data.put("projectCountByFiscalYear", projectAggs.get("fiscal_years"));
+        data.put("projectCountByAwardAmount", projectAggs.get("award_amounts"));
+        data.put("projectCountByProgram", projectAggs.get("programs"));
+        data.put("publicationCountByCitation", publicationAggs.get("citation_count_category"));
+        data.put("publicationCountByRCR", publicationAggs.get("rcr_range"));
+        data.put("publicationCountByYear", publicationAggs.get("year"));
+
+        // data.put("armsByPrograms", armsByPrograms(params));
+        // widgets data and facet filter counts
+        // for (var agg: TERM_AGGS) {
+        //     String field = agg.get(AGG_NAME);
+        //     String widgetQueryName = agg.get(WIDGET_QUERY);
+        //     String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
+        //     String endpoint = agg.get(AGG_ENDPOINT);
+        //     // subjectCountByXXXX
+        //     List<Map<String, Object>> widgetData;
+        //     if (endpoint.equals(SUBJECTS_END_POINT)) {
+        //         widgetData = getGroupCountHelper(aggs.get(field));
+        //         data.put(widgetQueryName, widgetData);
+        //     } else {
+        //         widgetData = subjectCountBy(field, params, endpoint);;
+        //         data.put(widgetQueryName, widgetData);
+        //     }
+        //     // filterSubjectCountByXXXX
+        //     if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
+        //         List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint);;
+        //         data.put(filterCountQueryName, filterCount);
+        //     } else {
+        //         data.put(filterCountQueryName, widgetData);
+        //     }
+        // }
+
+        // Map<String, JsonObject> rangeAggs = esService.collectRangeAggs(subjectResult, RANGE_AGG_NAMES);
+
+        // for (String field: RANGE_AGG_NAMES) {
+        //     String filterCountQueryName = RANGE_AGGS.get(field);
+        //     if (params.containsKey(field) && ((List<Double>)params.get(field)).size() >= 2) {
+        //         Map<String, Object> filterCount = rangeFilterSubjectCountBy(field, params);;
+        //         data.put(filterCountQueryName, filterCount);
+        //     } else {
+        //         data.put(filterCountQueryName, getRange(rangeAggs.get(field)));
+        //     }
+        // }
+
+        return data;
+    }
+
+    private List<Map<String, Object>> patentOverView(Map<String, Object> params) throws IOException {
+        // Following String array of arrays should be in form of "GraphQL_field_name", "ES_field_name"
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"patent_id", "patent_id"},
+                new String[]{"fulfilled_date", "fulfilled_date"},
+                new String[]{"queried_project_ids", "queried_project_ids"}
+        };
+
+        String defaultSort = "patent_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("patent_id", "patent_id"),
+                Map.entry("fulfilled_date", "fulfilled_date"),
+                Map.entry("queried_project_ids", "queried_project_ids")
+        );
+
+        return overview(PATENTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+    
+    private List<Map<String, Object>> clinicalTrialOverView(Map<String, Object> params) throws IOException {
+        // Following String array of arrays should be in form of "GraphQL_field_name", "ES_field_name"
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"clinical_trial_id", "clinical_trial_id"},
+                new String[]{"title", "title"},
+                new String[]{"last_update_posted", "last_update_posted"},
+                new String[]{"recruitment_status", "recruitment_status"},
+                new String[]{"queried_project_ids", "queried_project_ids"}
+        };
+
+        String defaultSort = "clinical_trial_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("clinical_trial_id", "clinical_trial_id"),
+                Map.entry("title", "title"),
+                Map.entry("last_update_posted", "last_update_posted"),
+                Map.entry("recruitment_status", "recruitment_status"),
+                Map.entry("queried_project_ids", "queried_project_ids")
+        );
+
+        return overview(CLINICAL_TRIALS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+    
+    private List<Map<String, Object>> datasetOverView(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"type", "transformed_type"},
+                new String[]{"accession", "accession"},
+                new String[]{"title", "title"},
+                new String[]{"release_date", "release_date"},
+                new String[]{"registration_date", "registration_date"},
+                new String[]{"bioproject_accession", "bioproject_accession"},
+                new String[]{"status", "status"},
+                new String[]{"submission_date", "submission_date"},
+                new String[]{"last_update_date", "last_update_date"},
+                new String[]{"queried_project_ids", "queried_project_ids"},
+                new String[]{"link", "link"},
+                new String[]{"transformed_type", "transformed_type"},
+        };
+
+        String defaultSort = "accession"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("type", "transformed_type"),
+                Map.entry("accession", "accession"),
+                Map.entry("title", "title"),
+                Map.entry("release_date", "release_date"),
+                Map.entry("registration_date", "registration_date"),
+                Map.entry("bioproject_accession", "bioproject_accession"),
+                Map.entry("status", "status"),
+                Map.entry("submission_date", "submission_date"),
+                Map.entry("last_update_date", "last_update_date"),
+                Map.entry("queried_project_ids", "queried_project_ids"),
+                Map.entry("link", "link"),
+                Map.entry("transformed_type", "transformed_type")
+        );
+
+        return overview(DATASETS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+
+    private List<Map<String, Object>> publicationOverview(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+                new String[]{"publication_id", "publication_id"},
+                new String[]{"pmc_id", "pmc_id"},
+                new String[]{"year", "year"},
+                new String[]{"journal", "journal"},
+                new String[]{"title", "title"},
+                new String[]{"authors", "authors"},
+                new String[]{"publish_date", "publish_date"},
+                new String[]{"citation_count", "citation_count"},
+                new String[]{"relative_citation_ratio", "relative_citation_ratio"},
+                new String[]{"tumor_grade", "tumor_grades"},
+                new String[]{"nih_percentile", "nih_percentile"},
+                new String[]{"doi", "doi"},
+                new String[]{"queried_project_ids", "queried_project_ids"},
+        };
+
+        String defaultSort = "publication_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("publication_id", "publication_id"),
+                Map.entry("pmc_id", "pmc_id"),
+                Map.entry("year", "year"),
+                Map.entry("journal", "journal"),
+                Map.entry("title", "title"),
+                Map.entry("authors", "authors"),
+                Map.entry("publish_date", "publish_date"),
+                Map.entry("citation_count", "citation_count"),
+                Map.entry("relative_citation_ratio", "relative_citation_ratio"),
+                Map.entry("nih_percentile", "nih_percentile"),
+                Map.entry("doi", "doi"),
+                Map.entry("queried_project_ids", "queried_project_ids")
+        );
+
+        return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+    
+    private List<Map<String, Object>> projectOverView(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+            new String[]{"program", "programs"},
+            new String[]{"project_id", "project_id"},
+            new String[]{"application_id", "application_id"},
+            new String[]{"fiscal_year", "fiscal_years"},
+            new String[]{"project_title", "project_title"},
+            new String[]{"project_type", "project_type"},
+            new String[]{"abstract_text", "abstract_text"},
+            new String[]{"keywords", "keywords"},
+            new String[]{"org_name", "org_name"},
+            new String[]{"org_city", "org_citie"},
+            new String[]{"org_state", "org_state"},
+            new String[]{"org_country", "org_country"},
+            new String[]{"principal_investigators", "principal_investigators"},
+            new String[]{"lead_doc", "docs"},
+            new String[]{"program_officers", "program_officers"},
+            new String[]{"award_amount", "award_amount"},
+            new String[]{"nci_funded_amount", "nci_funded_amount"},
+            new String[]{"award_notice_date", "award_notice_date"},
+            new String[]{"project_start_date", "project_start_date"},
+            new String[]{"project_end_date", "project_end_date"},
+            new String[]{"full_foa", "full_foa"},
+        };
+
+        String defaultSort = "project_id"; // Default sort order
+
+        // the indexes in ES are named after what is passed as filter params, the sorting params have different names for the same index properties
+        // we need to translate 'fiscal_year'(sort param) to 'fiscal_years.raw'(index property) for sorting
+        // we need to translate 'lead_doc'(sort param) to 'docs'(index property) for sorting
+        // we need to translate 'program'(sort param) to 'programs'(index property) for sorting
+        // we can leave 'award_amount'(sort param) alone for now, until we change how we handle the 'award_amount/award_amounts' index
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("program", "programs"),
+                Map.entry("lead_doc", "docs"),
+                Map.entry("fiscal_year", "fiscal_years.raw"),
+                Map.entry("award_amount", "award_amount"),
+                Map.entry("project_id", "project_id"),
+                Map.entry("project_title", "project_title"),
+                Map.entry("principal_investigators", "principal_investigators"),
+                Map.entry("project_end_date", "project_end_date")
+        );
+
+        return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
     }
 }
