@@ -592,19 +592,30 @@ public class BentoEsFilter implements DataFetcher {
         searchCategories.add(Map.of(
                 GS_END_POINT, PROJECTS_END_POINT,
                 GS_COUNT_RESULT_FIELD, "project_count",
-                GS_COUNT_FIELD, "project_id_kw", // returned results to count (unique) toward total result count
+                GS_COUNT_FIELD, "project_id", // returned results to count (unique) toward total result count
                 GS_RESULT_FIELD, "projects",
-                GS_SEARCH_FIELD, List.of("project_id", "application_id",
-                                        "project_title", "abstract_text",
-                                        "keywords", "org_name", "org_city", "org_state", "lead_doc", "principal_investigators",
-                                        "program_officers", "full_foa", "program"),
-                GS_SORT_FIELD, "project_id_kw",
+                GS_SEARCH_FIELD, List.of("project_id.search", "application_id.search",
+                                        "project_title.search", "abstract_text.search",
+                                        "keywords.search", "org_name.search", "org_city.search", "org_state.search", "docs.search", "principal_investigators.search",
+                                        "program_officers.search", "full_foa.search", "programs.search"),
+                GS_SORT_FIELD, "project_id",
                 GS_COLLECT_FIELDS, new String[][]{
                         new String[]{"project_id", "project_id"},
-                        new String[]{"application_id", "application_id"}
+                        new String[]{"application_id", "application_id"},
+                        new String[]{"project_title", "project_title"},
+                        new String[]{"abstract_text", "abstract_text"},
+                        new String[]{"keywords", "keywords"},
+                        new String[]{"org_name", "org_name"},
+                        new String[]{"org_city", "org_city"},
+                        new String[]{"org_state", "org_state"},
+                        new String[]{"lead_doc", "docs"},
+                        new String[]{"principal_investigators", "principal_investigators"},
+                        new String[]{"program_officers", "program_officers"},
+                        new String[]{"full_foa", "full_foa"},
+                        new String[]{"program", "programs"}
                 },
                 GS_HIGHLIGHT_FIELDS, new String[][] {
-                        new String[]{"highlight", "project_id"}
+                        new String[]{"highlight", "project_id.search"}
                 },
                 GS_CATEGORY_TYPE, "project"
         ));

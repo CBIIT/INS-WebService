@@ -172,6 +172,17 @@ type FileDetail {
 type GS_Project {
     project_id: String
     application_id: String
+    project_title: String
+    abstract_text: String
+    keywords: String
+    org_name: String
+    org_city: String
+    org_state: String
+    lead_doc: String
+    principal_investigators: String
+    program_officers: String
+    full_foa: String
+    program: String
     highlight: String
 }
 
@@ -240,7 +251,7 @@ type GS_About {
 }
 
 type GlobalSearchResult {
-    project_count: Int
+    project_count: String
     projects: [GS_Project]
 }
 
