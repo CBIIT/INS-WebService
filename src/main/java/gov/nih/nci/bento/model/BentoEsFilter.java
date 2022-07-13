@@ -612,7 +612,8 @@ public class BentoEsFilter implements DataFetcher {
                         new String[]{"principal_investigators", "principal_investigators"},
                         new String[]{"program_officers", "program_officers"},
                         new String[]{"full_foa", "full_foa"},
-                        new String[]{"program", "programs"}
+                        new String[]{"program", "programs"},
+                        new String[]{"type", "type"}
                 },
                 GS_HIGHLIGHT_FIELDS, new String[][] {
                         new String[]{"highlight", "project_id.search"}

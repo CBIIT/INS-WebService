@@ -183,6 +183,7 @@ type GS_Project {
     program_officers: String
     full_foa: String
     program: String
+    type: String
     highlight: String
 }
 
