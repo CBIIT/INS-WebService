@@ -615,9 +615,9 @@ public class BentoEsFilter implements DataFetcher {
                         new String[]{"program", "programs"},
                         new String[]{"type", "type"}
                 },
-                GS_HIGHLIGHT_FIELDS, new String[][] {
-                        new String[]{"highlight", "project_id.search"}
-                },
+                // GS_HIGHLIGHT_FIELDS, new String[][] {
+                //         new String[]{"highlight", "project_id.search"}
+                // },
                 GS_CATEGORY_TYPE, "project"
         ));
 
@@ -632,7 +632,7 @@ public class BentoEsFilter implements DataFetcher {
             Request request = new Request("GET", (String)category.get(GS_END_POINT));
             String sortFieldName = (String)category.get(GS_SORT_FIELD);
             query.put("sort", Map.of(sortFieldName, "asc"));
-            query = addHighlight(query, category);
+            // query = addHighlight(query, category);
 
             // size and offset
             query.put("size", size);
