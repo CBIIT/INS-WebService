@@ -125,8 +125,8 @@ type ProjectOverViewResult {
     principal_investigators: String
     lead_doc: String
     program_officers: String
-    award_amount: Int
-    nci_funded_amount: Int
+    award_amount: String
+    nci_funded_amount: String
     award_notice_date: String
     project_start_date: String
     project_end_date: String
@@ -167,6 +167,24 @@ type FileDetail {
     file_size: Float
     file_id: String
     md5sum: String
+}
+
+type GS_Project {
+    project_id: String
+    application_id: String
+    project_title: String
+    abstract_text: String
+    keywords: String
+    org_name: String
+    org_city: String
+    org_state: String
+    lead_doc: String
+    principal_investigators: String
+    program_officers: String
+    full_foa: String
+    program: String
+    type: String
+    highlight: String
 }
 
 type GS_Program {
@@ -234,6 +252,11 @@ type GS_About {
 }
 
 type GlobalSearchResult {
+    project_count: String
+    projects: [GS_Project]
+}
+
+type DEPRECATEDGlobalSearchResult {
     program_count: Int
     programs: [GS_Program]
 
@@ -383,7 +406,7 @@ type QueryType {
 
     findSubjectIdsInList(subject_ids: [String] = []): [SubjectResult]
 
-    globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
+    globalSearch (input: String = "", first: Int = 10, offset: Int = 0): GlobalSearchResult
 
     searchProjects (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""]): SearchProjectsResult
 
