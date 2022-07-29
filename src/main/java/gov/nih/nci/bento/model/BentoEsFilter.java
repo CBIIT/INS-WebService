@@ -660,6 +660,11 @@ public class BentoEsFilter implements DataFetcher {
 
         }
 
+        // List<Map<String, String>> about_results = searchAboutPage(input);
+        // int about_count = about_results.size();
+        // result.put("about_count", about_count);
+        // result.put("about_page", paginate(about_results, size, offset));
+
         return result;
     }
 
@@ -1177,20 +1182,26 @@ public class BentoEsFilter implements DataFetcher {
             new String[]{"full_foa", "full_foa"},
         };
 
-        String defaultSort = "project_id"; // Default sort order
+        String defaultSort = "project_id.sort"; // Default sort order
 
         // the indexes in ES are named after what is passed as filter params, the sorting params have different names for the same index properties
         // we need to translate 'fiscal_year'(sort param) to 'fiscal_years.raw'(index property) for sorting
-        // we need to translate 'lead_doc'(sort param) to 'docs'(index property) for sorting
-        // we need to translate 'program'(sort param) to 'programs'(index property) for sorting
+        // we need to translate 'lead_doc'(sort param) to 'docs.sort'(index property) for sorting
+        // we need to translate 'program'(sort param) to 'programs.sort'(index property) for sorting
         // we can leave 'award_amount'(sort param) alone for now, until we change how we handle the 'award_amount/award_amounts' index
+        // Additionally we change 'project_title' to 'project_title.sort' and 'project_id' to 'project_id.sort' to preserve
+        //   the pattern of having a 'normalizer: lowercase' sort field for textual columns that doesn't affect (make lowercase)
+        //   the query results for any other queries against those properties
+        //   For example, if the top-level 'programs' property had 'normalizer: lowercase' then queries against 'programs' would
+        //   return lowercase results, which caused problems for the Filter feature queries, hence a separate 'sort' subfield
+        //   with the 'normalizer: lowercase' encapsulated
         Map<String, String> mapping = Map.ofEntries(
-                Map.entry("program", "programs"),
-                Map.entry("lead_doc", "docs"),
+                Map.entry("program", "programs.sort"),
+                Map.entry("lead_doc", "docs.sort"),
                 Map.entry("fiscal_year", "fiscal_years.raw"),
                 Map.entry("award_amount", "award_amount"),
-                Map.entry("project_id", "project_id"),
-                Map.entry("project_title", "project_title"),
+                Map.entry("project_id", "project_id.sort"),
+                Map.entry("project_title", "project_title.sort"),
                 Map.entry("principal_investigators", "principal_investigators"),
                 Map.entry("project_end_date", "project_end_date")
         );
