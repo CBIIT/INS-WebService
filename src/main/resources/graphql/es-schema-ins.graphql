@@ -254,6 +254,9 @@ type GS_About {
 type GlobalSearchResult {
     project_count: String
     projects: [GS_Project]
+
+    about_count: Int
+    about_page: [GS_About]
 }
 
 type DEPRECATEDGlobalSearchResult {
