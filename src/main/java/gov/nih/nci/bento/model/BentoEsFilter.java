@@ -660,10 +660,10 @@ public class BentoEsFilter implements DataFetcher {
 
         }
 
-        // List<Map<String, String>> about_results = searchAboutPage(input);
-        // int about_count = about_results.size();
-        // result.put("about_count", about_count);
-        // result.put("about_page", paginate(about_results, size, offset));
+        List<Map<String, String>> about_results = searchAboutPage(input);
+        int about_count = about_results.size();
+        result.put("about_count", about_count);
+        result.put("about_page", paginate(about_results, size, offset));
 
         return result;
     }
@@ -692,6 +692,7 @@ public class BentoEsFilter implements DataFetcher {
                     ),
                 "size", ESService.MAX_ES_SIZE
         );
+        System.out.println(gson.toJson(query).toString());
         Request request = new Request("GET", GS_ABOUT_END_POINT);
         request.setJsonEntity(gson.toJson(query));
         JsonObject jsonObject = esService.send(request);
