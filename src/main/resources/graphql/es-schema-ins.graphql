@@ -112,6 +112,7 @@ type PublicationOverViewResult {
 type ProjectOverViewResult {
     program: String
     project_id: String
+    activity_code: String
     application_id: String
     fiscal_year: String
     project_title: String
