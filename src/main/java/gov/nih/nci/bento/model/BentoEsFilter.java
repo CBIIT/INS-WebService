@@ -1161,6 +1161,7 @@ public class BentoEsFilter implements DataFetcher {
     private List<Map<String, Object>> projectOverView(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
             new String[]{"program", "programs"},
+            new String[]{"activity_code", "activity_code"},
             new String[]{"project_id", "project_id"},
             new String[]{"application_id", "application_id"},
             new String[]{"fiscal_year", "fiscal_years"},
@@ -1190,7 +1191,8 @@ public class BentoEsFilter implements DataFetcher {
         // we need to translate 'lead_doc'(sort param) to 'docs.sort'(index property) for sorting
         // we need to translate 'program'(sort param) to 'programs.sort'(index property) for sorting
         // we can leave 'award_amount'(sort param) alone for now, until we change how we handle the 'award_amount/award_amounts' index
-        // Additionally we change 'project_title' to 'project_title.sort' and 'project_id' to 'project_id.sort' to preserve
+        // Additionally we change 'project_title' to 'project_title.sort' and 'project_id' to 'project_id.sort' and 
+        //   'activity_code' to 'activity_code.sort' to preserve
         //   the pattern of having a 'normalizer: lowercase' sort field for textual columns that doesn't affect (make lowercase)
         //   the query results for any other queries against those properties
         //   For example, if the top-level 'programs' property had 'normalizer: lowercase' then queries against 'programs' would
@@ -1201,6 +1203,7 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("lead_doc", "docs.sort"),
                 Map.entry("fiscal_year", "fiscal_years.raw"),
                 Map.entry("award_amount", "award_amount"),
+                Map.entry("activity_code", "activity_code.sort"),
                 Map.entry("project_id", "project_id.sort"),
                 Map.entry("project_title", "project_title.sort"),
                 Map.entry("principal_investigators", "principal_investigators"),
