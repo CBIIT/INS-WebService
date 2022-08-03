@@ -594,7 +594,7 @@ public class BentoEsFilter implements DataFetcher {
                 GS_COUNT_RESULT_FIELD, "project_count",
                 GS_COUNT_FIELD, "project_id", // returned results to count (unique) toward total result count
                 GS_RESULT_FIELD, "projects",
-                GS_SEARCH_FIELD, List.of("project_id.search", "application_id.search",
+                GS_SEARCH_FIELD, List.of("activity_code.search", "serial_number.search", "project_id.search", "application_id.search",
                                         "project_title.search", "abstract_text.search",
                                         "keywords.search", "org_name.search", "org_city.search", "org_state.search", "docs.search", "principal_investigators.search",
                                         "program_officers.search", "full_foa.search", "programs.search"),
@@ -692,7 +692,7 @@ public class BentoEsFilter implements DataFetcher {
                     ),
                 "size", ESService.MAX_ES_SIZE
         );
-        System.out.println(gson.toJson(query).toString());
+        
         Request request = new Request("GET", GS_ABOUT_END_POINT);
         request.setJsonEntity(gson.toJson(query));
         JsonObject jsonObject = esService.send(request);
