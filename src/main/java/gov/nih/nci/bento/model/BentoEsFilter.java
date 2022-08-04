@@ -62,6 +62,8 @@ public class BentoEsFilter implements DataFetcher {
     final int GS_LIMIT = 10;
     final String GS_END_POINT = "endpoint";
     final String GS_RESULT_FIELD = "result_field";
+    final String GS_AGG_FIELD = "agg_field";
+    final String GS_AGG_RESULT_FIELD = "agg_result_field";
     final String GS_COUNT_RESULT_FIELD = "count_result_field";
     final String GS_COUNT_FIELD = "count_field";
     final String GS_SEARCH_FIELD = "search_field";
@@ -593,6 +595,8 @@ public class BentoEsFilter implements DataFetcher {
                 GS_END_POINT, PROJECTS_END_POINT,
                 GS_COUNT_RESULT_FIELD, "project_count",
                 GS_COUNT_FIELD, "project_id", // returned results to count (unique) toward total result count
+                GS_AGG_RESULT_FIELD, "project_titles",
+                GS_AGG_FIELD, "project_title",
                 GS_RESULT_FIELD, "projects",
                 GS_SEARCH_FIELD, List.of("activity_code.search", "serial_number.search", "project_id.search", "application_id.search",
                                         "project_title.search", "abstract_text.search",
@@ -624,9 +628,10 @@ public class BentoEsFilter implements DataFetcher {
         for (Map<String, Object> category: searchCategories) {
             String resultFieldName = (String) category.get(GS_RESULT_FIELD);
             String resultCountFieldName = (String) category.get(GS_COUNT_FIELD);
+            String resultAggFieldName = (String) category.get(GS_AGG_FIELD);
             String[][] properties = (String[][]) category.get(GS_COLLECT_FIELDS);
             String[][] highlights = (String[][]) category.get(GS_HIGHLIGHT_FIELDS);
-            Map<String, Object> query = getGlobalSearchQuery(input, category, resultCountFieldName);
+            Map<String, Object> query = getGlobalSearchQuery(input, category, resultCountFieldName, resultAggFieldName);
 
             // Get results
             Request request = new Request("GET", (String)category.get(GS_END_POINT));
@@ -646,6 +651,15 @@ public class BentoEsFilter implements DataFetcher {
             Integer countResultFieldName = jsonObject.get("aggregations").getAsJsonObject().get("field_count").getAsJsonObject().get("value").getAsInt();
             result.put((String)category.get(GS_COUNT_RESULT_FIELD), countResultFieldName);
 
+            // Get aggregation field
+            JsonArray aggResultFieldName = jsonObject.get("aggregations").getAsJsonObject().get("agg_field").getAsJsonObject().get("buckets").getAsJsonArray();
+            List<Map<String, Object>> aggResults = new ArrayList<Map<String, Object>>();
+            for (JsonElement bucket: aggResultFieldName) {
+                aggResults.add(Map.of("title", bucket.getAsJsonObject().get("key").getAsString()));
+            }
+            result.put((String)category.get(GS_AGG_RESULT_FIELD), aggResults);
+
+            
             for (var object: objects) {
                 object.put(GS_CATEGORY_TYPE, category.get(GS_CATEGORY_TYPE));
             }
@@ -715,7 +729,7 @@ public class BentoEsFilter implements DataFetcher {
         return result;
     }
 
-    private Map<String, Object> getGlobalSearchQuery(String input, Map<String, Object> category, String resultCountFieldName) {
+    private Map<String, Object> getGlobalSearchQuery(String input, Map<String, Object> category, String resultCountFieldName, String resultAggFieldName) {
         List<String> searchFields = (List<String>)category.get(GS_SEARCH_FIELD);
         List<Object> searchClauses = new ArrayList<>();
         for (String searchFieldName: searchFields) {
@@ -726,7 +740,14 @@ public class BentoEsFilter implements DataFetcher {
         
         // get an accurate count of results, not just number of documents returned -- those may be different depending upon
         //   the index schema
-        query.put("aggs", Map.of("field_count", Map.of("cardinality", Map.of("field", resultCountFieldName))));
+        Map<String, Object> aggs = new HashMap<String, Object>();
+        if (resultCountFieldName != null) {
+            aggs.put("field_count", Map.of("cardinality", Map.of("field", resultCountFieldName)));
+        }
+        if (resultAggFieldName != null) {
+            aggs.put("agg_field", Map.of("terms", Map.of("field", resultAggFieldName)));
+        }
+        query.put("aggs", aggs);
 
         return query;
     }
