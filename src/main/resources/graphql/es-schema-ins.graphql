@@ -252,8 +252,13 @@ type GS_About {
     text: String
 }
 
+type GS_Title {
+    title: String
+}
+
 type GlobalSearchResult {
     project_count: String
+    project_titles: [GS_Title]
     projects: [GS_Project]
 
     about_count: Int
