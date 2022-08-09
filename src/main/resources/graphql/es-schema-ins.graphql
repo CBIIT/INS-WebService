@@ -257,7 +257,7 @@ type GS_Title {
 }
 
 type GlobalSearchResult {
-    project_count: String
+    project_count: Int
     project_titles: [GS_Title]
     projects: [GS_Project]
 
