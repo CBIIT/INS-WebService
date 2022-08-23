@@ -1227,7 +1227,7 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("activity_code", "activity_code.sort"),
                 Map.entry("project_id", "project_id.sort"),
                 Map.entry("project_title", "project_title.sort"),
-                Map.entry("principal_investigators", "principal_investigators"),
+                Map.entry("principal_investigators", "principal_investigators.sort"),
                 Map.entry("program_officers", "program_officers.sort"),
                 Map.entry("project_end_date", "project_end_date")
         );
