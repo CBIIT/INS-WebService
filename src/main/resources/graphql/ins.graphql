@@ -126,6 +126,7 @@ type ProgramInfo {
 
 type ProjectInfo {
     project_id: String
+    activity_code: String
     application_id: String
     fiscal_year: String
     project_title: String
@@ -393,8 +394,9 @@ type QueryType {
     programClinicalTrialCount(program_id: String): Int @cypher(statement: """
         MATCH (p:program {program_id: $program_id})
         OPTIONAL MATCH (p)<--(pr:project)
-        OPTIONAL MATCH (pr)<--(c:clinical_trial)
-        RETURN COUNT(DISTINCT c)
+        OPTIONAL MATCH (ct:clinical_trial)
+            WHERE (pr)<--(:publication)<--(ct) OR (pr)<--(ct)
+        RETURN COUNT(DISTINCT ct)
     """, passThrough: true)
 
     programPatentCount(program_id: String): Int @cypher(statement: """
@@ -418,11 +420,11 @@ type QueryType {
         MATCH (p)<--(pr:project)
         WITH DISTINCT pr
         RETURN {
-          funded_amount_1: SUM(CASE WHEN toInteger(pr.nci_funded_amount) < 500000 THEN 1 ELSE 0 END),
-          funded_amount_2: SUM(CASE WHEN 500000 <= toInteger(pr.nci_funded_amount) < 1000000 THEN 1 ELSE 0 END),
-          funded_amount_3: SUM(CASE WHEN 1000000 <= toInteger(pr.nci_funded_amount) < 3000000 THEN 1 ELSE 0 END),
-          funded_amount_4: SUM(CASE WHEN 3000000 <= toInteger(pr.nci_funded_amount) < 10000000 THEN 1 ELSE 0 END),
-          funded_amount_5: SUM(CASE WHEN 10000000 <= toInteger(pr.nci_funded_amount) THEN 1 ELSE 0 END)
+          funded_amount_1: SUM(CASE WHEN toInteger(pr.award_amount) < 250000 THEN 1 ELSE 0 END),
+          funded_amount_2: SUM(CASE WHEN 250000 <= toInteger(pr.award_amount) < 500000 THEN 1 ELSE 0 END),
+          funded_amount_3: SUM(CASE WHEN 500000 <= toInteger(pr.award_amount) < 750000 THEN 1 ELSE 0 END),
+          funded_amount_4: SUM(CASE WHEN 750000 <= toInteger(pr.award_amount) < 1000000 THEN 1 ELSE 0 END),
+          funded_amount_5: SUM(CASE WHEN 1000000 <= toInteger(pr.award_amount) THEN 1 ELSE 0 END)
         }
     """, passThrough: true)
 
@@ -511,7 +513,7 @@ type QueryType {
         return  COUNT(DISTINCT d.accession)
     """, passThrough: true)
 
-    numberOfDatasetsByProjects(project_ids: [String] = []): Int @cypher(statement: """
+    numberOfDatasets(project_ids: [String] = []): Int @cypher(statement: """
         MATCH (pr:project)
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
         OPTIONAL MATCH (pr)<--(:publication)<--(dt)
@@ -520,7 +522,7 @@ type QueryType {
         RETURN COUNT(DISTINCT dt.accession)
     """, passThrough: true)
 
-    numberOfPatentsByProjects(project_ids: [String] = []): Int @cypher(statement: """
+    numberOfPatents(project_ids: [String] = []): Int @cypher(statement: """
         MATCH (pr:project)
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
         OPTIONAL MATCH (pr)<--(p)
@@ -1040,7 +1042,7 @@ type QueryType {
             num_geos: 1,
             num_sras: 1,
             num_clinical_trials: 1,
-            projects: collect(DISTINCT pr {.*})
+            projects: collect(DISTINCT pr {.*, activity_code: SUBSTRING(pr.project_id, 1,3)})
         }
     """, passThrough: true)
 
