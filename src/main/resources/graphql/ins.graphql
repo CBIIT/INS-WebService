@@ -1030,13 +1030,15 @@ type QueryType {
 
     programDetail(program_id: String): ProgramDetail @cypher(statement:  """
         MATCH (p:program {program_id: $program_id})
+        MATCH (p)<--(pr:project)
+        WITH p, pr
         RETURN {
             program_id: p.program_id,
             program_name: p.program_name,
             program_description: p.program_description,
             program_website: p.program_website,
             num_publications: 1,
-            num_projects: 1,
+            num_projects: COUNT(DISTINCT pr.project_id),
             num_geos: 1,
             num_sras: 1,
             num_clinical_trials: 1,
