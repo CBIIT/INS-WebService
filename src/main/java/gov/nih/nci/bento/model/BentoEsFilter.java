@@ -125,15 +125,31 @@ public class BentoEsFilter implements DataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return patentOverView(args);
                         })
+                        .dataFetcher("patentOverViewByProject", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return patentOverView(args);
+                        })
                         .dataFetcher("clinicalTrialOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return clinicalTrialOverView(args);
+                        })
+                        .dataFetcher("clinicalTrialOverViewByProject", env -> {
                             Map<String, Object> args = env.getArguments();
                             return clinicalTrialOverView(args);
                         })
                         .dataFetcher("datasetOverView", env -> {
                             Map<String, Object> args = env.getArguments();
                             return datasetOverView(args);
-                          })
+                        })
+                        .dataFetcher("datasetOverViewByProject", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return datasetOverView(args);
+                        })
                         .dataFetcher("publicationOverView", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return publicationOverview(args);
+                         })
+                         .dataFetcher("publicationOverViewByProject", env -> {
                             Map<String, Object> args = env.getArguments();
                             return publicationOverview(args);
                          })

@@ -422,11 +422,15 @@ type QueryType {
     projectOverView (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""], offset: Int = 0, first: Int = 10, order_by: String = "", sort_direction: String = ""): [ProjectOverViewResult]
 
     publicationOverView (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PublicationOverViewResult]
+    publicationOverViewByProject (project_id: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PublicationOverViewResult]
 
     clinicalTrialOverView (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [ClinicalTrialOverViewResult]
+    clinicalTrialOverViewByProject (project_id: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [ClinicalTrialOverViewResult]
 
     patentOverView (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PatentOverViewResult]
+    patentOverViewByProject (project_id: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [PatentOverViewResult]
 
     datasetOverView (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [DatasetOverViewResult]
+    datasetOverViewByProject (project_id: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [DatasetOverViewResult]
 
 }
