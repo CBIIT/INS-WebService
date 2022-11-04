@@ -200,7 +200,8 @@ public class ESService {
         // List<Map<String, Object>> fields = new LinkedList<Map<String, Object>>();
         Map<String, Object> fields = new HashMap<String, Object>();
         for (String field: termAggNames) {
-            fields.put(field, Map.of("terms", Map.of("field", field)));
+            // the "size": 50 is so that we can have more than 10 buckets returned for our aggregations (the default)
+            fields.put(field, Map.of("terms", Map.of("field", field, "size", 50)));
         }
         newQuery.put("aggs", fields);
         return newQuery;
