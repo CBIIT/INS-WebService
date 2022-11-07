@@ -17,7 +17,9 @@ jobs:
         id: node 
         uses: actions/setup-node@v3
 
-      
+      - name: Install Contrast
+        id: contrast 
+        run: npm install -g @contrast/contrast-cli
 
 # jobs:
 #   Supply-Chain-Analysis:
