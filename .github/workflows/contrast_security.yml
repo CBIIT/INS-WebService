@@ -25,8 +25,7 @@ jobs:
 
       - name: Supply-Chain Analysis
         id: scan 
-        run: |
-          contrast audit -f pom.xml
+        run: contrast audit 
 
 # jobs:
 #   Supply-Chain-Analysis:
