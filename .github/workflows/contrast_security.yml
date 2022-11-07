@@ -31,8 +31,7 @@ jobs:
           orgId: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
           authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
           apiUrl: ${{ secrets.CONTRAST_API_URL }}
-          filePath: ./pom.xml
+          filePath: pom.xml
           severity: medium
           fail: true
-          ignoreDev: true
   
