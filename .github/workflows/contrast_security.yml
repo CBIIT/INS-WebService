@@ -24,12 +24,7 @@ jobs:
       - name: Supply-Chain Analysis
         id: scan 
         run: |
-          contrast audit
-          --organization-id {{ secrets.CONTRAST_ORGANIZATION_ID }}
-          --api-key {{ secrets.CONTRAST_API_KEY }}
-          --authorization {{ secrets.CONTRAST_AUTH_HEADER }}
-          --application-id ins
-          --host {{ CONTRAST_API_URL }}
+          contrast audit -f pom.xml
 
 # jobs:
 #   Supply-Chain-Analysis:
