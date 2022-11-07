@@ -6,32 +6,46 @@ on:
       - "main"
 
 jobs:
-  Supply-Chain-Analysis:
-    runs-on: ubuntu-latest 
-    steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v3
+  contrast:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout Repository
+        id: checkout 
+        uses: actions/checkout@v3 
 
-      - name: Install JDK
-        uses: actions/setup-java@v3 
-        with:
-          java-version: '11'
-          distribution: 'adopt'
+      - name: Install Node
+        id: node 
+        uses: actions/setup-node@v3
 
-      - name: Build JAR 
-        run: |
-          mvn clean install -DskipTests
+      
 
-      - name: Supply Chain Analysis
-        id: scan 
-        uses: Contrast-Security-OSS/contrast-sca-action@v1
-        with:
-          apiKey: ${{ secrets.CONTRAST_API_KEY }}
-          orgId: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
-          authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
-          apiUrl: ${{ secrets.CONTRAST_API_URL }}
-          filePath: pom.xml
-          severity: medium
-          fail: true
+# jobs:
+#   Supply-Chain-Analysis:
+#     runs-on: ubuntu-latest 
+#     steps:
+#       - name: Checkout
+#         id: checkout
+#         uses: actions/checkout@v3
+
+#       - name: Install JDK
+#         uses: actions/setup-java@v3 
+#         with:
+#           java-version: '11'
+#           distribution: 'adopt'
+
+#       - name: Build JAR 
+#         run: |
+#           mvn clean install -DskipTests
+
+#       - name: Supply Chain Analysis
+#         id: scan 
+#         uses: Contrast-Security-OSS/contrast-sca-action@v1
+#         with:
+#           apiKey: ${{ secrets.CONTRAST_API_KEY }}
+#           orgId: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
+#           authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
+#           apiUrl: ${{ secrets.CONTRAST_API_URL }}
+#           filePath: pom.xml
+#           severity: medium
+#           fail: false
   
