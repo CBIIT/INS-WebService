@@ -433,4 +433,13 @@ type QueryType {
     datasetOverView (programs: [String] = [""], docs: [String] = [""], fiscal_years: [String] = [""], award_amounts: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [DatasetOverViewResult]
     datasetOverViewByProject (project_id: [String] = [""], first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [DatasetOverViewResult]
 
+    numberOfPrograms: Int
+    numberOfProjects: Int
+    numberOfPublications: Int
+    numberOfGEOs: Int
+    numberOfSRAs: Int
+    numberOfDBGaps: Int
+    numberOfClinicalTrials: Int
+    numberOfPatents: Int
+
 }

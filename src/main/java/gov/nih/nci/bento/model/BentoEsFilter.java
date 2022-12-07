@@ -157,6 +157,38 @@ public class BentoEsFilter implements DataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return projectOverView(args);
                         })
+                        .dataFetcher("numberOfPrograms", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfPrograms(args);
+                        })
+                        .dataFetcher("numberOfProjects", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfProjects(args);
+                        })
+                        .dataFetcher("numberOfPublications", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfPublications(args);
+                        })
+                        .dataFetcher("numberOfGEOs", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfGEOs(args);
+                        })
+                        .dataFetcher("numberOfSRAs", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfSRAs(args);
+                        })
+                        .dataFetcher("numberOfDBGaps", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfDBGaps(args);
+                        })
+                        .dataFetcher("numberOfClinicalTrials", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfClinicalTrials(args);
+                        })
+                        .dataFetcher("numberOfPatents", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfPatents(args);
+                        })
                 )
                 .build();
     }
@@ -1249,5 +1281,85 @@ public class BentoEsFilter implements DataFetcher {
         );
 
         return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
+
+    private Integer numberOfPrograms(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());
+
+        Request request = new Request("GET", PROGRAMS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfProjects(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());
+
+        Request request = new Request("GET", PROJECTS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfPublications(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());
+
+        Request request = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfGEOs(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of("transformed_type", List.of("GEO")), Set.of());  // RANGE_PARAMS
+
+        Request request = new Request("GET", DATASETS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfSRAs(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of("transformed_type", List.of("SRA")), Set.of());  // RANGE_PARAMS
+
+        Request request = new Request("GET", DATASETS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfDBGaps(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of("transformed_type", List.of("dbGaP")), Set.of());  // RANGE_PARAMS
+
+        Request request = new Request("GET", DATASETS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfClinicalTrials(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());
+
+        Request request = new Request("GET", CLINICAL_TRIALS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfPatents(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());
+
+        Request request = new Request("GET", PATENTS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
     }
 }
