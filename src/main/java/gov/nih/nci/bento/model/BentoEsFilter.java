@@ -189,6 +189,22 @@ public class BentoEsFilter implements DataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return numberOfPatents(args);
                         })
+                        .dataFetcher("programPublicationCount", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return programPublicationCount(args);
+                        })
+                        .dataFetcher("programDatasetCount", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return programDatasetCount(args);
+                        })
+                        .dataFetcher("programClinicalTrialCount", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return programClinicalTrialCount(args);
+                        })
+                        .dataFetcher("programPatentCount", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return programPatentCount(args);
+                        })
                 )
                 .build();
     }
@@ -1355,6 +1371,46 @@ public class BentoEsFilter implements DataFetcher {
 
     private Integer numberOfPatents(Map<String, Object> params) throws IOException {
         Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());
+
+        Request request = new Request("GET", PATENTS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer programPublicationCount(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of("programs", List.of(params.get("program_id"))), Set.of());
+
+        Request request = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer programDatasetCount(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of("programs", List.of(params.get("program_id"))), Set.of());
+
+        Request request = new Request("GET", DATASETS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer programClinicalTrialCount(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of("programs", List.of(params.get("program_id"))), Set.of());
+
+        Request request = new Request("GET", CLINICAL_TRIALS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer programPatentCount(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of("programs", List.of(params.get("program_id"))), Set.of());
 
         Request request = new Request("GET", PATENTS_COUNT_END_POINT);
         request.setJsonEntity(gson.toJson(query));

@@ -442,4 +442,8 @@ type QueryType {
     numberOfClinicalTrials: Int
     numberOfPatents: Int
 
+    programPublicationCount (program_id: String): Int
+    programDatasetCount (program_id: String): Int
+    programClinicalTrialCount (program_id: String): Int
+    programPatentCount (program_id: String): Int
 }
