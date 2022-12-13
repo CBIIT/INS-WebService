@@ -208,7 +208,7 @@ type ProgramDetail {
     projects: [ProjectInfo]
 }
 
-type ProjectDetail {
+type DEPRECATEDProjectDetail {
     project_id: String
     application_id: String
     fiscal_year: String
@@ -333,13 +333,13 @@ type QueryType {
     schemaVersion: String @cypher(statement: "RETURN '1.1.0'")
 
     "Simple counts"
-    numberOfPrograms: Int @cypher(statement: "MATCH (n:program) return count(n)")
-    numberOfProjects: Int @cypher(statement: "MATCH (n:project) return count(n)")
-    numberOfPublications: Int @cypher(statement: "MATCH (n:publication) return count(n)")
-    numberOfGEOs: Int @cypher(statement: "MATCH (n:geo) return count(n)")
-    numberOfSRAs: Int @cypher(statement: "MATCH (n:sra) return count(n)")
-    numberOfDBGaps: Int @cypher(statement: "MATCH (n:dbgap) return count(n)")
-    numberOfClinicalTrials: Int @cypher(statement: "MATCH (n:clinical_trial) return count(n)")
+    DEPRECATEDnumberOfPrograms: Int @cypher(statement: "MATCH (n:program) return count(n)")
+    DEPRECATEDnumberOfProjects: Int @cypher(statement: "MATCH (n:project) return count(n)")
+    DEPRECATEDnumberOfPublications: Int @cypher(statement: "MATCH (n:publication) return count(n)")
+    DEPRECATEDnumberOfGEOs: Int @cypher(statement: "MATCH (n:geo) return count(n)")
+    DEPRECATEDnumberOfSRAs: Int @cypher(statement: "MATCH (n:sra) return count(n)")
+    DEPRECATEDnumberOfDBGaps: Int @cypher(statement: "MATCH (n:dbgap) return count(n)")
+    DEPRECATEDnumberOfClinicalTrials: Int @cypher(statement: "MATCH (n:clinical_trial) return count(n)")
 
     programInfo: [ProgramInfo] @cypher(statement: """
         MATCH (p:program)
@@ -354,7 +354,7 @@ type QueryType {
         }
     """, passThrough: true)
 
-    programPublicationCount(program_id: String): Int @cypher(statement: """
+    DEPRECATEDprogramPublicationCount(program_id: String): Int @cypher(statement: """
         MATCH (p:program {program_id: $program_id})
         OPTIONAL MATCH (p)<--(pr:project)
         OPTIONAL MATCH (pr)<--(pub:publication)
@@ -382,14 +382,14 @@ type QueryType {
         RETURN count(DISTINCT d)
     """, passThrough: true)
 
-    programDatasetCount(program_id: String): Int @cypher(statement: """
+    DEPRECATEDprogramDatasetCount(program_id: String): Int @cypher(statement: """
         MATCH (p:program {program_id: $program_id})
         OPTIONAL MATCH (p)<--(:project)<--(:publication)<--(ds)
         WHERE ds:geo OR ds:sra OR ds:dbgap
         RETURN COUNT(DISTINCT ds)
     """, passThrough: true)
 
-    programClinicalTrialCount(program_id: String): Int @cypher(statement: """
+    DEPRECATEDprogramClinicalTrialCount(program_id: String): Int @cypher(statement: """
         MATCH (p:program {program_id: $program_id})
         OPTIONAL MATCH (p)<--(pr:project)
         OPTIONAL MATCH (ct:clinical_trial)
@@ -397,7 +397,7 @@ type QueryType {
         RETURN COUNT(DISTINCT ct)
     """, passThrough: true)
 
-    programPatentCount(program_id: String): Int @cypher(statement: """
+    DEPRECATEDprogramPatentCount(program_id: String): Int @cypher(statement: """
         MATCH (p:program {program_id: $program_id})
         OPTIONAL MATCH (p)<--(:project)<--(pat)
         WHERE pat:granted_patent OR pat:patent_application
@@ -520,7 +520,7 @@ type QueryType {
         RETURN COUNT(DISTINCT dt.accession)
     """, passThrough: true)
 
-    numberOfPatents(project_ids: [String] = []): Int @cypher(statement: """
+    DEPRECATEDnumberOfPatents(project_ids: [String] = []): Int @cypher(statement: """
         MATCH (pr:project)
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
         OPTIONAL MATCH (pr)<--(p)
@@ -1044,7 +1044,7 @@ type QueryType {
         }
     """, passThrough: true)
 
-    projectDetail(project_id: String): ProjectDetail @cypher(statement:  """
+    DEPRECATEDprojectDetail(project_id: String): DEPRECATEDProjectDetail @cypher(statement:  """
         MATCH (pr:project {project_id: $project_id})
         OPTIONAL MATCH (pr)<--(pub:publication)
         OPTIONAL MATCH (pub)<--(dt)
