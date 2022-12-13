@@ -208,7 +208,7 @@ type ProgramDetail {
     projects: [ProjectInfo]
 }
 
-type ProjectDetail {
+type DEPRECATEDProjectDetail {
     project_id: String
     application_id: String
     fiscal_year: String
@@ -341,7 +341,7 @@ type QueryType {
     DEPRECATEDnumberOfDBGaps: Int @cypher(statement: "MATCH (n:dbgap) return count(n)")
     DEPRECATEDnumberOfClinicalTrials: Int @cypher(statement: "MATCH (n:clinical_trial) return count(n)")
 
-    programInfo: [ProgramInfo] @cypher(statement: """
+    programInfo: [DEPRECATEDProgramInfo] @cypher(statement: """
         MATCH (p:program)
         OPTIONAL MATCH (p)<--(pr:project)
         OPTIONAL MATCH (pr)<--(pub:publication)
@@ -1044,7 +1044,7 @@ type QueryType {
         }
     """, passThrough: true)
 
-    projectDetail(project_id: String): ProjectDetail @cypher(statement:  """
+    DEPRECATEDprojectDetail(project_id: String): DEPRECATEDProjectDetail @cypher(statement:  """
         MATCH (pr:project {project_id: $project_id})
         OPTIONAL MATCH (pr)<--(pub:publication)
         OPTIONAL MATCH (pub)<--(dt)
