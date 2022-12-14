@@ -511,7 +511,7 @@ type QueryType {
         return  COUNT(DISTINCT d.accession)
     """, passThrough: true)
 
-    numberOfDatasets(project_ids: [String] = []): Int @cypher(statement: """
+    DEPRECATEDnumberOfDatasets(project_ids: [String] = []): Int @cypher(statement: """
         MATCH (pr:project)
             WHERE (size($project_ids) = 0 OR pr.project_id IN $project_ids)
         OPTIONAL MATCH (pr)<--(:publication)<--(dt)

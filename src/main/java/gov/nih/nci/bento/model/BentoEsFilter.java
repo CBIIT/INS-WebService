@@ -181,6 +181,10 @@ public class BentoEsFilter implements DataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return numberOfDBGaps(args);
                         })
+                        .dataFetcher("numberOfDatasets", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfDatasets(args);
+                        })
                         .dataFetcher("numberOfClinicalTrials", env -> {
                             Map<String, Object> args = env.getArguments();
                             return numberOfClinicalTrials(args);
@@ -1360,6 +1364,16 @@ public class BentoEsFilter implements DataFetcher {
 
     private Integer numberOfDBGaps(Map<String, Object> params) throws IOException {
         Map<String, Object> query = esService.buildFacetFilterQuery(Map.of("transformed_type", List.of("dbGaP")), Set.of());  // RANGE_PARAMS
+
+        Request request = new Request("GET", DATASETS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfDatasets(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());  // RANGE_PARAMS
 
         Request request = new Request("GET", DATASETS_COUNT_END_POINT);
         request.setJsonEntity(gson.toJson(query));
