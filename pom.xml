@@ -108,7 +108,7 @@
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
-			<version>1.27</version>
+			<version>1.32</version>
 		</dependency>
 
 		<!-- Unirest Java -->
@@ -185,7 +185,7 @@
 		<dependency>
 			<groupId>org.neo4j.driver</groupId>
 			<artifactId>neo4j-java-driver</artifactId>
-			<version>4.2.0</version>
+			<version>4.2.9</version>
 		</dependency>
 
 		<dependency>
@@ -211,7 +211,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
-            <version>1.12.147</version>
+            <version>1.12.368</version>
             <scope>compile</scope>
         </dependency>
 
