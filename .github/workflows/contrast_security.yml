@@ -1,0 +1,31 @@
+name: Contrast Security
+run-name: Contrast Security
+on: workflow_dispatch
+
+jobs:
+  build_and_scan:
+    permissions:
+      actions: read 
+      contents: read 
+      security-events: write 
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+    - 
+    - name: Contrast Scan Action
+      uses: Contrast-Security-OSS/contrastscan-action@v2.0.3
+      with:
+        artifact: mypath/target/myartifact.jar
+        apiKey: ${{ secrets.CONTRAST_API_KEY }}
+        orgId: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
+        authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
+        severity: high
+        fail: true
+    # To list vulnerabilities in the GitHub Security Tab of the repo include GitHub upload-sarif action
+    # The value of `sarif_file` must be `results.sarif` 
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: results.sarif
