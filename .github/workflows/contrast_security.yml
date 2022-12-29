@@ -54,8 +54,8 @@ jobs:
         with:
           node-version: 16 
       
-      - name: Install Contrast 
-        run: npm i -g @contrast/contrast-cli@latest 
+      # - name: Install Contrast 
+      #   run: npm i -g @contrast/contrast-cli@latest 
 
       - name: Dowload Artifact 
         uses: actions/download-artifact@v3
@@ -63,8 +63,8 @@ jobs:
           name: maven-build
           path: build
       
-      - name: Display structure of downloaded files
-        run: ls -R
+      # - name: Display structure of downloaded files
+      #   run: ls -R
 
       - name: Contrast Scan Action
         uses: Contrast-Security-OSS/contrastscan-action@v2.0.3
@@ -80,20 +80,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: results.sarif
-
-      # - name: Scan Artifact 
-      #   env:
-      #     CT_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
-      #     CT_AUTH_TOKEN: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
-      #     ORG_ID: ${{ secrets.CONTRAST_AUTH_HEADER }}
-      #     URL: ${{ secrets.CONTRAST_API_URL }}
-      #   run: |
-      #     contrast-cli --scan ./builds/ROOT.war \
-      #     --api_key $CT_API_KEY \
-      #     --authorization $CT_AUTH_TOKEN \
-      #     --organization_id $ORG_ID \
-      #     --project_id 44f84082-c3c4-414c-9b63-a48b7d71f719/scans/6316924e-2335-45a6-8aa2-5e0c3d298039 \
-      #     --host $URL \
-      #     --language JAVA --wait_for_scan
-
-
