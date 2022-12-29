@@ -63,7 +63,19 @@ jobs:
           name: maven-build
           path: builds/ROOT.war
 
-      
+      - name: Scan Artifact 
+        env:
+          CT_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
+          CT_AUTH_TOKEN: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
+          ORG_ID: ${{ secrets.CONTRAST_AUTH_HEADER }}
+          URL: ${{ secrets.CONTRAST_API_URL }}
+        run: |
+          contrast-cli --scan ./builds/ROOT.war \
+          --api_key $CT_API_KEY \
+          --authorization $CT_AUTH_TOKEN \
+          --organization_id $ORG_ID \
+          --host $URL \
+          --language JAVA --wait_for_scan
 
 
   # build_and_scan:
