@@ -99,7 +99,7 @@
 		<dependency>
 			<groupId>com.graphql-java-kickstart</groupId>
 			<artifactId>graphql-java-tools</artifactId>
-			<version>13.0.2</version>
+			<version>5.4.0</version>
 		</dependency>
 
 		<!-- GSON -->
