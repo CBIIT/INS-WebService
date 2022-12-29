@@ -1,0 +1,22 @@
+name: Trivy Security
+run-name: Trivy Security
+on: pull_request
+jobs:
+  build: 
+    permissions: 
+      contents: read
+      packages: write 
+    runs-on: ubuntu-latest 
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+        aws-region: ${{ secrets.AWS_REGION }}
+        role-session-name: ${{ secrets.AWS_ROLE_SESSION_NAME }}
+    - name: Login to ECR 
+      id: ecr 
+      uses: aws-actions/amazon-ecr-login@v1
+    
