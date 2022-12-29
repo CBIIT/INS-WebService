@@ -1,6 +1,6 @@
 name: Contrast Security
 run-name: Contrast Security
-on: workflow_dispatch
+on: pull_request
 
 jobs:
   build_and_scan:
