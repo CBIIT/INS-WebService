@@ -74,8 +74,7 @@ jobs:
           orgId: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
           authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
           apiUrl: ${{ secrets.CONTRAST_API_URL }}
-          severity: high
-          fail: true
+          fail: false
 
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v2
