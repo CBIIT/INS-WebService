@@ -61,7 +61,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: maven-build
-          path: ROOT.war
+          path: build
       
       - name: Display structure of downloaded files
         run: ls -R
@@ -69,7 +69,7 @@ jobs:
       - name: Contrast Scan Action
         uses: Contrast-Security-OSS/contrastscan-action@v2.0.3
         with:
-          artifact: ROOT.war
+          artifact: build/ROOT.war
           apiKey: ${{ secrets.CONTRAST_API_KEY }}
           orgId: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
           authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
