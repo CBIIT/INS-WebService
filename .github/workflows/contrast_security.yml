@@ -77,6 +77,11 @@ jobs:
           severity: high
           fail: true
 
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif
+
       # - name: Scan Artifact 
       #   env:
       #     CT_API_KEY: ${{ secrets.CONTRAST_API_KEY }}
