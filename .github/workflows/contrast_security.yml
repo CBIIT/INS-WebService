@@ -45,7 +45,7 @@ jobs:
         authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
         severity: low
         fail: false
-        languages: java
+        language: java
 
     - name: Upload SARIF file
       uses: github/codeql-action/upload-sarif@v2
