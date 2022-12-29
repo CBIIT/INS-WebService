@@ -62,6 +62,9 @@ jobs:
         with:
           name: maven-build
           path: ROOT.war
+      
+      - name: Display structure of downloaded files
+        run: ls -R
 
       - name: Contrast Scan Action
         uses: Contrast-Security-OSS/contrastscan-action@v2.0.3
