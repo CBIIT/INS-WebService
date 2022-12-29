@@ -3,51 +3,72 @@ run-name: Contrast Security
 on: pull_request
 
 jobs:
-  build_and_scan:
+  contrast: 
     permissions:
       actions: read 
       contents: read 
       security-events: write 
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-latest 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository 
+        uses: actions/checkout@v3 
+      
+      - name: Install Node 
+        uses: actions/setup-node 
+        with:
+          node-version: 16 
+      
+      - name: Install Contrast 
+        run: npm i -g @contrast/contrast-cli@latest 
 
-    - name: remove properties template
-      run: rm $GITHUB_WORKSPACE/src/main/resources/application_example.properties 
+      
 
-    - name: rename config file 
-      run: cp $GITHUB_WORKSPACE/src/main/resources/application.properties.j2 $GITHUB_WORKSPACE/src/main/resources/application.properties 
 
-    - name: Set up JDK 11
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
-        distribution: 'adopt'
+  # build_and_scan:
+  #   permissions:
+  #     actions: read 
+  #     contents: read 
+  #     security-events: write 
+  #   runs-on: ubuntu-latest
 
-    - name: Build with Maven
-      run: mvn package -DskipTests
+  #   steps:
+  #   - name: Checkout Repository
+  #     uses: actions/checkout@v3
 
-    - name: Rename Artifact 
-      run: cp $GITHUB_WORKSPACE/target/Bento-0.0.1.war $GITHUB_WORKSPACE/target/ROOT.war
+  #   - name: remove properties template
+  #     run: rm $GITHUB_WORKSPACE/src/main/resources/application_example.properties 
 
-    - name: Verify Build Exists 
-      run: cd $GITHUB_WORKSPACE/target/ && ls
+  #   - name: rename config file 
+  #     run: cp $GITHUB_WORKSPACE/src/main/resources/application.properties.j2 $GITHUB_WORKSPACE/src/main/resources/application.properties 
 
-    - name: Contrast Scan Action
-      uses: Contrast-Security-OSS/contrastscan-action@v2.0.3
-      with:
-        artifact: $GITHUB_WORKSPACE/target/ROOT.war
-        apiUrl: https://fd001.contrastsecurity.com
-        apiKey: ${{ secrets.CONTRAST_API_KEY }}
-        orgId: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
-        authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
-        severity: low
-        fail: false
-        language: java
+  #   - name: Set up JDK 11
+  #     uses: actions/setup-java@v3
+  #     with:
+  #       java-version: '11'
+  #       distribution: 'adopt'
 
-    - name: Upload SARIF file
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: results.sarif
+  #   - name: Build with Maven
+  #     run: mvn package -DskipTests
+
+  #   - name: Rename Artifact 
+  #     run: cp $GITHUB_WORKSPACE/target/Bento-0.0.1.war $GITHUB_WORKSPACE/target/ROOT.war
+
+  #   - name: Verify Build Exists 
+  #     run: cd $GITHUB_WORKSPACE/target/ && ls
+
+  #   - name: Contrast Scan Action
+  #     uses: Contrast-Security-OSS/contrastscan-action@v2.0.3
+  #     with:
+  #       artifact: $GITHUB_WORKSPACE/target/ROOT.war
+  #       apiUrl: https://fd001.contrastsecurity.com
+  #       apiKey: ${{ secrets.CONTRAST_API_KEY }}
+  #       orgId: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
+  #       authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
+  #       severity: low
+  #       fail: false
+  #       language: java
+
+  #   - name: Upload SARIF file
+  #     uses: github/codeql-action/upload-sarif@v2
+  #     with:
+  #       sarif_file: results.sarif
