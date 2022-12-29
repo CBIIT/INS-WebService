@@ -39,6 +39,7 @@ jobs:
         path: ./target/ROOT.war
 
   contrast: 
+    needs: build
     permissions:
       actions: read 
       contents: read 
@@ -55,6 +56,12 @@ jobs:
       
       - name: Install Contrast 
         run: npm i -g @contrast/contrast-cli@latest 
+
+      - name: Dowload Artifact 
+        uses: actions/download-artifact@v3
+        with:
+          name: maven-build
+          path: builds/ROOT.war
 
       
 
