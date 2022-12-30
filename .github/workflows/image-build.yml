@@ -83,6 +83,7 @@ jobs:
         image: ${{ steps.meta.outputs.tags }}
         fail-build: false 
         severity-cutoff: low
+        output-format: table
 
       
 #     - name: Build, tag, and push the image to Amazon ECR
