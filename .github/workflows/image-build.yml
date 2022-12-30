@@ -82,6 +82,8 @@ jobs:
       with: 
         image: ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.meta.outputs.tags }}
 
+    - name: echo 
+      run: ${{ steps.scan.outputs.sarif }}
       
 #     - name: Build, tag, and push the image to Amazon ECR
 #       id: build-image
