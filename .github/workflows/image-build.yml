@@ -48,6 +48,9 @@ jobs:
         name: maven-build
         path: target
 
+    - name: confirm download
+      run: ls -R
+
     - name: Docker Login
       id: login
       uses: docker/login-action@v2
@@ -56,30 +59,22 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: where we at 
-      run: pwd 
-
     - name: Extract Metadata
       id: meta
       uses: docker/metadata-action@v4
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-    - name: check location
-      run: pwd
-
     - name: Build and Publish
       uses: docker/build-push-action@v3
       with:
         file: ./dockerfiles/cbiit-alpine-base-dockerfile
+        build-args: ARTIFACT=target/ROOT.war
         push: false 
         no-cache: true 
         load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-    
-    - name: final check
-      run: pwd
 
       
 #     - name: Build, tag, and push the image to Amazon ECR
