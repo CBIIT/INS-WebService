@@ -81,7 +81,9 @@ jobs:
       uses: anchore/scan-action@v3
       with: 
         image: ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.meta.outputs.tags }}
-
+        fail-build: false 
+        severity: low
+        
     - name: echo 
       run: ${{ steps.scan.outputs.sarif }}
       
