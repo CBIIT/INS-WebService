@@ -82,8 +82,8 @@ jobs:
       with: 
         image: ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.meta.outputs.tags }}
         fail-build: false 
-        severity: low
-        
+        severity-cutoff: low
+
     - name: echo 
       run: ${{ steps.scan.outputs.sarif }}
       
