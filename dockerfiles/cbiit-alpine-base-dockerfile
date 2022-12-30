@@ -1,0 +1,13 @@
+FROM alpine:3.12
+
+RUN sh
+RUN chmod 1777 /tmp
+RUN chmod -R 1777 /var/tmp
+RUN rm -rf /var/lib/apt/lists/*
+
+# update sources list
+RUN apk update && apk upgrade
+RUN apk add ca-certificates wget && update-ca-certificates
+
+# COPY ./alpine_harden.sh /root
+# RUN /root/alpine_harden.sh
