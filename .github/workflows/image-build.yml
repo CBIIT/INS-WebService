@@ -56,7 +56,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-      name: construct
+    - name: construct
       run: |
         docker build  \ 
           --file dockerOS/AlpineDockerfile -t ${{ env.REGISTRY }}/${{ env.IMAGE_TAG}}:latest .
