@@ -42,13 +42,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Artifact Directory
-      run: mkdir target 
-
-    
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+    - name: Dowload Artifact 
+      uses: actions/download-artifact@v3
+      with:
+        name: maven-build
+        path: target
 
     - name: Docker Login
       id: login
