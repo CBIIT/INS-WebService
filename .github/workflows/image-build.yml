@@ -56,31 +56,30 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: construct
-      run: |
-        docker build  \ 
-          --file dockerOS/AlpineDockerfile -t ${{ env.REGISTRY }}/${{ env.IMAGE_TAG}}:latest .
+    - name: where we at 
+      run: pwd 
 
-    #     #Docker push
-    #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-    #     echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+    - name: Extract Metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
-    # - name: Extract Metadata
-    #   id: meta
-    #   uses: docker/metadata-action@v4
-    #   with:
-    #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+    - name: check location
+      run: pwd
 
-    # - name: Build and Publish
-    #   uses: docker/build-push-action@v3
-    #   with:
-    #     file: ./dockerfiles/cbiit-alpine-base-dockerfile
-    #     push: false 
-    #     no-cache: true 
-    #     load: true
-    #     tags: ${{ steps.meta.outputs.tags }}
-    #     labels: ${{ steps.meta.outputs.labels }}
-      
+    - name: Build and Publish
+      uses: docker/build-push-action@v3
+      with:
+        file: ./dockerfiles/cbiit-alpine-base-dockerfile
+        push: false 
+        no-cache: true 
+        load: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+    
+    - name: final check
+      run: pwd
 
       
 #     - name: Build, tag, and push the image to Amazon ECR
