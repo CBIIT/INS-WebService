@@ -84,40 +84,8 @@ jobs:
         fail-build: false 
         severity-cutoff: low
         output-format: table
-
-      
-#     - name: Build, tag, and push the image to Amazon ECR
-#       id: build-image
-#       env:
-#         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-#         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
-#         IMAGE_TAG: 'cbiit-alpine-linux'
-        
-#       run: |
-#         #d=$(date +%Y.%m.%d--%H.%M)
-#         #tag=cbiit-alpine-linux-$d
-#         #Build, tag, and push image to Amazon ECR
-#         docker build  --file dockerOS/AlpineDockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-#         #Docker push
-#         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-#         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-
-
-#         name: publish
-# on: [push]
-# jobs:
-# publish-hello-docker-image:
-# runs-on: ubuntu-latest
-# steps:
-# - uses: actions/checkout@v2
-# - name: Login to GitHub Container Registry
-# uses: docker/login-action@v1
-# with:
-# registry: ghcr.io
-# username: ${{ github.actor }}
-# password: ${{ secrets.GITHUB_TOKEN }}
-# - name: Build the hello-docker Docker image
-# run: |
-#        docker build . --tag ghcr.io/deselikem/hello-docker-gcr-demo:latest
-#        docker run ghcr.io/deselikem/hello-docker-gcr-demo:latest
-#        docker push ghcr.io/deselikem/hello-docker-gcr-demo:latest
+    
+    - name: SBOM 
+      uses: anchore/sbom-action@v0
+      with:
+        image: ${{ steps.meta.outputs.tags }}
