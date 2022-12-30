@@ -80,12 +80,10 @@ jobs:
       id: scan
       uses: anchore/scan-action@v3
       with: 
-        image: ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.meta.outputs.tags }}
+        image: ${{ steps.meta.outputs.tags }}
         fail-build: false 
         severity-cutoff: low
 
-    - name: echo 
-      run: ${{ steps.meta.outputs.tags }}
       
 #     - name: Build, tag, and push the image to Amazon ECR
 #       id: build-image
