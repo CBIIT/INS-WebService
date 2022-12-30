@@ -77,8 +77,10 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
 
-    - name: verify 
-      run: echo ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.meta.outputs.tags }}
+    - name: Scan image
+      uses: anchore/scan-action@v3
+      with: 
+        image: ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.meta.outputs.tags }}
 
       
 #     - name: Build, tag, and push the image to Amazon ECR
