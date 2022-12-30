@@ -66,6 +66,7 @@ jobs:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
     - name: Build and Publish
+      id: run
       uses: docker/build-push-action@v3
       with:
         file: ./dockerfiles/cbiit-alpine-base-dockerfile
@@ -75,6 +76,9 @@ jobs:
         load: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+
+    - name: verify 
+      run: echo ${{ env.REGISTRY }}/${{ github.repository }}
 
       
 #     - name: Build, tag, and push the image to Amazon ECR
