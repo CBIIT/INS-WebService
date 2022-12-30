@@ -38,6 +38,7 @@ jobs:
       contents: read 
       packages: write
       actions: read
+      security-events: write
     
     steps:
     - name: Checkout
@@ -48,9 +49,6 @@ jobs:
       with:
         name: maven-build
         path: target
-
-    - name: confirm download
-      run: ls -R
 
     - name: Docker Login
       id: login
