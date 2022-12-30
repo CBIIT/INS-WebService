@@ -85,7 +85,7 @@ jobs:
         severity-cutoff: low
 
     - name: echo 
-      run: ${{ steps.scan.outputs.sarif }}
+      run: ${{ steps.meta.outputs.tags }}
       
 #     - name: Build, tag, and push the image to Amazon ECR
 #       id: build-image
