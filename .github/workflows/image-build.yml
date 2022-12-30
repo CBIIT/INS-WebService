@@ -99,3 +99,8 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
+
+    - name: Run HadoLint 
+      uses: hadolint/hadolint-action@v2.1.0
+      with:
+        dockerfile: ./dockerfiles/cbiit-alpine-base-dockerfile
