@@ -56,6 +56,7 @@
 			<artifactId>spring-boot-test-autoconfigure</artifactId>
 		</dependency>
 
+		<!-- Spot-include, sub-dependency of Spring Boot -->
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
@@ -111,6 +112,7 @@
 		</dependency>
 
 		<!-- YAML -->
+		<!-- Spot-include, sub-dependency of Spring Boot -->
 		<dependency>
 			<groupId>org.yaml</groupId>
 			<artifactId>snakeyaml</artifactId>
@@ -194,29 +196,12 @@
 			<version>4.4.11</version>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib -->
-		<!-- <dependency>
-			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-stdlib</artifactId>
-			<version>1.6.0</version>
-		</dependency> -->
-
+		<!-- Spot-include, sub-dependency of Spring Boot and neo4j-java-driver -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.13.4.2</version>
 		</dependency>
-
-		<!-- <dependency>
-			<groupId>org.neo4j</groupId>
-			<artifactId>neo4j-cypher-dsl</artifactId>
-			<version>2021.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jetbrains</groupId>
-			<artifactId>annotations</artifactId>
-			<version>13.0</version>
-		</dependency> -->
 
         <!-- OpenSearch Java High level REST API -->
         <!-- https://mvnrepository.com/artifact/org.opensearch.client/opensearch-rest-client -->
