@@ -1,4 +1,4 @@
-FROM alpine:3.12 AS base
+FROM alpine:3.17 AS base
 RUN sh
 RUN chmod 1777 /tmp
 RUN chmod -R 1777 /var/tmp
