@@ -347,6 +347,15 @@ type ProjectDetailResult {
     num_patents: Int
 }
 
+type ProgramInfoResult {
+    program_id: String
+    program_name: String
+    program_description: String
+    program_website: String
+    num_projects: Int
+    num_publications: Int
+}
+
 schema {
     query: QueryType
 }
@@ -476,4 +485,6 @@ type QueryType {
     programPatentCount (program_id: String): Int
 
     projectDetail (project_id: String): ProjectDetailResult
+    
+    programInfo (first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [ProgramInfoResult]
 }
