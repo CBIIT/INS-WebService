@@ -115,7 +115,7 @@ type FundAmountRangeCount {
   funded_amount_5: Int
 }
 
-type ProgramInfo {
+type DEPRECATEDProgramInfo {
     program_id: String
     program_name: String
     program_description: String
@@ -341,7 +341,7 @@ type QueryType {
     DEPRECATEDnumberOfDBGaps: Int @cypher(statement: "MATCH (n:dbgap) return count(n)")
     DEPRECATEDnumberOfClinicalTrials: Int @cypher(statement: "MATCH (n:clinical_trial) return count(n)")
 
-    programInfo: [ProgramInfo] @cypher(statement: """
+    DEPRECATEDprogramInfo: [DEPRECATEDProgramInfo] @cypher(statement: """
         MATCH (p:program)
         OPTIONAL MATCH (p)<--(pr:project)
         OPTIONAL MATCH (pr)<--(pub:publication)

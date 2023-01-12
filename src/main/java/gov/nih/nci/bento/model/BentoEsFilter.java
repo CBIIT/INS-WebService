@@ -209,11 +209,10 @@ public class BentoEsFilter implements DataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return programPatentCount(args);
                         })
-                        // TODO: adeforge 12/08/2022 -- this probably needs to be a table
-                        // .dataFetcher("programInfo", env -> {
-                        //     Map<String, Object> args = env.getArguments();
-                        //     return programInfo(args);
-                        // })
+                        .dataFetcher("programInfo", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return programInfo(args);
+                        })
                         .dataFetcher("projectDetail", env -> {
                             Map<String, Object> args = env.getArguments();
                             return projectDetail(args);
@@ -1442,38 +1441,27 @@ public class BentoEsFilter implements DataFetcher {
         return number;
     }
 
-    // private Map<String, Object> programInfo(Map<String, Object> params) throws IOException {
-    //     final String AGG_NAME = "agg_name";
-    //     final String AGG_ENDPOINT = "agg_endpoint";
-    //     // final String WIDGET_QUERY = "widgetQueryName";
-    //     // final String FILTER_COUNT_QUERY = "filterCountQueryName";
-        
-    //     Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());
+    private List<Map<String, Object>> programInfo(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+            new String[]{"program_id", "programs"},
+            new String[]{"program_name", "program_name"},
+            new String[]{"program_website", "program_website"},
+            new String[]{"num_projects", "num_projects"},
+            new String[]{"num_publications", "num_publications"},
+        };
 
-    //     final List<Map<String, String>> PROGRAM_TERM_AGGS = new ArrayList<>();
-    //     PROGRAM_TERM_AGGS.add(Map.of(
-    //         AGG_NAME, "programs",
-    //         // WIDGET_QUERY, "publicationCountByCitation",
-    //         // FILTER_COUNT_QUERY, "filterPublicationCountByCitation",
-    //         AGG_ENDPOINT, PROGRAMS_END_POINT
-    //     ));
+        String defaultSort = "programs"; // Default sort order
 
-    //     List<String> publication_agg_names = new ArrayList<>();
-    //     for (var agg: PROGRAM_TERM_AGGS) {
-    //         publication_agg_names.add(agg.get(AGG_NAME));
-    //     }
-    //     final String[] PROGRAMS_TERM_AGG_NAMES = publication_agg_names.toArray(new String[PROGRAM_TERM_AGGS.size()]);
+        Map<String, String> mapping = Map.ofEntries(
+                Map.entry("program_id", "programs"),
+                Map.entry("program_name", "program_name"),
+                Map.entry("program_website", "program_website"),
+                Map.entry("num_projects", "num_projects"),
+                Map.entry("num_publications", "num_publications")
+        );
 
-    //     Map<String, Object> programAggQuery = esService.addAggregations(query, PROGRAMS_TERM_AGG_NAMES, new String[]{});
-    //     Request programRequest = new Request("GET", PROGRAMS_END_POINT);
-    //     programRequest.setJsonEntity(gson.toJson(programAggQuery));
-    //     JsonObject programResult = esService.send(programRequest);
-    //     Map<String, JsonArray> programAggs = esService.collectTermAggs(programResult, PROGRAMS_TERM_AGG_NAMES);
-        
-    //     System.out.println(programAggs);
-
-    //     return null;
-    // }
+        return overview(PROGRAMS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+    }
 
     private Map<String, Object> projectDetail(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
