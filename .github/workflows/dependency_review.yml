@@ -16,6 +16,13 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
+      - name: Cleanup Files 
+        run: |
+          cp src/main/resources/application.properties.j2 src/main/resources/application.properties
+
+      - name: Confirm Results
+        run: cd src/main/resources && ls -la
+
       - name: build jar
         run: mvn -DskipTests package
 
