@@ -20,14 +20,19 @@ jobs:
         run: |
           cp src/main/resources/application.properties.j2 src/main/resources/application.properties
 
-      - name: Confirm Results
-        run: cd src/main/resources && ls -la
-
       - name: build jar
         run: mvn clean package -DskipTests
 
-      - name: Check directory
-        run: cd target && ls -la
+      - name: Prepare WAR Artifact
+        run: cp target/Bento-0.0.1.war target/ROOT.war
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ROOT.war
+          path: target/ROOT.war
+
+      
 
       # - name: Contrast SCA Action
       #   uses: Contrast-Security-OSS/contrast-sca-action@v1
