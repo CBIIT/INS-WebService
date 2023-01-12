@@ -24,7 +24,7 @@ jobs:
         run: cd src/main/resources && ls -la
 
       - name: build jar
-        run: mvn package
+        run: mvn clean package
 
       - name: Check directory
         run: cd target && ls -la
