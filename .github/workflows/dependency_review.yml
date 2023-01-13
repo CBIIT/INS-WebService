@@ -36,10 +36,16 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - name: Checkout Repository 
+        id: checkout
         uses: actions/checkout@v3 
 
       - name: Maven Dependency Tree 
+        id: dep
         run: mvn dependency:tree
+
+      - name: Print Outputs
+        run: |
+          echo '${{ steps.dep.output }}'
   
   # contrast:
   #   runs-on: macos-latest
