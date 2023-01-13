@@ -41,11 +41,9 @@ jobs:
 
       - name: Maven Dependency Tree 
         id: dep
-        run: mvn dependency:tree
+        run: mvn dependency:tree -Doutput=/dependencies
 
-      - name: Print Outputs
-        run: |
-          echo ${{ steps.dep.output }}
+
   
   # contrast:
   #   runs-on: macos-latest
