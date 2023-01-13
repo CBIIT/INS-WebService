@@ -41,6 +41,10 @@ jobs:
       - name: Install Contrast CLI
         run: brew tap contrastsecurity/tap && brew install contrast
 
+      - name: Contrast Audit
+        run: |
+          contrast audit --application-id
+
       
 
       # - name: Contrast SCA Action
