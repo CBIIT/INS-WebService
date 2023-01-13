@@ -43,6 +43,10 @@ jobs:
         id: dep
         run: mvn dependency:tree -Doutput=/dependencies
 
+      - name: Check Output
+        id: verify
+        run: ls -la
+
 
   
   # contrast:
