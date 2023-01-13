@@ -36,23 +36,36 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - name: Checkout Repository 
-        id: checkout
         uses: actions/checkout@v3 
 
       - name: Create Dependency Tree 
-        id: dep
         run: |
           mvn dependency:tree -DoutputFile=maven/dependency-tree.txt
 
       - name: Upload Dependency Tree
-        id: upload 
         uses: actions/upload-artifact@v3
         with:
           name: dependencies.txt
           path: maven/dependency-tree.txt
 
+  dependency-analyze:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout Repository 
+        uses: actions/checkout@v3 
 
-  
+      - name: Create Dependency Tree 
+        run: |
+          mvn dependency:analyze -DoutputFile=maven/dependency-analysis.txt
+
+      - name: Upload Dependency Tree
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependencies.txt
+          path: maven/dependency-analysis.txt
+
+
+  mvn dependency:analyze
   # contrast:
   #   runs-on: macos-latest
   #   steps:
