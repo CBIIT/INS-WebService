@@ -41,7 +41,7 @@ jobs:
 
       - name: Maven Dependency Tree 
         id: dep
-        run: mvn dependency:tree -Doutput=/dependencies
+        run: mvn dependency:tree -DoutputFile=dependencies.txt
 
       - name: Check Output
         id: verify
