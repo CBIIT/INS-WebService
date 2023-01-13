@@ -68,13 +68,13 @@ jobs:
 
       - name: Create Dependency Analysis 
         run: |
-          mvn dependency:analyze >> maven/dependency-analysis.txt
+          mvn dependency:analyze >> dependency-analysis.txt
 
       - name: Upload Dependency Tree
         uses: actions/upload-artifact@v3
         with:
           name: dependency-analysis.txt
-          path: maven/dependency-analysis.txt
+          path: dependency-analysis.txt
 
 
   # contrast:
