@@ -99,9 +99,9 @@ jobs:
 
       - name: Contrast Audit
         run: |
-          contrast audit --track true \ 
-          --file pom.xml \
-          --save spdx \ 
+          contrast audit  \ 
+          --f pom.xml \
+          --s spdx \ 
           --application-name CCDI_INS \
 
 
