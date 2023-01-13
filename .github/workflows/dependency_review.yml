@@ -65,7 +65,6 @@ jobs:
           path: maven/dependency-analysis.txt
 
 
-  mvn dependency:analyze
   # contrast:
   #   runs-on: macos-latest
   #   steps:
