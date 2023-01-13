@@ -86,9 +86,6 @@ jobs:
       - name: Install Contrast CLI
         run: brew tap contrastsecurity/tap && brew install contrast
 
-      - name: Check Working Directory
-        run: ls -la
-
       - name: Contrast Auth
         run: |
           contrast auth \
@@ -97,16 +94,15 @@ jobs:
           --host ${{ secrets.CONTRAST_API_URL }} \
           --organization-id ${{ secrets.CONTRAST_ORGANIZATION_ID }}
 
-      # - name: Contrast Audit
-      #   run: |
-      #     contrast audit --track \ 
-      #     --file pom.xml \
-      #     --save spdx \ 
-      #     --api-key ${{ secrets.AWS_REGION }}\
-      #     --application-name CCDI_INS \
-      #     --authorization ${{ secrets.AWS_REGION }}\
-      #     --host ${{ secrets.AWS_REGION }}\
-      #     --organization-id ${{ secrets.AWS_REGION }}
+      - name: Check Working Directory
+        run: ls -la
+
+      - name: Contrast Audit
+        run: |
+          contrast audit --track \ 
+          --file pom.xml \
+          --save spdx \ 
+          --application-name CCDI_INS \
 
 
 
