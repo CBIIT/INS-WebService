@@ -66,9 +66,12 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
-      - name: Create Dependency Tree 
+      - name: Create Dependency Analysis 
         run: |
           mvn dependency:analyze >> analysis.txt
+
+      - name: List Directory
+        run: ls -la
 
       # - name: Upload Dependency Tree
       #   uses: actions/upload-artifact@v3
