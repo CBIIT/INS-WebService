@@ -31,19 +31,28 @@ jobs:
         with:
           name: ROOT.war
           path: target/ROOT.war
+
+  dependency-tree:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout Repository 
+        uses: actions/checkout@v3 
+
+      - name: Maven Dependency Tree 
+        run: mvn dependency:tree
   
-  contrast:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+  # contrast:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v3
 
-      - name: Install Contrast CLI
-        run: brew tap contrastsecurity/tap && brew install contrast
+  #     - name: Install Contrast CLI
+  #       run: brew tap contrastsecurity/tap && brew install contrast
 
-      - name: Contrast Audit
-        run: |
-          contrast audit --application-id
+  #     - name: Contrast Audit
+  #       run: |
+  #         contrast audit --application-id
 
       
 
