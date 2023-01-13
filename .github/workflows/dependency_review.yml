@@ -39,13 +39,17 @@ jobs:
         id: checkout
         uses: actions/checkout@v3 
 
-      - name: Maven Dependency Tree 
+      - name: Create Dependency Tree 
         id: dep
-        run: mvn dependency:tree -DoutputFile=dependencies.txt
+        run: |
+          mvn dependency:tree -DoutputFile=maven/dependency-tree.txt
 
-      - name: Check Output
-        id: verify
-        run: ls -la
+      - name: Upload Dependency Tree
+        id: upload 
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependencies.txt
+          path: maven/dependency-tree.txt
 
 
   
