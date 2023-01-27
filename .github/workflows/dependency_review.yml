@@ -2,14 +2,13 @@ name: Contrast Security SCA
 on:
   push:
     branches:
-      - "security"
+      - "dev**"
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
       - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
@@ -32,53 +31,9 @@ jobs:
           name: ROOT.war
           path: target/ROOT.war
 
-  dependency-tree:
-    runs-on: ubuntu-latest
-    steps: 
-      - name: Checkout Repository 
-        uses: actions/checkout@v3 
-
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-
-      - name: Create Dependency Tree 
-        run: |
-          mvn dependency:tree -DoutputFile=maven/dependency-tree.txt
-
-      - name: Upload Dependency Tree
-        uses: actions/upload-artifact@v3
-        with:
-          name: dependencies.txt
-          path: maven/dependency-tree.txt
-
-  dependency-analyze:
-    runs-on: ubuntu-latest
-    steps: 
-      - name: Checkout Repository 
-        uses: actions/checkout@v3
-
-      - name: Set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-
-      - name: Create Dependency Analysis 
-        run: |
-          mvn dependency:analyze >> dependency-analysis.txt
-
-      - name: Upload Dependency Tree
-        uses: actions/upload-artifact@v3
-        with:
-          name: dependency-analysis.txt
-          path: dependency-analysis.txt
-
-
   contrast:
     runs-on: macos-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -97,9 +52,12 @@ jobs:
       - name: Check Working Directory
         run: ls -la
 
+      - name: Help 
+        run: contrast audit -h
+
       - name: Contrast Audit
         run: |
-          contrast audit --file pom.xml --save spdx --application-name CCDI_INS 
+          contrast audit --file pom.xml --application-name CCDI_INS --app-groups {{ secrets.CONTRAST_APP_GROUPS }}
 
 
 
