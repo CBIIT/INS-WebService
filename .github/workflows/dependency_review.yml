@@ -1,6 +1,7 @@
-name: Contrast Security SCA
+name: SCA and SAST Scans
+run-name: Contrast Security 
 on:
-  push:
+  pull_request:
     branches:
       - "dev**"
 jobs:
@@ -14,17 +15,13 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-
       - name: Cleanup Files 
         run: |
           cp src/main/resources/application.properties.j2 src/main/resources/application.properties
-
       - name: Build Artifact
         run: mvn clean package -DskipTests
-
       - name: Prepare Artifact
         run: cp target/Bento-0.0.1.war target/ROOT.war
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -33,14 +30,11 @@ jobs:
 
   contrast:
     runs-on: macos-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
       - name: Install Contrast CLI
         run: brew tap contrastsecurity/tap && brew install contrast
-
       - name: Contrast Auth
         run: |
           contrast auth \
