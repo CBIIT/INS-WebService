@@ -28,7 +28,7 @@ jobs:
   #         name: ROOT.war
   #         path: target/ROOT.war
 
-  contrast:
+  Contrast-SCA:
     runs-on: macos-latest
     steps:
       - name: Checkout Repository
@@ -47,8 +47,10 @@ jobs:
       - name: Help 
         run: contrast audit -h
       - name: Contrast Audit
+        id: audit
         run: |
           contrast audit \
           --file pom.xml \
           --application-name CCDI_INS \
           --app-groups ${{ secrets.CONTRAST_APP_GROUPS }}
+      - run: echo ${{ steps.audit.outputs.* }}
