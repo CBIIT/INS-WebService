@@ -51,4 +51,4 @@ jobs:
           contrast audit \
           --file pom.xml \
           --application-name CCDI_INS \
-          --app-groups {{ secrets.CONTRAST_APP_GROUPS }}
+          --app-groups ${{ secrets.CONTRAST_APP_GROUPS }}
