@@ -53,4 +53,4 @@ jobs:
           --file pom.xml \
           --application-name CCDI_INS \
           --app-groups ${{ secrets.CONTRAST_APP_GROUPS }}
-      - run: echo ${{ steps.audit.outputs.* }}
+      - run: ls -la 
