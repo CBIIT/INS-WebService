@@ -48,29 +48,13 @@ jobs:
           --authorization ${{ secrets.CONTRAST_AUTH_HEADER }} \
           --host ${{ secrets.CONTRAST_API_URL }} \
           --organization-id ${{ secrets.CONTRAST_ORGANIZATION_ID }}
-
       - name: Check Working Directory
         run: ls -la
-
       - name: Help 
         run: contrast audit -h
-
       - name: Contrast Audit
         run: |
-          contrast audit --file pom.xml --application-name CCDI_INS --app-groups {{ secrets.CONTRAST_APP_GROUPS }}
-
-
-
-
-      
-
-      # - name: Contrast SCA Action
-      #   uses: Contrast-Security-OSS/contrast-sca-action@v1
-      #   with:
-      #     apiKey: ${{ secrets.CONTRAST_API_KEY }}
-      #     orgId: ${{ secrets.CONTRAST_ORGANIZATION_ID }}
-      #     authHeader: ${{ secrets.CONTRAST_AUTH_HEADER }}
-      #     apiUrl: ${{ secrets.CONTRAST_API_URL }}
-      #     filePath: mypath/to/config/files
-      #     severity: medium
-      #     fail: true
+          contrast audit \
+          --file pom.xml \
+          --application-name CCDI_INS \
+          --app-groups {{ secrets.CONTRAST_APP_GROUPS }}
