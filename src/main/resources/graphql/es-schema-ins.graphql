@@ -132,6 +132,7 @@ type ProjectOverViewResult {
     project_start_date: String
     project_end_date: String
     full_foa: String
+    queried_project_id: String
 }
 
 type GroupCount2 {
