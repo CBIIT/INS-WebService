@@ -1037,11 +1037,11 @@ public class BentoEsFilter implements DataFetcher {
         int numberOfProjects = projectsCountResult.get("count").getAsInt();
 
         // special case because it's counting core projects
-        Map<String, Object> coreProjectsCountQuery = esService.addCardinalityAggregation(query, "queried_project_id");
+        Map<String, Object> coreProjectsCountQuery = esService.buildFacetFilterQuery(params, Set.of(), Set.of(), Map.of("representative", List.of(true))); // esService.addCardinalityAggregation(query, "queried_project_id");
         Request coreProjectsCountRequest = new Request("GET", PROJECTS_END_POINT);
         coreProjectsCountRequest.setJsonEntity(gson.toJson(coreProjectsCountQuery));
         JsonObject coreProjectsCountResult = esService.send(coreProjectsCountRequest);
-        int numberOfCoreProjects = coreProjectsCountResult.getAsJsonObject("aggregations").getAsJsonObject("cardinality_count").get("value").getAsInt();
+        int numberOfCoreProjects = coreProjectsCountResult.getAsJsonObject("hits").getAsJsonObject("total").get("value").getAsInt(); // coreProjectsCountResult.getAsJsonObject("aggregations").getAsJsonObject("cardinality_count").get("value").getAsInt();
 
         Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
         publicationsCountRequest.setJsonEntity(gson.toJson(query));
@@ -1066,14 +1066,14 @@ public class BentoEsFilter implements DataFetcher {
         Map<String, Object> data = new HashMap<>();
         // Get aggregations
         Map<String, Object> representativeQuery = esService.buildFacetFilterQuery(params, Set.of(), Set.of(), Map.of("representative", List.of(true)));  // we want to filter by the representative grants, as an additional param
-        Map<String, Object> projectAggQuery = esService.addAggregations(representativeQuery, PROJECTS_TERM_AGG_NAMES, "queried_project_id");
+        Map<String, Object> projectAggQuery = esService.addAggregations(representativeQuery, PROJECTS_TERM_AGG_NAMES); // , "queried_project_id");
         Request projectRequest = new Request("GET", PROJECTS_END_POINT);
         projectRequest.setJsonEntity(gson.toJson(projectAggQuery));
         JsonObject projectResult = esService.send(projectRequest);
         Map<String, JsonArray> projectAggs = esService.collectTermAggs(projectResult, PROJECTS_TERM_AGG_NAMES);
         for (var agg: PROJECT_TERM_AGGS) {
             JsonArray buckets = projectAggs.get(agg.get(AGG_NAME));
-            List<Map<String, Object>> parsedBuckets = getGroupCardinalityCountHelper(buckets);
+            List<Map<String, Object>> parsedBuckets = getGroupCountHelper(buckets); // getGroupCardinalityCountHelper(buckets);
             data.put(agg.get(WIDGET_QUERY), parsedBuckets);
             data.put(agg.get(FILTER_COUNT_QUERY), parsedBuckets);
         }
