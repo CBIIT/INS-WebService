@@ -307,6 +307,7 @@ type SearchProjectsResult {
 
     numberOfPrograms: Int
     numberOfProjects: Int
+    numberOfCoreProjects: Int
     numberOfPublications: Int
     numberOfDatasets: Int
     numberOfClinicalTrials: Int

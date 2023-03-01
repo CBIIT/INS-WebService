@@ -625,6 +625,17 @@ public class BentoEsFilter implements DataFetcher {
         return data;
     }
 
+    private List<Map<String, Object>> getGroupCardinalityCountHelper(JsonArray buckets) throws IOException {
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (JsonElement group: buckets) {
+            data.add(Map.of("group", group.getAsJsonObject().get("key").getAsString(),
+                    "subjects", group.getAsJsonObject().getAsJsonObject("cardinality_count").get("value").getAsInt()
+            ));
+
+        }
+        return data;
+    }
+
     private Map<String, Object> rangeFilterSubjectCountBy(String category, Map<String, Object> params) throws IOException {
         Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS,Set.of(PAGE_SIZE, category));
         return getRangeCount(category, query);
@@ -632,7 +643,7 @@ public class BentoEsFilter implements DataFetcher {
 
     private Map<String, Object> getRangeCount(String category, Map<String, Object> query) throws IOException {
         String[] AGG_NAMES = new String[] {category};
-        query = esService.addAggregations(query, new String[]{}, AGG_NAMES);
+        query = esService.addAggregations(query, new String[]{}, new String(), AGG_NAMES);
         Request request = new Request("GET", SUBJECTS_END_POINT);
         request.setJsonEntity(gson.toJson(query));
         JsonObject jsonObject = esService.send(request);
@@ -1013,7 +1024,7 @@ public class BentoEsFilter implements DataFetcher {
         }
         final String[] PUBLICATIONS_TERM_AGG_NAMES = publication_agg_names.toArray(new String[PUBLICATION_TERM_AGGS.size()]);
 
-        Map<String, Object> query = esService.buildFacetFilterQuery(params, Set.of());  // RANGE_PARAMS
+        Map<String, Object> query = esService.buildFacetFilterQuery(params);
 
         Request programsCountRequest = new Request("GET", PROGRAMS_COUNT_END_POINT);
         programsCountRequest.setJsonEntity(gson.toJson(query));
@@ -1024,6 +1035,13 @@ public class BentoEsFilter implements DataFetcher {
         projectsCountRequest.setJsonEntity(gson.toJson(query));
         JsonObject projectsCountResult = esService.send(projectsCountRequest);
         int numberOfProjects = projectsCountResult.get("count").getAsInt();
+
+        // special case because it's counting core projects
+        Map<String, Object> coreProjectsCountQuery = esService.addCardinalityAggregation(query, "queried_project_id");
+        Request coreProjectsCountRequest = new Request("GET", PROJECTS_END_POINT);
+        coreProjectsCountRequest.setJsonEntity(gson.toJson(coreProjectsCountQuery));
+        JsonObject coreProjectsCountResult = esService.send(coreProjectsCountRequest);
+        int numberOfCoreProjects = coreProjectsCountResult.getAsJsonObject("aggregations").getAsJsonObject("cardinality_count").get("value").getAsInt();
 
         Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
         publicationsCountRequest.setJsonEntity(gson.toJson(query));
@@ -1045,85 +1063,40 @@ public class BentoEsFilter implements DataFetcher {
         JsonObject patentsCountResult = esService.send(patentsCountRequest);
         int numberOfPatents = patentsCountResult.get("count").getAsInt();
 
+        Map<String, Object> data = new HashMap<>();
         // Get aggregations
-        Map<String, Object> projectAggQuery = esService.addAggregations(query, PROJECTS_TERM_AGG_NAMES, new String[]{});
+        Map<String, Object> representativeQuery = esService.buildFacetFilterQuery(params, Set.of(), Set.of(), Map.of("representative", List.of(true)));  // we want to filter by the representative grants, as an additional param
+        Map<String, Object> projectAggQuery = esService.addAggregations(representativeQuery, PROJECTS_TERM_AGG_NAMES, "queried_project_id");
         Request projectRequest = new Request("GET", PROJECTS_END_POINT);
         projectRequest.setJsonEntity(gson.toJson(projectAggQuery));
         JsonObject projectResult = esService.send(projectRequest);
         Map<String, JsonArray> projectAggs = esService.collectTermAggs(projectResult, PROJECTS_TERM_AGG_NAMES);
+        for (var agg: PROJECT_TERM_AGGS) {
+            JsonArray buckets = projectAggs.get(agg.get(AGG_NAME));
+            List<Map<String, Object>> parsedBuckets = getGroupCardinalityCountHelper(buckets);
+            data.put(agg.get(WIDGET_QUERY), parsedBuckets);
+            data.put(agg.get(FILTER_COUNT_QUERY), parsedBuckets);
+        }
 
-        Map<String, Object> publicationAggQuery = esService.addAggregations(query, PUBLICATIONS_TERM_AGG_NAMES, new String[]{});
+        Map<String, Object> publicationAggQuery = esService.addAggregations(query, PUBLICATIONS_TERM_AGG_NAMES);
         Request publicationRequest = new Request("GET", PUBLICATIONS_END_POINT);
         publicationRequest.setJsonEntity(gson.toJson(publicationAggQuery));
         JsonObject publicationResult = esService.send(publicationRequest);
         Map<String, JsonArray> publicationAggs = esService.collectTermAggs(publicationResult, PUBLICATIONS_TERM_AGG_NAMES);
+        for (var agg: PUBLICATION_TERM_AGGS) {
+            JsonArray buckets = publicationAggs.get(agg.get(AGG_NAME));
+            List<Map<String, Object>> parsedBuckets = getGroupCountHelper(buckets);
+            data.put(agg.get(WIDGET_QUERY), parsedBuckets);
+            data.put(agg.get(FILTER_COUNT_QUERY), parsedBuckets);
+        }
 
-        Map<String, Object> data = new HashMap<>();
-        // data.put("filterProjectCountByDOC", projectAggs.get("docs"));
-        // data.put("filterProjectCountByFiscalYear", projectAggs.get("fiscal_years"));
-        // data.put("filterProjectCountByAwardAmount", projectAggs.get("award_amounts"));
-        // data.put("filterProjectCountByProgram", projectAggs.get("programs"));
         data.put("numberOfPrograms", numberOfPrograms);
         data.put("numberOfProjects", numberOfProjects);
+        data.put("numberOfCoreProjects", numberOfCoreProjects);
         data.put("numberOfPublications", numberOfPublications);
         data.put("numberOfDatasets", numberOfDatasets);
         data.put("numberOfClinicalTrials", numberOfClinicalTrials);
         data.put("numberOfPatents", numberOfPatents);
-        // data.put("projectCountByDOC", projectAggs.get("docs"));
-        // data.put("projectCountByFiscalYear", projectAggs.get("fiscal_years"));
-        // data.put("projectCountByAwardAmount", projectAggs.get("award_amounts"));
-        // data.put("projectCountByProgram", projectAggs.get("programs"));
-        // data.put("publicationCountByCitation", publicationAggs.get("citation_count_category"));
-        // data.put("publicationCountByRCR", publicationAggs.get("rcr_range"));
-        // data.put("publicationCountByYear", publicationAggs.get("year"));
-
-        // widgets data and facet filter counts for projects
-        for (var agg: PROJECT_TERM_AGGS) {
-            String field = agg.get(AGG_NAME);
-            String widgetQueryName = agg.get(WIDGET_QUERY);
-            String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
-            String endpoint = agg.get(AGG_ENDPOINT);
-            // subjectCountByXXXX
-            List<Map<String, Object>> widgetData;
-            if (endpoint.equals(SUBJECTS_END_POINT)) {
-                widgetData = getGroupCountHelper(projectAggs.get(field));
-                data.put(widgetQueryName, widgetData);
-            } else {
-                widgetData = subjectCountBy(field, params, endpoint);;
-                data.put(widgetQueryName, widgetData);
-            }
-            // filterSubjectCountByXXXX
-            if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
-                List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint);;
-                data.put(filterCountQueryName, filterCount);
-            } else {
-                data.put(filterCountQueryName, widgetData);
-            }
-        }
-
-        // widgets data and facet filter counts for publications
-        for (var agg: PUBLICATION_TERM_AGGS) {
-            String field = agg.get(AGG_NAME);
-            String widgetQueryName = agg.get(WIDGET_QUERY);
-            String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
-            String endpoint = agg.get(AGG_ENDPOINT);
-            // subjectCountByXXXX
-            List<Map<String, Object>> widgetData;
-            if (endpoint.equals(SUBJECTS_END_POINT)) {
-                widgetData = getGroupCountHelper(publicationAggs.get(field));
-                data.put(widgetQueryName, widgetData);
-            } else {
-                widgetData = subjectCountBy(field, params, endpoint);;
-                data.put(widgetQueryName, widgetData);
-            }
-            // filterSubjectCountByXXXX
-            if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
-                List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint);;
-                data.put(filterCountQueryName, filterCount);
-            } else {
-                data.put(filterCountQueryName, widgetData);
-            }
-        }
 
         // Map<String, JsonObject> rangeAggs = esService.collectRangeAggs(subjectResult, RANGE_AGG_NAMES);
 
