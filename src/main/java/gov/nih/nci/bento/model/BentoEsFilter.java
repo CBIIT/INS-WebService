@@ -1038,10 +1038,10 @@ public class BentoEsFilter implements DataFetcher {
 
         // special case because it's counting core projects
         Map<String, Object> coreProjectsCountQuery = esService.buildFacetFilterQuery(params, Set.of(), Set.of(), Map.of("representative", List.of(true))); // esService.addCardinalityAggregation(query, "queried_project_id");
-        Request coreProjectsCountRequest = new Request("GET", PROJECTS_END_POINT);
+        Request coreProjectsCountRequest = new Request("GET", PROJECTS_COUNT_END_POINT); // PROJECTS_END_POINT);
         coreProjectsCountRequest.setJsonEntity(gson.toJson(coreProjectsCountQuery));
         JsonObject coreProjectsCountResult = esService.send(coreProjectsCountRequest);
-        int numberOfCoreProjects = coreProjectsCountResult.getAsJsonObject("hits").getAsJsonObject("total").get("value").getAsInt(); // coreProjectsCountResult.getAsJsonObject("aggregations").getAsJsonObject("cardinality_count").get("value").getAsInt();
+        int numberOfCoreProjects = coreProjectsCountResult.get("count").getAsInt(); // coreProjectsCountResult.getAsJsonObject("hits").getAsJsonObject("total").get("value").getAsInt(); // coreProjectsCountResult.getAsJsonObject("aggregations").getAsJsonObject("cardinality_count").get("value").getAsInt();
 
         Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
         publicationsCountRequest.setJsonEntity(gson.toJson(query));
