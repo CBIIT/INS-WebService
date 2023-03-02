@@ -324,6 +324,7 @@ type SearchProjectsResult {
 
 type ProjectDetailResult {
     project_id: String
+    queried_project_id: String
     application_id: String
     fiscal_year: String
     project_title: String
@@ -486,7 +487,7 @@ type QueryType {
     programClinicalTrialCount (program_id: String): Int
     programPatentCount (program_id: String): Int
 
-    projectDetail (project_id: String): ProjectDetailResult
+    projectDetail (queried_project_id: String): ProjectDetailResult
     
     programInfo (first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [ProgramInfoResult]
 }
