@@ -487,7 +487,7 @@ type QueryType {
     programClinicalTrialCount (program_id: String): Int
     programPatentCount (program_id: String): Int
 
-    projectDetail (queried_project_id: String): ProjectDetailResult
+    projectDetail (project_id: String): ProjectDetailResult
     
     programInfo (first: Int = 10, offset: Int = 0, order_by: String = "", sort_direction: String = ""): [ProgramInfoResult]
 }

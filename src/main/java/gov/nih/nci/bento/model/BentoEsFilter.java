@@ -1466,12 +1466,12 @@ public class BentoEsFilter implements DataFetcher {
         };
 
         // get the data
-        Map<String,Object> query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("queried_project_id"))), Set.of(), Set.of(), Map.of("representative", List.of(true)));
+        Map<String,Object> query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))), Set.of(), Set.of(), Map.of("representative", List.of(true)));
         Request request = new Request("GET", PROJECTS_END_POINT);
         Map<String,Object> result = esService.collectPage(request, query, PROPERTIES, 1, 0).get(0);
 
         // get the counts
-        query = esService.buildFacetFilterQuery(Map.of("queried_project_ids", List.of(params.get("queried_project_id"))));
+        query = esService.buildFacetFilterQuery(Map.of("queried_project_ids", List.of(params.get("project_id"))));
         Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
         publicationsCountRequest.setJsonEntity(gson.toJson(query));
         JsonObject publicationsCountResult = esService.send(publicationsCountRequest);
