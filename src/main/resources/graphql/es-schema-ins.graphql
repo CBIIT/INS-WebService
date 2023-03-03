@@ -344,6 +344,7 @@ type ProjectDetailResult {
     project_start_date: String
     project_end_date: String
     full_foa: String
+    num_projects: Int
     num_publications: Int
     num_datasets: Int
     num_clinical_trials: Int

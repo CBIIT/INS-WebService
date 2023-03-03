@@ -1474,8 +1474,16 @@ public class BentoEsFilter implements DataFetcher {
         Request request = new Request("GET", PROJECTS_END_POINT);
         Map<String,Object> result = esService.collectPage(request, query, PROPERTIES, 1, 0).get(0);
 
+        // get the project count
+        query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))));
+        Request projectsCountRequest = new Request("GET", PROJECTS_COUNT_END_POINT);
+        projectsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject projectsCountResult = esService.send(projectsCountRequest);
+        int numberOfProjects = projectsCountResult.get("count").getAsInt();
+
         // get the counts
         query = esService.buildFacetFilterQuery(Map.of("queried_project_ids", List.of(params.get("project_id"))));
+        
         Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
         publicationsCountRequest.setJsonEntity(gson.toJson(query));
         JsonObject publicationsCountResult = esService.send(publicationsCountRequest);
@@ -1497,6 +1505,7 @@ public class BentoEsFilter implements DataFetcher {
         int numberOfPatents = patentsCountResult.get("count").getAsInt();
 
         Map<String, Object> data = new HashMap<>();
+        data.put("num_projects", numberOfProjects);
         data.put("num_publications", numberOfPublications);
         data.put("num_datasets", numberOfDatasets);
         data.put("num_clinical_trials", numberOfClinicalTrials);
