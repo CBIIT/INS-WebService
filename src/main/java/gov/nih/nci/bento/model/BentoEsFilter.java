@@ -168,6 +168,10 @@ public class BentoEsFilter implements DataFetcher {
                         .dataFetcher("numberOfProjects", env -> {
                             Map<String, Object> args = env.getArguments();
                             return numberOfProjects(args);
+                        }).
+                        dataFetcher("numberOfCoreProjects", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfCoreProjects(args);
                         })
                         .dataFetcher("numberOfPublications", env -> {
                             Map<String, Object> args = env.getArguments();
@@ -1302,6 +1306,16 @@ public class BentoEsFilter implements DataFetcher {
 
     private Integer numberOfProjects(Map<String, Object> params) throws IOException {
         Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());
+
+        Request request = new Request("GET", PROJECTS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfCoreProjects(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of(), Set.of(), Map.of("representative", List.of(true)));
 
         Request request = new Request("GET", PROJECTS_COUNT_END_POINT);
         request.setJsonEntity(gson.toJson(query));

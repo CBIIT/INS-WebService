@@ -476,6 +476,7 @@ type QueryType {
 
     numberOfPrograms: Int
     numberOfProjects: Int
+    numberOfCoreProjects: Int
     numberOfPublications: Int
     numberOfGEOs: Int
     numberOfSRAs: Int
