@@ -410,7 +410,7 @@ type QueryType {
         MATCH (p)<--(pr:project)
         WITH DISTINCT pr
         RETURN { group: pr.lead_doc,
-                 subjects: COUNT(DISTINCT pr.project_id)}
+                 subjects: COUNT(DISTINCT pr.queried_project_id)}
     """, passThrough: true)
 
     projectCountInProgramByFundedAmount(program_id: String): [FundAmountRangeCount] @cypher(statement: """
