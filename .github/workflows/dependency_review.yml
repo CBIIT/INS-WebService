@@ -1,58 +1,31 @@
-name: Contrast || TruffleHog
-run-name: Repository Security
-on: 
+name: Codacy Security Scan
+
+on:
   pull_request:
-    branches:
-      - "dev**"
-      
+    branches: [ "dev**", "qa**", "main"]
+  push:
+    branches: [ "main" ]
+
 jobs:
-  Codacy-Spotbugs:
-    name: Codacy Analysis CLI
+  SAST:
+    name: Build Backend 
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@main
+      - name: Remove Example Properties File 
+        run: rm src/main/resources/application_example.properties 
+      - name: Build SprintBoot Application 
+        run: mvn clean package -DskipTests=true 
+      - name: Rename WAR Artifact 
+        run: mv ./target/Bento-0.0.1.war ./target/ROOT.war 
       - name: Run Codacy Analysis CLI
         uses: codacy/codacy-analysis-cli-action@master
         with:
           tool: spotbugs
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          # or
-          # api-token: ${{ secrets.CODACY_API_TOKEN }}
           upload: true
           max-allowed-issues: 2147483647
-  Contrast-SCA:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-      - name: Install Contrast CLI
-        run: brew tap contrastsecurity/tap && brew install contrast
-      - name: Contrast Auth
-        run: |
-          contrast auth \
-          --api-key ${{ secrets.CONTRAST_API_KEY }} \
-          --authorization ${{ secrets.CONTRAST_AUTH_HEADER }} \
-          --host ${{ secrets.CONTRAST_API_URL }} \
-          --organization-id ${{ secrets.CONTRAST_ORGANIZATION_ID }}
-      - name: Contrast Audit
-        id: audit
-        run: |
-          contrast audit \
-          --file pom.xml \
-          --application-name CCDI_INS \
-          --app-groups ${{ secrets.CONTRAST_APP_GROUPS }}
-  TruffleHog-Secrets:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-          # extra_args: --debug --only-verified
+          verbose: true
+          allow-network: true 
+          skip-uncommitted-files-check: true
