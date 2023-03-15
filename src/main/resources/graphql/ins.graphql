@@ -202,6 +202,7 @@ type ProgramDetail {
     program_website: String
     num_publications: Int
     num_projects: Int
+    num_core_projects: Int
     num_geos: Int
     num_sras: Int
     num_clinical_trials: Int
