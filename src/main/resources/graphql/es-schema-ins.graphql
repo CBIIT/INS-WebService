@@ -349,6 +349,7 @@ type ProjectDetailResult {
     num_datasets: Int
     num_clinical_trials: Int
     num_patents: Int
+    program: String
 }
 
 type ProgramInfoResult {
