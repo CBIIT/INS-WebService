@@ -414,15 +414,15 @@ type QueryType {
     """, passThrough: true)
 
     projectCountInProgramByFundedAmount(program_id: String): [FundAmountRangeCount] @cypher(statement: """
-        MATCH (p:program {program_id: "Moonshot"})
+        MATCH (p:program {program_id: $program_id})
         OPTIONAL MATCH (p)<--(pr:project)
         WITH DISTINCT pr.queried_project_id AS queried_project_ids, SUM(toInteger(pr.award_amount)) AS sums
         RETURN {
-          funded_amount_1: SUM(CASE WHEN sums < 250000 THEN 1 ELSE 0 END),
-          funded_amount_2: SUM(CASE WHEN 250000 <= sums < 500000 THEN 1 ELSE 0 END),
-          funded_amount_3: SUM(CASE WHEN 500000 <= sums < 750000 THEN 1 ELSE 0 END),
-          funded_amount_4: SUM(CASE WHEN 750000 <= sums < 1000000 THEN 1 ELSE 0 END),
-          funded_amount_5: SUM(CASE WHEN 1000000 <= sums THEN 1 ELSE 0 END)
+          funded_amount_1: SUM(CASE WHEN sums < 1000000 THEN 1 ELSE 0 END),
+          funded_amount_2: SUM(CASE WHEN 1000000 <= sums < 2000000 THEN 1 ELSE 0 END),
+          funded_amount_3: SUM(CASE WHEN 2000000 <= sums < 4000000 THEN 1 ELSE 0 END),
+          funded_amount_4: SUM(CASE WHEN 4000000 <= sums < 10000000 THEN 1 ELSE 0 END),
+          funded_amount_5: SUM(CASE WHEN 10000000 <= sums THEN 1 ELSE 0 END)
         }
     """, passThrough: true)
 
