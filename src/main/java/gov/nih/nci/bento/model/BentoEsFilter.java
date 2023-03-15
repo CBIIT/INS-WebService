@@ -1475,18 +1475,39 @@ public class BentoEsFilter implements DataFetcher {
             new String[]{"principal_investigators", "principal_investigators"},
             new String[]{"lead_doc", "docs"},
             new String[]{"program_officers", "program_officers"},
-            new String[]{"award_amount", "award_amount"},
-            new String[]{"nci_funded_amount", "nci_funded_amount"},
+            // new String[]{"award_amount", "award_amount"},
+            // new String[]{"nci_funded_amount", "nci_funded_amount"},
             new String[]{"award_notice_date", "award_notice_date"},
             new String[]{"project_start_date", "project_start_date"},
             new String[]{"project_end_date", "project_end_date"},
             new String[]{"full_foa", "full_foa"},
         };
 
+        final String[][] CUMULATIVE_PROPERTIES = new String[][]{
+            new String[]{"nci_funded_amount", "nci_funded_amount"},
+            new String[]{"award_amount", "award_amount"},
+        };
+
         // get the data
         Map<String,Object> query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))), Set.of(), Set.of(), Map.of("representative", List.of(true)));
         Request request = new Request("GET", PROJECTS_END_POINT);
         Map<String,Object> result = esService.collectPage(request, query, PROPERTIES, 1, 0).get(0);
+
+        // get the cumulative data
+        query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))));
+        request = new Request("GET", PROJECTS_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonArray cumulativeResult = esService.send(request).getAsJsonObject("hits").getAsJsonArray("hits");
+        Integer cumulativeResultSize = cumulativeResult.size();
+        // the cumulative properties return arrays of values to be summed
+        for (var cumulativeProperty : CUMULATIVE_PROPERTIES) {
+            String propName = cumulativeProperty[0];
+            Integer sum = 0;
+            for (int i = 0; i < cumulativeResultSize; i++) {
+                sum += cumulativeResult.get(i).getAsJsonObject().get("_source").getAsJsonObject().get(propName).getAsInt();
+                result.put(propName, sum);
+            }
+        }
 
         // get the project count
         query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))));
