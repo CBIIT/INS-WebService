@@ -1495,6 +1495,8 @@ public class BentoEsFilter implements DataFetcher {
 
         // get the cumulative data
         query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))));
+        query.put("size", ESService.MAX_ES_SIZE);
+        query.put("from", 0);
         request = new Request("GET", PROJECTS_END_POINT);
         request.setJsonEntity(gson.toJson(query));
         JsonArray cumulativeResult = esService.send(request).getAsJsonObject("hits").getAsJsonArray("hits");
