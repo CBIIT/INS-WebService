@@ -1493,6 +1493,14 @@ public class BentoEsFilter implements DataFetcher {
         Request request = new Request("GET", PROJECTS_END_POINT);
         Map<String,Object> result = esService.collectPage(request, query, PROPERTIES, 1, 0).get(0);
 
+        // adeforge 03/16/2023: This could probably be a new type of aggregate query. As it stands, this is a basic query for all documents
+        //   in the 'projects' index with a given 'queried_project_id'. We loop over them and sum the relevant 'CUMULATIVE_PROPERTIES'.
+        //   This was not implemented as a new type of 'addAggregations' in the ESService.java module because this is a one-off that
+        //   was simple to implement as such and the number of documents (grants in a core project) is low -- there wouldn't be a noticeable
+        //   performance hit over and above the fact that it's an endpoint hit. If we were to implement a new aggregate query, that
+        //   would be an endpoint hit as well and the difference between that and this would probably be negligible, but would cost more development time.
+        //   If we want to formalize this with a new type of OpenSearch query and associated modifications to ESService.java, we can do that.
+        //   The above are the reasons for implementing it this way for now.
         // get the cumulative data
         query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))));
         query.put("size", ESService.MAX_ES_SIZE);
