@@ -140,7 +140,11 @@ public class ESService {
         return buildFacetFilterQuery(params, rangeParams, Set.of());
     }
 
-    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams) throws IOException {
+    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams)  throws IOException {
+        return buildFacetFilterQuery(params, rangeParams, excludedParams, Map.of());
+    }
+
+    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams, Map<String,Object> additionalParams) throws IOException {
         Map<String, Object> result = new HashMap<>();
 
         List<Object> filter = new ArrayList<>();
@@ -167,7 +171,7 @@ public class ESService {
                         range.put("lte", higher);
                     }
                     filter.add(Map.of(
-                            "range", Map.of( key, range)
+                            "range", Map.of(key, range)
                     ));
                 }
             } else {
@@ -176,11 +180,48 @@ public class ESService {
                 // list with only one empty string [""] means return all records
                 if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
                     filter.add(Map.of(
-                        "terms", Map.of( key, valueSet)
+                        "terms", Map.of(key, valueSet)
                     ));
                 }
             }
         }
+
+        for (var key: additionalParams.keySet()) {
+            if (excludedParams.contains(key)) {
+                continue;
+            }
+
+            if (rangeParams.contains(key)) {
+                // Range parameters, should contain two doubles, first lower bound, then upper bound
+                // Any other values after those two will be ignored
+                List<Double> bounds = (List<Double>) additionalParams.get(key);
+                if (bounds.size() >= 2) {
+                    Double lower = bounds.get(0);
+                    Double higher = bounds.get(1);
+                    if (lower == null && higher == null) {
+                        throw new IOException("Lower bound and Upper bound can't be both null!");
+                    }
+                    Map<String, Double> range = new HashMap<>();
+                    if (lower != null) {
+                        range.put("gte", lower);
+                    }
+                    if (higher != null) {
+                        range.put("lte", higher);
+                    }
+                    filter.add(Map.of(
+                            "range", Map.of(key, range)
+                    ));
+                }
+            } else {
+                // it is assumed that if we're adding additional parameters in the backend,
+                //   that we know what we're doing and don't require as much validation
+                //   as with normal 'params' passed from the user/frontend
+                filter.add(Map.of(
+                    "terms", Map.of(key, additionalParams.get(key))
+                ));
+            }
+        }
+
         if (filter.size() == 0) {
             result.put("query", Map.of("match_all", Map.of()));    
         } else {
@@ -190,10 +231,14 @@ public class ESService {
     }
 
     public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames) {
-        return addAggregations(query, termAggNames, new String[]{});
+        return addAggregations(query, termAggNames, new String(), new String[]{});
     }
 
-    public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames, String[] rangeAggNames) {
+    public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames, String cardinalityAggName) {
+        return addAggregations(query, termAggNames, cardinalityAggName, new String[]{});
+    }
+
+    public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames, String subCardinalityAggName, String[] rangeAggNames) {
         Map<String, Object> newQuery = new HashMap<>(query);
         newQuery.put("size", 0);
         // newQuery.put("aggs", getAllAggregations(termAggNames, rangeAggNames));
@@ -201,10 +246,26 @@ public class ESService {
         Map<String, Object> fields = new HashMap<String, Object>();
         for (String field: termAggNames) {
             // the "size": 50 is so that we can have more than 10 buckets returned for our aggregations (the default)
-            fields.put(field, Map.of("terms", Map.of("field", field, "size", 50)));
+            Map<String, Object> subField = Map.of("field", field, "size", 50);
+            if (!subCardinalityAggName.isEmpty()) {
+                fields.put(field, Map.of("terms", subField, "aggs", addCardinalityHelper(subCardinalityAggName)));
+            } else {
+                fields.put(field, Map.of("terms", subField));
+            }
         }
         newQuery.put("aggs", fields);
         return newQuery;
+    }
+
+    public Map<String, Object> addCardinalityAggregation(Map<String, Object> query, String cardinalityAggName) {
+        Map<String, Object> newQuery = new HashMap<>(query);
+        newQuery.put("size", 0);
+        newQuery.put("aggs", addCardinalityHelper(cardinalityAggName));
+        return newQuery;
+    }
+
+    public Map<String, Object> addCardinalityHelper(String cardinalityAggName) {
+        return Map.of("cardinality_count", Map.of("cardinality", Map.of("field", cardinalityAggName)));
     }
 
     public void addSubAggregations(Map<String, Object> query, String mainAggName, String[] subTermAggNames) {

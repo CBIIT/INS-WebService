@@ -157,6 +157,10 @@ public class BentoEsFilter implements DataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return projectOverView(args);
                         })
+                        .dataFetcher("projectOverViewByProject", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return projectOverView(args);
+                        })
                         .dataFetcher("numberOfPrograms", env -> {
                             Map<String, Object> args = env.getArguments();
                             return numberOfPrograms(args);
@@ -164,6 +168,10 @@ public class BentoEsFilter implements DataFetcher {
                         .dataFetcher("numberOfProjects", env -> {
                             Map<String, Object> args = env.getArguments();
                             return numberOfProjects(args);
+                        }).
+                        dataFetcher("numberOfCoreProjects", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return numberOfCoreProjects(args);
                         })
                         .dataFetcher("numberOfPublications", env -> {
                             Map<String, Object> args = env.getArguments();
@@ -625,6 +633,17 @@ public class BentoEsFilter implements DataFetcher {
         return data;
     }
 
+    private List<Map<String, Object>> getGroupCardinalityCountHelper(JsonArray buckets) throws IOException {
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (JsonElement group: buckets) {
+            data.add(Map.of("group", group.getAsJsonObject().get("key").getAsString(),
+                    "subjects", group.getAsJsonObject().getAsJsonObject("cardinality_count").get("value").getAsInt()
+            ));
+
+        }
+        return data;
+    }
+
     private Map<String, Object> rangeFilterSubjectCountBy(String category, Map<String, Object> params) throws IOException {
         Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS,Set.of(PAGE_SIZE, category));
         return getRangeCount(category, query);
@@ -632,7 +651,7 @@ public class BentoEsFilter implements DataFetcher {
 
     private Map<String, Object> getRangeCount(String category, Map<String, Object> query) throws IOException {
         String[] AGG_NAMES = new String[] {category};
-        query = esService.addAggregations(query, new String[]{}, AGG_NAMES);
+        query = esService.addAggregations(query, new String[]{}, new String(), AGG_NAMES);
         Request request = new Request("GET", SUBJECTS_END_POINT);
         request.setJsonEntity(gson.toJson(query));
         JsonObject jsonObject = esService.send(request);
@@ -1013,7 +1032,7 @@ public class BentoEsFilter implements DataFetcher {
         }
         final String[] PUBLICATIONS_TERM_AGG_NAMES = publication_agg_names.toArray(new String[PUBLICATION_TERM_AGGS.size()]);
 
-        Map<String, Object> query = esService.buildFacetFilterQuery(params, Set.of());  // RANGE_PARAMS
+        Map<String, Object> query = esService.buildFacetFilterQuery(params);
 
         Request programsCountRequest = new Request("GET", PROGRAMS_COUNT_END_POINT);
         programsCountRequest.setJsonEntity(gson.toJson(query));
@@ -1024,6 +1043,13 @@ public class BentoEsFilter implements DataFetcher {
         projectsCountRequest.setJsonEntity(gson.toJson(query));
         JsonObject projectsCountResult = esService.send(projectsCountRequest);
         int numberOfProjects = projectsCountResult.get("count").getAsInt();
+
+        // special case because it's counting core projects
+        Map<String, Object> coreProjectsCountQuery = esService.buildFacetFilterQuery(params, Set.of(), Set.of(), Map.of("representative", List.of(true))); // esService.addCardinalityAggregation(query, "queried_project_id");
+        Request coreProjectsCountRequest = new Request("GET", PROJECTS_COUNT_END_POINT); // PROJECTS_END_POINT);
+        coreProjectsCountRequest.setJsonEntity(gson.toJson(coreProjectsCountQuery));
+        JsonObject coreProjectsCountResult = esService.send(coreProjectsCountRequest);
+        int numberOfCoreProjects = coreProjectsCountResult.get("count").getAsInt(); // coreProjectsCountResult.getAsJsonObject("hits").getAsJsonObject("total").get("value").getAsInt(); // coreProjectsCountResult.getAsJsonObject("aggregations").getAsJsonObject("cardinality_count").get("value").getAsInt();
 
         Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
         publicationsCountRequest.setJsonEntity(gson.toJson(query));
@@ -1045,85 +1071,40 @@ public class BentoEsFilter implements DataFetcher {
         JsonObject patentsCountResult = esService.send(patentsCountRequest);
         int numberOfPatents = patentsCountResult.get("count").getAsInt();
 
+        Map<String, Object> data = new HashMap<>();
         // Get aggregations
-        Map<String, Object> projectAggQuery = esService.addAggregations(query, PROJECTS_TERM_AGG_NAMES, new String[]{});
+        Map<String, Object> representativeQuery = esService.buildFacetFilterQuery(params, Set.of(), Set.of(), Map.of("representative", List.of(true)));  // we want to filter by the representative grants, as an additional param
+        Map<String, Object> projectAggQuery = esService.addAggregations(representativeQuery, PROJECTS_TERM_AGG_NAMES); // , "queried_project_id");
         Request projectRequest = new Request("GET", PROJECTS_END_POINT);
         projectRequest.setJsonEntity(gson.toJson(projectAggQuery));
         JsonObject projectResult = esService.send(projectRequest);
         Map<String, JsonArray> projectAggs = esService.collectTermAggs(projectResult, PROJECTS_TERM_AGG_NAMES);
+        for (var agg: PROJECT_TERM_AGGS) {
+            JsonArray buckets = projectAggs.get(agg.get(AGG_NAME));
+            List<Map<String, Object>> parsedBuckets = getGroupCountHelper(buckets); // getGroupCardinalityCountHelper(buckets);
+            data.put(agg.get(WIDGET_QUERY), parsedBuckets);
+            data.put(agg.get(FILTER_COUNT_QUERY), parsedBuckets);
+        }
 
-        Map<String, Object> publicationAggQuery = esService.addAggregations(query, PUBLICATIONS_TERM_AGG_NAMES, new String[]{});
+        Map<String, Object> publicationAggQuery = esService.addAggregations(query, PUBLICATIONS_TERM_AGG_NAMES);
         Request publicationRequest = new Request("GET", PUBLICATIONS_END_POINT);
         publicationRequest.setJsonEntity(gson.toJson(publicationAggQuery));
         JsonObject publicationResult = esService.send(publicationRequest);
         Map<String, JsonArray> publicationAggs = esService.collectTermAggs(publicationResult, PUBLICATIONS_TERM_AGG_NAMES);
+        for (var agg: PUBLICATION_TERM_AGGS) {
+            JsonArray buckets = publicationAggs.get(agg.get(AGG_NAME));
+            List<Map<String, Object>> parsedBuckets = getGroupCountHelper(buckets);
+            data.put(agg.get(WIDGET_QUERY), parsedBuckets);
+            data.put(agg.get(FILTER_COUNT_QUERY), parsedBuckets);
+        }
 
-        Map<String, Object> data = new HashMap<>();
-        // data.put("filterProjectCountByDOC", projectAggs.get("docs"));
-        // data.put("filterProjectCountByFiscalYear", projectAggs.get("fiscal_years"));
-        // data.put("filterProjectCountByAwardAmount", projectAggs.get("award_amounts"));
-        // data.put("filterProjectCountByProgram", projectAggs.get("programs"));
         data.put("numberOfPrograms", numberOfPrograms);
         data.put("numberOfProjects", numberOfProjects);
+        data.put("numberOfCoreProjects", numberOfCoreProjects);
         data.put("numberOfPublications", numberOfPublications);
         data.put("numberOfDatasets", numberOfDatasets);
         data.put("numberOfClinicalTrials", numberOfClinicalTrials);
         data.put("numberOfPatents", numberOfPatents);
-        // data.put("projectCountByDOC", projectAggs.get("docs"));
-        // data.put("projectCountByFiscalYear", projectAggs.get("fiscal_years"));
-        // data.put("projectCountByAwardAmount", projectAggs.get("award_amounts"));
-        // data.put("projectCountByProgram", projectAggs.get("programs"));
-        // data.put("publicationCountByCitation", publicationAggs.get("citation_count_category"));
-        // data.put("publicationCountByRCR", publicationAggs.get("rcr_range"));
-        // data.put("publicationCountByYear", publicationAggs.get("year"));
-
-        // widgets data and facet filter counts for projects
-        for (var agg: PROJECT_TERM_AGGS) {
-            String field = agg.get(AGG_NAME);
-            String widgetQueryName = agg.get(WIDGET_QUERY);
-            String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
-            String endpoint = agg.get(AGG_ENDPOINT);
-            // subjectCountByXXXX
-            List<Map<String, Object>> widgetData;
-            if (endpoint.equals(SUBJECTS_END_POINT)) {
-                widgetData = getGroupCountHelper(projectAggs.get(field));
-                data.put(widgetQueryName, widgetData);
-            } else {
-                widgetData = subjectCountBy(field, params, endpoint);;
-                data.put(widgetQueryName, widgetData);
-            }
-            // filterSubjectCountByXXXX
-            if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
-                List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint);;
-                data.put(filterCountQueryName, filterCount);
-            } else {
-                data.put(filterCountQueryName, widgetData);
-            }
-        }
-
-        // widgets data and facet filter counts for publications
-        for (var agg: PUBLICATION_TERM_AGGS) {
-            String field = agg.get(AGG_NAME);
-            String widgetQueryName = agg.get(WIDGET_QUERY);
-            String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
-            String endpoint = agg.get(AGG_ENDPOINT);
-            // subjectCountByXXXX
-            List<Map<String, Object>> widgetData;
-            if (endpoint.equals(SUBJECTS_END_POINT)) {
-                widgetData = getGroupCountHelper(publicationAggs.get(field));
-                data.put(widgetQueryName, widgetData);
-            } else {
-                widgetData = subjectCountBy(field, params, endpoint);;
-                data.put(widgetQueryName, widgetData);
-            }
-            // filterSubjectCountByXXXX
-            if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
-                List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint);;
-                data.put(filterCountQueryName, filterCount);
-            } else {
-                data.put(filterCountQueryName, widgetData);
-            }
-        }
 
         // Map<String, JsonObject> rangeAggs = esService.collectRangeAggs(subjectResult, RANGE_AGG_NAMES);
 
@@ -1279,6 +1260,7 @@ public class BentoEsFilter implements DataFetcher {
             new String[]{"project_start_date", "project_start_date"},
             new String[]{"project_end_date", "project_end_date"},
             new String[]{"full_foa", "full_foa"},
+            new String[]{"queried_project_id", "queried_project_id"},
         };
 
         String defaultSort = "project_id.sort"; // Default sort order
@@ -1305,7 +1287,8 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("project_title", "project_title.sort"),
                 Map.entry("principal_investigators", "principal_investigators.sort"),
                 Map.entry("program_officers", "program_officers.sort"),
-                Map.entry("project_end_date", "project_end_date")
+                Map.entry("project_end_date", "project_end_date"),
+                Map.entry("queried_project_id", "queried_project_id")
         );
 
         return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
@@ -1323,6 +1306,16 @@ public class BentoEsFilter implements DataFetcher {
 
     private Integer numberOfProjects(Map<String, Object> params) throws IOException {
         Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of());
+
+        Request request = new Request("GET", PROJECTS_COUNT_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject result = esService.send(request);
+        int number = result.get("count").getAsInt();
+        return number;
+    }
+
+    private Integer numberOfCoreProjects(Map<String, Object> params) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(Map.of(), Set.of(), Set.of(), Map.of("representative", List.of(true)));
 
         Request request = new Request("GET", PROJECTS_COUNT_END_POINT);
         request.setJsonEntity(gson.toJson(query));
@@ -1468,6 +1461,7 @@ public class BentoEsFilter implements DataFetcher {
             new String[]{"program", "programs"},
             new String[]{"activity_code", "activity_code"},
             new String[]{"project_id", "project_id"},
+            new String[]{"queried_project_id", "queried_project_id"},
             new String[]{"application_id", "application_id"},
             new String[]{"fiscal_year", "fiscal_years"},
             new String[]{"project_title", "project_title"},
@@ -1481,21 +1475,60 @@ public class BentoEsFilter implements DataFetcher {
             new String[]{"principal_investigators", "principal_investigators"},
             new String[]{"lead_doc", "docs"},
             new String[]{"program_officers", "program_officers"},
-            new String[]{"award_amount", "award_amount"},
-            new String[]{"nci_funded_amount", "nci_funded_amount"},
+            // new String[]{"award_amount", "award_amount"},
+            // new String[]{"nci_funded_amount", "nci_funded_amount"},
             new String[]{"award_notice_date", "award_notice_date"},
             new String[]{"project_start_date", "project_start_date"},
             new String[]{"project_end_date", "project_end_date"},
             new String[]{"full_foa", "full_foa"},
         };
 
+        final String[][] CUMULATIVE_PROPERTIES = new String[][]{
+            new String[]{"nci_funded_amount", "nci_funded_amount"},
+            new String[]{"award_amount", "award_amount"},
+        };
+
         // get the data
-        Map<String,Object> query = esService.buildFacetFilterQuery(Map.of("project_id", List.of(params.get("project_id"))), Set.of());  // RANGE_PARAMS
+        Map<String,Object> query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))), Set.of(), Set.of(), Map.of("representative", List.of(true)));
         Request request = new Request("GET", PROJECTS_END_POINT);
         Map<String,Object> result = esService.collectPage(request, query, PROPERTIES, 1, 0).get(0);
 
+        // adeforge 03/16/2023: This could probably be a new type of aggregate query. As it stands, this is a basic query for all documents
+        //   in the 'projects' index with a given 'queried_project_id'. We loop over them and sum the relevant 'CUMULATIVE_PROPERTIES'.
+        //   This was not implemented as a new type of 'addAggregations' in the ESService.java module because this is a one-off that
+        //   was simple to implement as such and the number of documents (grants in a core project) is low -- there wouldn't be a noticeable
+        //   performance hit over and above the fact that it's an endpoint hit. If we were to implement a new aggregate query, that
+        //   would be an endpoint hit as well and the difference between that and this would probably be negligible, but would cost more development time.
+        //   If we want to formalize this with a new type of OpenSearch query and associated modifications to ESService.java, we can do that.
+        //   The above are the reasons for implementing it this way for now.
+        // get the cumulative data
+        query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))));
+        query.put("size", ESService.MAX_ES_SIZE);
+        query.put("from", 0);
+        request = new Request("GET", PROJECTS_END_POINT);
+        request.setJsonEntity(gson.toJson(query));
+        JsonArray cumulativeResult = esService.send(request).getAsJsonObject("hits").getAsJsonArray("hits");
+        Integer cumulativeResultSize = cumulativeResult.size();
+        // the cumulative properties return arrays of values to be summed
+        for (var cumulativeProperty : CUMULATIVE_PROPERTIES) {
+            String propName = cumulativeProperty[0];
+            Integer sum = 0;
+            for (int i = 0; i < cumulativeResultSize; i++) {
+                sum += cumulativeResult.get(i).getAsJsonObject().get("_source").getAsJsonObject().get(propName).getAsInt();
+                result.put(propName, sum);
+            }
+        }
+
+        // get the project count
+        query = esService.buildFacetFilterQuery(Map.of("queried_project_id", List.of(params.get("project_id"))));
+        Request projectsCountRequest = new Request("GET", PROJECTS_COUNT_END_POINT);
+        projectsCountRequest.setJsonEntity(gson.toJson(query));
+        JsonObject projectsCountResult = esService.send(projectsCountRequest);
+        int numberOfProjects = projectsCountResult.get("count").getAsInt();
+
         // get the counts
-        query = esService.buildFacetFilterQuery(Map.of("project_id", List.of(params.get("project_id"))), Set.of());  // RANGE_PARAMS
+        query = esService.buildFacetFilterQuery(Map.of("queried_project_ids", List.of(params.get("project_id"))));
+        
         Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
         publicationsCountRequest.setJsonEntity(gson.toJson(query));
         JsonObject publicationsCountResult = esService.send(publicationsCountRequest);
@@ -1517,6 +1550,7 @@ public class BentoEsFilter implements DataFetcher {
         int numberOfPatents = patentsCountResult.get("count").getAsInt();
 
         Map<String, Object> data = new HashMap<>();
+        data.put("num_projects", numberOfProjects);
         data.put("num_publications", numberOfPublications);
         data.put("num_datasets", numberOfDatasets);
         data.put("num_clinical_trials", numberOfClinicalTrials);
