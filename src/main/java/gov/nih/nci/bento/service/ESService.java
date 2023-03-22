@@ -140,7 +140,11 @@ public class ESService {
         return buildFacetFilterQuery(params, rangeParams, Set.of());
     }
 
-    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams) throws IOException {
+    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams)  throws IOException {
+        return buildFacetFilterQuery(params, rangeParams, excludedParams, "");
+    }
+
+    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams, String nestedProperty) throws IOException {
         Map<String, Object> result = new HashMap<>();
 
         List<Object> filter = new ArrayList<>();
@@ -181,11 +185,15 @@ public class ESService {
                 }
             }
         }
+        
         if (filter.size() == 0) {
             result.put("query", Map.of("match_all", Map.of()));    
-        } else {
+        } else if (nestedProperty.equals("")) {  // the nestedParams has to be explicitly set, otherwise the default behavior should be as before
             result.put("query", Map.of("bool", Map.of("filter", filter)));
+        } else {
+            result.put("query", Map.of("nested", Map.of("path", nestedProperty, "query", Map.of("bool", Map.of("filter", filter)))));
         }
+        
         return result;
     }
 
