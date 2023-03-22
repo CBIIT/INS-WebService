@@ -174,18 +174,31 @@ public class ESService {
                     if (higher != null) {
                         range.put("lte", higher);
                     }
-                    filter.add(Map.of(
+                    if (nestedProperty.equals("")) {  // nested queries are on nested property keys
+                        filter.add(Map.of(
                             "range", Map.of(key, range)
-                    ));
+                        ));
+                    } else {
+                        filter.add(Map.of(
+                            "range", Map.of(nestedProperty+"."+key, range)
+                        ));
+                    }
+
                 }
             } else {
                 // Term parameters (default)
                 List<String> valueSet = (List<String>) params.get(key);
                 // list with only one empty string [""] means return all records
                 if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
-                    filter.add(Map.of(
-                        "terms", Map.of(key, valueSet)
-                    ));
+                    if (nestedProperty.equals("")) {  // nested queries are on nested property keys
+                        filter.add(Map.of(
+                            "terms", Map.of(key, valueSet)
+                        ));
+                    } else {
+                        filter.add(Map.of(
+                        "terms", Map.of(nestedProperty+"."+key, valueSet)
+                        ));
+                    }
                 }
             }
         }
@@ -212,17 +225,29 @@ public class ESService {
                     if (higher != null) {
                         range.put("lte", higher);
                     }
-                    filter.add(Map.of(
+                    if (nestedProperty.equals("")) {  // nested queries are on nested property keys
+                        filter.add(Map.of(
                             "range", Map.of(key, range)
-                    ));
+                        ));
+                    } else {
+                        filter.add(Map.of(
+                            "range", Map.of(nestedProperty+"."+key, range)
+                        ));
+                    }
                 }
             } else {
                 // it is assumed that if we're adding additional parameters in the backend,
                 //   that we know what we're doing and don't require as much validation
                 //   as with normal 'params' passed from the user/frontend
-                filter.add(Map.of(
-                    "terms", Map.of(key, additionalParams.get(key))
-                ));
+                if (nestedProperty.equals("")) {  // nested queries are on nested property keys
+                    filter.add(Map.of(
+                        "terms", Map.of(key, additionalParams.get(key))
+                    ));
+                } else {
+                    filter.add(Map.of(
+                        "terms", Map.of(nestedProperty+"."+key, additionalParams.get(key))
+                    ));
+                }
             }
         }
 
@@ -231,7 +256,7 @@ public class ESService {
         } else if (nestedProperty.equals("")) {  // the nestedParams has to be explicitly set, otherwise the default behavior should be as before
             result.put("query", Map.of("bool", Map.of("filter", filter)));
         } else {
-            result.put("query", Map.of("nested", Map.of("path", nestedProperty, "query", Map.of("bool", Map.of("filter", filter)))));
+            result.put("query", Map.of("nested", Map.of("path", nestedProperty, "query", Map.of("bool", Map.of("filter", filter)), "inner_hits", Map.of())));
         }
         
         return result;
