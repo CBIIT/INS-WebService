@@ -1039,12 +1039,6 @@ public class BentoEsFilter implements DataFetcher {
         final String[] PUBLICATIONS_TERM_AGG_NAMES = publication_agg_names.toArray(new String[PUBLICATION_TERM_AGGS.size()]);
 
         Map<String, Object> query = esService.buildFacetFilterQuery(params);
-
-        Request programsCountRequest = new Request("GET", PROGRAMS_COUNT_END_POINT);
-        programsCountRequest.setJsonEntity(gson.toJson(query));
-        JsonObject programsCountResult = esService.send(programsCountRequest);
-        int numberOfPrograms = programsCountResult.get("count").getAsInt();
-
         Request projectsCountRequest = new Request("GET", PROJECTS_COUNT_END_POINT);
         projectsCountRequest.setJsonEntity(gson.toJson(query));
         JsonObject projectsCountResult = esService.send(projectsCountRequest);
@@ -1057,23 +1051,30 @@ public class BentoEsFilter implements DataFetcher {
         JsonObject coreProjectsCountResult = esService.send(coreProjectsCountRequest);
         int numberOfCoreProjects = coreProjectsCountResult.get("count").getAsInt(); // coreProjectsCountResult.getAsJsonObject("hits").getAsJsonObject("total").get("value").getAsInt(); // coreProjectsCountResult.getAsJsonObject("aggregations").getAsJsonObject("cardinality_count").get("value").getAsInt();
 
+        // count anything with 'nested_projects'
+        Map<String, Object> nestedQuery = esService.buildFacetFilterQuery(params, Set.of(), Set.of(), Map.of(), "nested_projects");
+        Request programsCountRequest = new Request("GET", PROGRAMS_COUNT_END_POINT);
+        programsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
+        JsonObject programsCountResult = esService.send(programsCountRequest);
+        int numberOfPrograms = programsCountResult.get("count").getAsInt();
+
         Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
-        publicationsCountRequest.setJsonEntity(gson.toJson(query));
+        publicationsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
         JsonObject publicationsCountResult = esService.send(publicationsCountRequest);
         int numberOfPublications = publicationsCountResult.get("count").getAsInt();
 
         Request datasetsCountRequest = new Request("GET", DATASETS_COUNT_END_POINT);
-        datasetsCountRequest.setJsonEntity(gson.toJson(query));
+        datasetsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
         JsonObject datasetsCountResult = esService.send(datasetsCountRequest);
         int numberOfDatasets = datasetsCountResult.get("count").getAsInt();
 
         Request clinicalTrialsCountRequest = new Request("GET", CLINICAL_TRIALS_COUNT_END_POINT);
-        clinicalTrialsCountRequest.setJsonEntity(gson.toJson(query));
+        clinicalTrialsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
         JsonObject clinicalTrialsCountResult = esService.send(clinicalTrialsCountRequest);
         int numberOfClinicalTrials = clinicalTrialsCountResult.get("count").getAsInt();
 
         Request patentsCountRequest = new Request("GET", PATENTS_COUNT_END_POINT);
-        patentsCountRequest.setJsonEntity(gson.toJson(query));
+        patentsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
         JsonObject patentsCountResult = esService.send(patentsCountRequest);
         int numberOfPatents = patentsCountResult.get("count").getAsInt();
 
