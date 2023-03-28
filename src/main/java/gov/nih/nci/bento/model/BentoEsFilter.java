@@ -536,9 +536,15 @@ public class BentoEsFilter implements DataFetcher {
     }
 
     private List<Map<String, Object>> overview(String endpoint, Map<String, Object> params, String[][] properties, String defaultSort, Map<String, String> mapping) throws IOException {
+        return overview(endpoint, params, properties, defaultSort, mapping, "");
+    }
+
+    // if the nestedProperty is set, this will filter based upon the params against the nested property for the endpoint's index.
+    // otherwise, this will filter based upon the params against the top level properties for the index
+    private List<Map<String, Object>> overview(String endpoint, Map<String, Object> params, String[][] properties, String defaultSort, Map<String, String> mapping, String nestedProperty) throws IOException {
 
         Request request = new Request("GET", endpoint);
-        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION));
+        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION), Map.of(), nestedProperty);
         String order_by = (String)params.get(ORDER_BY);
         String direction = ((String)params.get(SORT_DIRECTION)).toLowerCase();
         query.put("sort", mapSortOrder(order_by, direction, defaultSort, mapping));
@@ -1042,12 +1048,6 @@ public class BentoEsFilter implements DataFetcher {
         final String[] PUBLICATIONS_TERM_AGG_NAMES = publication_agg_names.toArray(new String[PUBLICATION_TERM_AGGS.size()]);
 
         Map<String, Object> query = esService.buildFacetFilterQuery(params);
-
-        Request programsCountRequest = new Request("GET", PROGRAMS_COUNT_END_POINT);
-        programsCountRequest.setJsonEntity(gson.toJson(query));
-        JsonObject programsCountResult = esService.send(programsCountRequest);
-        int numberOfPrograms = programsCountResult.get("count").getAsInt();
-
         Request projectsCountRequest = new Request("GET", PROJECTS_COUNT_END_POINT);
         projectsCountRequest.setJsonEntity(gson.toJson(query));
         JsonObject projectsCountResult = esService.send(projectsCountRequest);
@@ -1060,23 +1060,30 @@ public class BentoEsFilter implements DataFetcher {
         JsonObject coreProjectsCountResult = esService.send(coreProjectsCountRequest);
         int numberOfCoreProjects = coreProjectsCountResult.get("count").getAsInt(); // coreProjectsCountResult.getAsJsonObject("hits").getAsJsonObject("total").get("value").getAsInt(); // coreProjectsCountResult.getAsJsonObject("aggregations").getAsJsonObject("cardinality_count").get("value").getAsInt();
 
+        // count anything with 'nested_projects'
+        Map<String, Object> nestedQuery = esService.buildFacetFilterQuery(params, Set.of(), Set.of(), Map.of(), "nested_projects");
+        Request programsCountRequest = new Request("GET", PROGRAMS_COUNT_END_POINT);
+        programsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
+        JsonObject programsCountResult = esService.send(programsCountRequest);
+        int numberOfPrograms = programsCountResult.get("count").getAsInt();
+
         Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
-        publicationsCountRequest.setJsonEntity(gson.toJson(query));
+        publicationsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
         JsonObject publicationsCountResult = esService.send(publicationsCountRequest);
         int numberOfPublications = publicationsCountResult.get("count").getAsInt();
 
         Request datasetsCountRequest = new Request("GET", DATASETS_COUNT_END_POINT);
-        datasetsCountRequest.setJsonEntity(gson.toJson(query));
+        datasetsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
         JsonObject datasetsCountResult = esService.send(datasetsCountRequest);
         int numberOfDatasets = datasetsCountResult.get("count").getAsInt();
 
         Request clinicalTrialsCountRequest = new Request("GET", CLINICAL_TRIALS_COUNT_END_POINT);
-        clinicalTrialsCountRequest.setJsonEntity(gson.toJson(query));
+        clinicalTrialsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
         JsonObject clinicalTrialsCountResult = esService.send(clinicalTrialsCountRequest);
         int numberOfClinicalTrials = clinicalTrialsCountResult.get("count").getAsInt();
 
         Request patentsCountRequest = new Request("GET", PATENTS_COUNT_END_POINT);
-        patentsCountRequest.setJsonEntity(gson.toJson(query));
+        patentsCountRequest.setJsonEntity(gson.toJson(nestedQuery));
         JsonObject patentsCountResult = esService.send(patentsCountRequest);
         int numberOfPatents = patentsCountResult.get("count").getAsInt();
 
@@ -1153,6 +1160,7 @@ public class BentoEsFilter implements DataFetcher {
         };
 
         String defaultSort = "patent_id"; // Default sort order
+        String nestedProperty = "nested_projects";  // Filter on the nested property for the patents index
 
         Map<String, String> mapping = Map.ofEntries(
                 Map.entry("patent_id", "patent_id"),
@@ -1160,7 +1168,7 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("queried_project_ids", "queried_project_ids")
         );
 
-        return overview(PATENTS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+        return overview(PATENTS_END_POINT, params, PROPERTIES, defaultSort, mapping, nestedProperty);
     }
     
     private List<Map<String, Object>> clinicalTrialOverView(Map<String, Object> params) throws IOException {
@@ -1174,6 +1182,7 @@ public class BentoEsFilter implements DataFetcher {
         };
 
         String defaultSort = "clinical_trial_id"; // Default sort order
+        String nestedProperty = "nested_projects";  // Filter on the nested property for the clinical_trials index
 
         Map<String, String> mapping = Map.ofEntries(
                 Map.entry("clinical_trial_id", "clinical_trial_id"),
@@ -1183,7 +1192,7 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("queried_project_ids", "queried_project_ids")
         );
 
-        return overview(CLINICAL_TRIALS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+        return overview(CLINICAL_TRIALS_END_POINT, params, PROPERTIES, defaultSort, mapping, nestedProperty);
     }
     
     private List<Map<String, Object>> datasetOverView(Map<String, Object> params) throws IOException {
@@ -1203,6 +1212,7 @@ public class BentoEsFilter implements DataFetcher {
         };
 
         String defaultSort = "accession"; // Default sort order
+        String nestedProperty = "nested_projects";  // Filter on the nested property for the datasets index
 
         Map<String, String> mapping = Map.ofEntries(
                 Map.entry("type", "transformed_type"),
@@ -1219,7 +1229,7 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("transformed_type", "transformed_type")
         );
 
-        return overview(DATASETS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+        return overview(DATASETS_END_POINT, params, PROPERTIES, defaultSort, mapping, nestedProperty);
     }
 
     private List<Map<String, Object>> publicationOverview(Map<String, Object> params) throws IOException {
@@ -1240,6 +1250,7 @@ public class BentoEsFilter implements DataFetcher {
         };
 
         String defaultSort = "publication_id"; // Default sort order
+        String nestedProperty = "nested_projects";  // Filter on the nested property for the publications index
 
         Map<String, String> mapping = Map.ofEntries(
                 Map.entry("publication_id", "publication_id"),
@@ -1256,7 +1267,7 @@ public class BentoEsFilter implements DataFetcher {
                 Map.entry("queried_project_ids", "queried_project_ids")
         );
 
-        return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping);
+        return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping, nestedProperty);
     }
     
     private List<Map<String, Object>> projectOverView(Map<String, Object> params) throws IOException {
