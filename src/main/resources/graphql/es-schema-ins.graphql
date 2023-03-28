@@ -173,6 +173,7 @@ type FileDetail {
 
 type GS_Project {
     project_id: String
+    queried_project_id: String
     application_id: String
     project_title: String
     abstract_text: String

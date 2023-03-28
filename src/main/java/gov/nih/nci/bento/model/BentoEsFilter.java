@@ -708,6 +708,7 @@ public class BentoEsFilter implements DataFetcher {
                 GS_SORT_FIELD, "project_id",
                 GS_COLLECT_FIELDS, new String[][]{
                         new String[]{"project_id", "project_id"},
+                        new String[]{"queried_project_id", "queried_project_id"},
                         new String[]{"application_id", "application_id"},
                         new String[]{"project_title", "project_title"},
                         new String[]{"abstract_text", "abstract_text"},
