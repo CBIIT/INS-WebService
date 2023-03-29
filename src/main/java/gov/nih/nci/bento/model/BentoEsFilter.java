@@ -607,12 +607,20 @@ public class BentoEsFilter implements DataFetcher {
     // }
 
     private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint) throws IOException {
-        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE));
+        return subjectCountBy(category, params, endpoint, Map.of());
+    }
+
+    private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint, Map<String, Object> additionalParams) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE), additionalParams);
         return getGroupCount(category, query, endpoint);
     }
 
     private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint) throws IOException {
-        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, category));
+        return filterSubjectCountBy(category, params, endpoint, Map.of());
+    }
+
+    private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint, Map<String, Object> additionalParams) throws IOException {
+        Map<String, Object> query = esService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, category), additionalParams);
         return getGroupCount(category, query, endpoint);
     }
 
@@ -706,6 +714,7 @@ public class BentoEsFilter implements DataFetcher {
                 GS_SORT_FIELD, "project_id",
                 GS_COLLECT_FIELDS, new String[][]{
                         new String[]{"project_id", "project_id"},
+                        new String[]{"queried_project_id", "queried_project_id"},
                         new String[]{"application_id", "application_id"},
                         new String[]{"project_title", "project_title"},
                         new String[]{"abstract_text", "abstract_text"},
@@ -1079,31 +1088,6 @@ public class BentoEsFilter implements DataFetcher {
         int numberOfPatents = patentsCountResult.get("count").getAsInt();
 
         Map<String, Object> data = new HashMap<>();
-        // Get aggregations
-        Map<String, Object> representativeQuery = esService.buildFacetFilterQuery(params, Set.of(), Set.of(), Map.of("representative", List.of(true)));  // we want to filter by the representative grants, as an additional param
-        Map<String, Object> projectAggQuery = esService.addAggregations(representativeQuery, PROJECTS_TERM_AGG_NAMES); // , "queried_project_id");
-        Request projectRequest = new Request("GET", PROJECTS_END_POINT);
-        projectRequest.setJsonEntity(gson.toJson(projectAggQuery));
-        JsonObject projectResult = esService.send(projectRequest);
-        Map<String, JsonArray> projectAggs = esService.collectTermAggs(projectResult, PROJECTS_TERM_AGG_NAMES);
-        for (var agg: PROJECT_TERM_AGGS) {
-            JsonArray buckets = projectAggs.get(agg.get(AGG_NAME));
-            List<Map<String, Object>> parsedBuckets = getGroupCountHelper(buckets); // getGroupCardinalityCountHelper(buckets);
-            data.put(agg.get(WIDGET_QUERY), parsedBuckets);
-            data.put(agg.get(FILTER_COUNT_QUERY), parsedBuckets);
-        }
-
-        Map<String, Object> publicationAggQuery = esService.addAggregations(query, PUBLICATIONS_TERM_AGG_NAMES);
-        Request publicationRequest = new Request("GET", PUBLICATIONS_END_POINT);
-        publicationRequest.setJsonEntity(gson.toJson(publicationAggQuery));
-        JsonObject publicationResult = esService.send(publicationRequest);
-        Map<String, JsonArray> publicationAggs = esService.collectTermAggs(publicationResult, PUBLICATIONS_TERM_AGG_NAMES);
-        for (var agg: PUBLICATION_TERM_AGGS) {
-            JsonArray buckets = publicationAggs.get(agg.get(AGG_NAME));
-            List<Map<String, Object>> parsedBuckets = getGroupCountHelper(buckets);
-            data.put(agg.get(WIDGET_QUERY), parsedBuckets);
-            data.put(agg.get(FILTER_COUNT_QUERY), parsedBuckets);
-        }
 
         data.put("numberOfPrograms", numberOfPrograms);
         data.put("numberOfProjects", numberOfProjects);
@@ -1112,6 +1096,45 @@ public class BentoEsFilter implements DataFetcher {
         data.put("numberOfDatasets", numberOfDatasets);
         data.put("numberOfClinicalTrials", numberOfClinicalTrials);
         data.put("numberOfPatents", numberOfPatents);
+
+        // widgets data and facet filter counts for projects
+        for (var agg: PROJECT_TERM_AGGS) {
+            String field = agg.get(AGG_NAME);
+            String widgetQueryName = agg.get(WIDGET_QUERY);
+            String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
+            String endpoint = agg.get(AGG_ENDPOINT);
+            // subjectCountByXXXX
+            List<Map<String, Object>> widgetData;
+            widgetData = subjectCountBy(field, params, endpoint, Map.of("representative", List.of(true)));
+            data.put(widgetQueryName, widgetData);
+            // filterSubjectCountByXXXX
+            if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
+                List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint, Map.of("representative", List.of(true)));
+                data.put(filterCountQueryName, filterCount);
+            } else {
+                data.put(filterCountQueryName, widgetData);
+            }
+        }
+
+        // widgets data and facet filter counts for publications
+        for (var agg: PUBLICATION_TERM_AGGS) {
+            String field = agg.get(AGG_NAME);
+            String widgetQueryName = agg.get(WIDGET_QUERY);
+            String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
+            String endpoint = agg.get(AGG_ENDPOINT);
+            // subjectCountByXXXX
+            List<Map<String, Object>> widgetData;
+            widgetData = subjectCountBy(field, params, endpoint);;
+            data.put(widgetQueryName, widgetData);
+            // filterSubjectCountByXXXX
+            if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
+                List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint);;
+                data.put(filterCountQueryName, filterCount);
+            } else {
+                data.put(filterCountQueryName, widgetData);
+            }
+        }
+
 
         // Map<String, JsonObject> rangeAggs = esService.collectRangeAggs(subjectResult, RANGE_AGG_NAMES);
 
