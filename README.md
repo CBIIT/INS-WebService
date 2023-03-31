@@ -1,5 +1,3 @@
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/b0bdec2014de4f128d40e23ee43da649)](https://www.codacy.com/gh/CBIIT/INS-WebService/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CBIIT/INS-WebService&amp;utm_campaign=Badge_Grade)
-
 # Bento Backend Framework Configuration Guide
 This is the user documentation for the Bento Backend.
 
