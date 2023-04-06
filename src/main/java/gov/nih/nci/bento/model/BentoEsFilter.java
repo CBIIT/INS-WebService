@@ -708,7 +708,7 @@ public class BentoEsFilter implements DataFetcher {
                 GS_AGG_FIELD, "project_title",
                 GS_RESULT_FIELD, "projects",
                 GS_SEARCH_FIELD, List.of("activity_code.search", "serial_number.search", "project_id.search", "application_id.search",
-                                        "project_title.search", "abstract_text.search",
+                                        "project_title.search", "abstract_text.search", "queried_project_id.search",
                                         "keywords.search", "org_name.search", "org_city.search", "org_state.search", "docs.search", "principal_investigators.search",
                                         "program_officers.search", "full_foa.search", "programs.search"),
                 GS_SORT_FIELD, "project_id",
