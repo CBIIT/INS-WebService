@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.*;
 
-import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
+import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring; 
 
 @Component
 public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
