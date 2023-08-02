@@ -88,7 +88,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     final String GS_CATEGORY_TYPE = "type";
     final String GS_ABOUT = "about";
     final String GS_HIGHLIGHT_FIELDS = "highlight_fields";
-    final String GS_HIGHLIGHT_DELIMITER = "$";
+    final String GS_HIGHLIGHT_DELIMITER = "C";
     final Set<String> RANGE_PARAMS = Set.of("age_at_index");
 
     public PrivateESDataFetcher(InsESService esService) {
