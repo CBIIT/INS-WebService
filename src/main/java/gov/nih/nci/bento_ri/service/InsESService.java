@@ -1,7 +1,13 @@
-package gov.nih.nci.bento.service;
+package gov.nih.nci.bento_ri.service;
 
 import com.google.gson.*;
 import gov.nih.nci.bento.model.ConfigurationDAO;
+import gov.nih.nci.bento.service.ESService;
+import gov.nih.nci.bento.service.RedisService;
+import gov.nih.nci.bento.service.connector.AWSClient;
+import gov.nih.nci.bento.service.connector.AbstractClient;
+import gov.nih.nci.bento.service.connector.DefaultClient;
+
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.util.EntityUtils;
@@ -21,8 +27,8 @@ import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.*;
 
-@Service("ESService")
-public class ESService {
+@Service("InsESService")
+public class InsESService extends ESService {
     public static final String SCROLL_ENDPOINT = "/_search/scroll";
     public static final String JSON_OBJECT = "jsonObject";
     public static final String AGGS = "aggs";
@@ -39,28 +45,37 @@ public class ESService {
 
     private Gson gson = new GsonBuilder().serializeNulls().create();
 
-    // Base on host name to use signed request (AWS) or not (local)
-    public RestClient searchClient(String serviceName, String region) {
-        String host = config.getEsHost().trim();
-        String scheme = config.getEsScheme();
-        int port = config.getEsPort();
-        if (config.getEsSignRequests()) {
-            AWS4Signer signer = new AWS4Signer();
-            signer.setServiceName(serviceName);
-            signer.setRegionName(region);
-            HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer, credentialsProvider);
-            return RestClient.builder(new HttpHost(host, port, scheme)).setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)).build();
-        } else {
-            var lowLevelBuilder = RestClient.builder(new HttpHost(host, port, scheme));
-            return lowLevelBuilder.build();
-        }
+    private InsESService(ConfigurationDAO config) {
+        super(config);
+        this.gson = new GsonBuilder().serializeNulls().create();
+        logger.info("Initializing Elasticsearch client");
+        // Base on host name to use signed request (AWS) or not (local)
+        AbstractClient abstractClient = config.isEsSignRequests() ? new AWSClient(config) : new DefaultClient(config);
+        client = abstractClient.getLowLevelElasticClient();
     }
 
-    @PostConstruct
-    public void init() {
-        logger.info("Initializing Elasticsearch client");
-        client = searchClient("es", "us-east-1");
-    }
+    // Base on host name to use signed request (AWS) or not (local)
+    // public RestClient searchClient(String serviceName, String region) {
+    //     String host = config.getEsHost().trim();
+    //     String scheme = config.getEsScheme();
+    //     int port = config.getEsPort();
+    //     if (config.getEsSignRequests()) {
+    //         AWS4Signer signer = new AWS4Signer();
+    //         signer.setServiceName(serviceName);
+    //         signer.setRegionName(region);
+    //         HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer, credentialsProvider);
+    //         return RestClient.builder(new HttpHost(host, port, scheme)).setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)).build();
+    //     } else {
+    //         var lowLevelBuilder = RestClient.builder(new HttpHost(host, port, scheme));
+    //         return lowLevelBuilder.build();
+    //     }
+    // }
+
+    // @PostConstruct
+    // public void init() {
+    //     logger.info("Initializing Elasticsearch client");
+    //     client = searchClient("es", "us-east-1");
+    // }
 
     @PreDestroy
     private void close() throws IOException {
