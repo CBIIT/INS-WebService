@@ -81,20 +81,16 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                             return globalSearch(args);
                         })
                         .dataFetcher("numberOfGrants", env -> {
-                            Map<String, Object> args = env.getArguments();
-                            return numberOfGrants(args);
+                            return numberOfGrants();
                         })
                         .dataFetcher("numberOfPrograms", env -> {
-                            Map<String, Object> args = env.getArguments();
-                            return numberOfPrograms(args);
+                            return numberOfPrograms();
                         })
                         .dataFetcher("numberOfProjects", env -> {
-                            Map<String, Object> args = env.getArguments();
-                            return numberOfProjects(args);
+                            return numberOfProjects();
                         })
                         .dataFetcher("numberOfPublications", env -> {
-                            Map<String, Object> args = env.getArguments();
-                            return numberOfPublications(args);
+                            return numberOfPublications();
                         })
                 )
                 .build();
@@ -408,7 +404,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return result;
     }
 
-    private Integer numberOfGrants(Map<String, Object> params) throws Exception {
+    private Integer numberOfGrants() throws Exception {
         Request homeStatsRequest = new Request("GET", HOME_STATS_END_POINT);
         JsonObject homeStatsResult = insEsService.send(homeStatsRequest);
         JsonArray hits = homeStatsResult.getAsJsonObject("hits").getAsJsonArray("hits");
@@ -424,7 +420,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return count;
     }
 
-    private Integer numberOfPrograms(Map<String, Object> params) throws Exception {
+    private Integer numberOfPrograms() throws Exception {
         Request homeStatsRequest = new Request("GET", HOME_STATS_END_POINT);
         JsonObject homeStatsResult = insEsService.send(homeStatsRequest);
         JsonArray hits = homeStatsResult.getAsJsonObject("hits").getAsJsonArray("hits");
@@ -440,7 +436,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return count;
     }
 
-    private Integer numberOfProjects(Map<String, Object> params) throws Exception {
+    private Integer numberOfProjects() throws Exception {
         Request homeStatsRequest = new Request("GET", HOME_STATS_END_POINT);
         JsonObject homeStatsResult = insEsService.send(homeStatsRequest);
         JsonArray hits = homeStatsResult.getAsJsonObject("hits").getAsJsonArray("hits");
@@ -456,7 +452,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return count;
     }
 
-    private Integer numberOfPublications(Map<String, Object> params) throws Exception {
+    private Integer numberOfPublications() throws Exception {
         Request homeStatsRequest = new Request("GET", HOME_STATS_END_POINT);
         JsonObject homeStatsResult = insEsService.send(homeStatsRequest);
         JsonArray hits = homeStatsResult.getAsJsonObject("hits").getAsJsonArray("hits");
