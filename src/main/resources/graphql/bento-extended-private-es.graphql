@@ -398,12 +398,10 @@ type SampleDetailFile {
 
 type QueryType {
     esVersion: String
+    numberOfGrants: Int
     numberOfPrograms: Int
-    numberOfStudies: Int
-    numberOfSubjects: Int
-    numberOfSamples: Int
-    numberOfLabProcedures: Int
-    numberOfFiles: Int
+    numberOfProjects: Int
+    numberOfPublications: Int
 
     searchSubjects (
         subject_ids: [String] = [],
