@@ -16,8 +16,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.client.Request;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -33,6 +35,8 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private final YamlQueryFactory yamlQueryFactory;
     private final TypeMapperService typeMapper = new TypeMapperImpl();
     private InsESService insEsService;
+    @Autowired
+    private Cache<String, Object> caffeineCache;
 
     // parameters used in queries
     final String PAGE_SIZE = "first";
@@ -79,6 +83,10 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                         .dataFetcher("globalSearch", env -> {
                             Map<String, Object> args = env.getArguments();
                             return globalSearch(args);
+                        })
+                        .dataFetcher("searchParticipants", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return searchParticipants(args);
                         })
                         .dataFetcher("numberOfGrants", env -> {
                             return numberOfGrants();
@@ -404,6 +412,11 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return result;
     }
 
+    private Map<String, Object> searchParticipants(Map<String, Object> params) throws IOException {
+        String cacheKey = generateCacheKey(params);
+        Map<String, Object> data = (Map<String, Object>)caffeineCache.asMap().get(cacheKey);
+    }
+
     private Integer numberOfGrants() throws Exception {
         Request homeStatsRequest = new Request("GET", HOME_STATS_END_POINT);
         JsonObject homeStatsResult = insEsService.send(homeStatsRequest);
@@ -475,5 +488,35 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private final static class BENTO_FIELDS {
         private static final String SAMPLE_NESTED_FILE_INFO = "file_info";
         private static final String FILES = "files";
+    }
+
+    private String generateCacheKey(Map<String, Object> params) throws IOException {
+        List<String> keys = new ArrayList<>();
+        for (String key: params.keySet()) {
+            if (RANGE_PARAMS.contains(key)) {
+                // Range parameters, should contain two doubles, first lower bound, then upper bound
+                // Any other values after those two will be ignored
+                List<Integer> bounds = (List<Integer>) params.get(key);
+                if (bounds.size() >= 2) {
+                    Integer lower = bounds.get(0);
+                    Integer higher = bounds.get(1);
+                    if (lower == null && higher == null) {
+                        throw new IOException("Lower bound and Upper bound can't be both null!");
+                    }
+                    keys.add(key.concat(lower.toString()).concat(higher.toString()));
+                }
+            } else {
+                List<String> valueSet = (List<String>) params.get(key);
+                // list with only one empty string [""] means return all records
+                if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
+                    keys.add(key.concat(valueSet.toString()));
+                }
+            }
+        }
+        if (keys.size() == 0){
+            return "all";
+        } else {
+            return keys.toString();
+        }
     }
 }
