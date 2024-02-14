@@ -104,6 +104,83 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                 .build();
     }
 
+        private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint, String cardinalityAggName, String indexType) throws IOException {
+        return subjectCountBy(category, params, endpoint, Map.of(), cardinalityAggName, indexType);
+    }
+
+    private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint, Map<String, Object> additionalParams, String cardinalityAggName, String indexType) throws IOException {
+        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE), REGULAR_PARAMS, "nested_filters", indexType);
+        List<String> only_includes;
+        List<String> valueSet = INCLUDE_PARAMS.contains(category) ? (List<String>)params.get(category) : List.of();
+        if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))){
+            only_includes = valueSet;
+        } else {
+            only_includes = List.of();
+        }
+        return getGroupCount(category, query, endpoint, cardinalityAggName, only_includes);
+    }
+
+    private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint, String cardinalityAggName, String indexType) throws IOException {
+        return filterSubjectCountBy(category, params, endpoint, Map.of(), cardinalityAggName, indexType);
+    }
+
+    private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint, Map<String, Object> additionalParams, String cardinalityAggName, String indexType) throws IOException {
+        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, category), REGULAR_PARAMS, "nested_filters", indexType);
+        return getGroupCount(category, query, endpoint, cardinalityAggName, List.of());
+    }
+
+        private List<Map<String, Object>> getGroupCount(String category, Map<String, Object> query, String endpoint, String cardinalityAggName, List<String> only_includes) throws IOException {
+        if (RANGE_PARAMS.contains(category)) {
+            query = insEsService.addRangeAggregations(query, category, only_includes);
+            Request request = new Request("GET", endpoint);
+            String jsonizedRequest = gson.toJson(query);
+            request.setJsonEntity(jsonizedRequest);
+            JsonObject jsonObject = insEsService.send(request);
+            Map<String, JsonObject> aggs = insEsService.collectRangAggs(jsonObject, category);
+            JsonObject ranges = aggs.get(category);
+
+            return getRangeGroupCountHelper(ranges);
+        } else {
+            String[] AGG_NAMES = new String[] {category};
+            query = insEsService.addAggregations(query, AGG_NAMES, cardinalityAggName, only_includes);
+            Request request = new Request("GET", endpoint);
+            request.setJsonEntity(gson.toJson(query));
+            JsonObject jsonObject = insEsService.send(request);
+            Map<String, JsonArray> aggs = insEsService.collectTermAggs(jsonObject, AGG_NAMES);
+            JsonArray buckets = aggs.get(category);
+
+            return getGroupCountHelper(buckets, cardinalityAggName);
+        }
+        
+    }
+
+    private List<Map<String, Object>> getRangeGroupCountHelper(JsonObject ranges) throws IOException {
+        List<Map<String, Object>> data = new ArrayList<>();
+        if (ranges.get("count").getAsInt() == 0) {
+            data.add(Map.of("lowerBound", 0,
+                    "subjects", 0,
+                    "upperBound", 0
+            ));
+        } else {
+            data.add(Map.of("lowerBound", ranges.get("min").getAsInt(),
+                    "subjects", ranges.get("count").getAsInt(),
+                    "upperBound", ranges.get("max").getAsInt()
+            ));
+        }
+        return data;
+    }
+
+    private List<Map<String, Object>> getGroupCountHelper(JsonArray buckets, String cardinalityAggName) throws IOException {
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (JsonElement group: buckets) {
+            data.add(Map.of("group", group.getAsJsonObject().get("key").getAsString(),
+                    "subjects", !(cardinalityAggName == null) ? group.getAsJsonObject().get("cardinality_count").getAsJsonObject().get("value").getAsInt() : group.getAsJsonObject().get("doc_count").getAsInt()
+            ));
+
+        }
+        return data;
+    }
+
     private List<Map<String, Object>> overview(String endpoint, Map<String, Object> params, String[][] properties, String defaultSort, Map<String, String> mapping) throws IOException {
         return overview(endpoint, params, properties, defaultSort, mapping, "");
     }
@@ -415,6 +492,82 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private Map<String, Object> searchParticipants(Map<String, Object> params) throws IOException {
         String cacheKey = generateCacheKey(params);
         Map<String, Object> data = (Map<String, Object>)caffeineCache.asMap().get(cacheKey);
+
+        // Early return for cache hit
+        if (data != null) {
+            logger.info("hit cache!");
+            return data;
+        }
+
+        data = new HashMap<>();
+
+        final String CARDINALITY_AGG_NAME = "cardinality_agg_name";
+        final String AGG_NAME = "agg_name";
+        final String AGG_ENDPOINT = "agg_endpoint";
+        final String WIDGET_QUERY = "widgetQueryName";
+        final String FILTER_COUNT_QUERY = "filterCountQueryName";
+        // Query related values
+        final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
+        PROJECT_TERM_AGGS.add(Map.of(
+                CARDINALITY_AGG_NAME, "project_id",
+                AGG_NAME, "focus_area",
+                WIDGET_QUERY,"projectCountByFocusArea",
+                FILTER_COUNT_QUERY, "filterProjectCountByFocusArea",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+                CARDINALITY_AGG_NAME, "project_id",
+                AGG_NAME, "program_name",
+                WIDGET_QUERY,"projectCountByProgramName",
+                FILTER_COUNT_QUERY, "filterProjectCountByProgramName",
+                AGG_ENDPOINT, PROJECTS_END_POINT
+        ));
+
+        Map<String, Object> query_participants = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "participants");
+        Map<String, Object> newQuery_participants = new HashMap<>(query_participants);
+        newQuery_participants.put("size", 0);
+        newQuery_participants.put("track_total_hits", 10000000);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        newQuery_participants.put("aggs", fields);
+        Request participantsCountRequest = new Request("GET", PARTICIPANTS_END_POINT);
+        String jsonizedQuery = gson.toJson(newQuery_participants);
+        participantsCountRequest.setJsonEntity(jsonizedQuery);
+        JsonObject participantsCountResult = insEsService.send(participantsCountRequest);
+
+        // widgets data and facet filter counts for projects
+        for (var agg: PROJECT_TERM_AGGS) {
+            String field = agg.get(AGG_NAME);
+            String widgetQueryName = agg.get(WIDGET_QUERY);
+            String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
+            String endpoint = agg.get(AGG_ENDPOINT);
+            String indexType = endpoint.replace("/", "").replace("_search", "");
+            String cardinalityAggName = agg.get(CARDINALITY_AGG_NAME);
+            List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint, cardinalityAggName, indexType);
+            if(RANGE_PARAMS.contains(field)) {
+                data.put(filterCountQueryName, filterCount.get(0));
+            } else {
+                data.put(filterCountQueryName, filterCount);
+            }
+            
+            if (widgetQueryName != null) {
+                if (RANGE_PARAMS.contains(field)) {
+                    List<Map<String, Object>> subjectCount = subjectCountByRange(field, params, endpoint, cardinalityAggName, indexType);
+                    data.put(widgetQueryName, subjectCount);
+                } else {
+                    if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
+                        List<Map<String, Object>> subjectCount = subjectCountBy(field, params, endpoint, cardinalityAggName, indexType);
+                        data.put(widgetQueryName, subjectCount);
+                    } else {
+                        data.put(widgetQueryName, filterCount);
+                    }
+                }
+                
+            }
+        }
+
+        caffeineCache.put(cacheKey, data);
+
+        return data;
     }
 
     private Integer numberOfGrants() throws Exception {

@@ -313,6 +313,20 @@ public class InsESService extends ESService {
         return result;
     }
 
+    public Map<String, Object> addRangeAggregations(Map<String, Object> query, String rangeAggName, List<String> only_includes) {
+        Map<String, Object> newQuery = new HashMap<>(query);
+        newQuery.put("size", 0);
+
+        Map<String, Object> fields = new HashMap<String, Object>();
+        Map<String, Object> subField = new HashMap<String, Object>();
+        subField.put("filter", Map.of("range", Map.of(rangeAggName, Map.of("gt", -1))));
+        subField.put("aggs", Map.of("range_stats", Map.of("stats", Map.of("field", rangeAggName))));
+        fields.put("inner", subField);
+        newQuery.put("aggs", fields);
+        
+        return newQuery;
+    }
+
     public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames) {
         return addAggregations(query, termAggNames, new String(), new String[]{});
     }
