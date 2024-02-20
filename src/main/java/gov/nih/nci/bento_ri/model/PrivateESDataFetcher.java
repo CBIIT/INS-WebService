@@ -2,19 +2,14 @@ package gov.nih.nci.bento_ri.model;
 
 import gov.nih.nci.bento.constants.Const;
 import gov.nih.nci.bento.model.AbstractPrivateESDataFetcher;
-import gov.nih.nci.bento.model.search.MultipleRequests;
-import gov.nih.nci.bento.model.search.filter.DefaultFilter;
-import gov.nih.nci.bento.model.search.filter.FilterParam;
 import gov.nih.nci.bento.model.search.mapper.TypeMapperImpl;
 import gov.nih.nci.bento.model.search.mapper.TypeMapperService;
-import gov.nih.nci.bento.model.search.query.QueryParam;
 import gov.nih.nci.bento.model.search.yaml.YamlQueryFactory;
 import gov.nih.nci.bento.service.ESService;
 import gov.nih.nci.bento_ri.service.InsESService;
 import graphql.schema.idl.RuntimeWiring;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opensearch.action.search.SearchRequest;
 import org.opensearch.client.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,13 +22,12 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.*;
 
-import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring; 
+import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 
 @Component
 public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private static final Logger logger = LogManager.getLogger(PrivateESDataFetcher.class);
     private final YamlQueryFactory yamlQueryFactory;
-    private final TypeMapperService typeMapper = new TypeMapperImpl();
     private InsESService insEsService;
     @Autowired
     private Cache<String, Object> caffeineCache;
@@ -50,24 +44,33 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     final String PUBLICATIONS_END_POINT = "/publications/_search";
     final String HOME_STATS_END_POINT = "/home_stats/_search";
 
-    final String GS_ABOUT_END_POINT = "/about_page/_search";
-    final String GS_MODEL_END_POINT = "/data_model/_search";
+    final String GRANTS_COUNT_END_POINT = "/grants/_count";
+    final String PROGRAMS_COUNT_END_POINT = "/programs/_count";
+    final String PROJECTS_COUNT_END_POINT = "/projects/_count";
+    final String PUBLICATIONS_COUNT_END_POINT = "/publications/_count";
 
-    final int GS_LIMIT = 10;
-    final String GS_END_POINT = "endpoint";
-    final String GS_RESULT_FIELD = "result_field";
-    final String GS_AGG_FIELD = "agg_field";
-    final String GS_AGG_RESULT_FIELD = "agg_result_field";
-    final String GS_COUNT_RESULT_FIELD = "count_result_field";
-    final String GS_COUNT_FIELD = "count_field";
-    final String GS_SEARCH_FIELD = "search_field";
-    final String GS_COLLECT_FIELDS = "collect_fields";
-    final String GS_SORT_FIELD = "sort_field";
-    final String GS_CATEGORY_TYPE = "type";
-    final String GS_ABOUT = "about";
-    final String GS_HIGHLIGHT_FIELDS = "highlight_fields";
-    final String GS_HIGHLIGHT_DELIMITER = "$";
-    final Set<String> RANGE_PARAMS = Set.of("age_at_index");
+    // For slider fields
+    final Set<String> RANGE_PARAMS = Set.of();
+
+    final Set<String> BOOLEAN_PARAMS = Set.of();
+
+    final Set<String> ARRAY_PARAMS = Set.of();
+
+    // For multiple selection from a list
+    final Set<String> INCLUDE_PARAMS  = Set.of(
+        // Programs
+        "focus_area"
+    );
+
+    final Set<String> REGULAR_PARAMS = Set.of(
+        // Programs
+        "focus_area"
+    );
+
+    final Set<String> PROGRAM_REGULAR_PARAMS = Set.of(
+        // Programs
+        "focus_area"
+    );
 
     public PrivateESDataFetcher(InsESService esService) {
         super(esService);
@@ -80,13 +83,26 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return RuntimeWiring.newRuntimeWiring()
                 .type(newTypeWiring("QueryType")
                         .dataFetchers(yamlQueryFactory.createYamlQueries(Const.ES_ACCESS_TYPE.PRIVATE))
-                        .dataFetcher("globalSearch", env -> {
+                        .dataFetcher("idsLists", env -> idsLists())
+                        .dataFetcher("searchProjects", env -> {
                             Map<String, Object> args = env.getArguments();
-                            return globalSearch(args);
+                            return searchProjects(args);
                         })
-                        .dataFetcher("searchParticipants", env -> {
+                        .dataFetcher("grantsOverview", env -> {
                             Map<String, Object> args = env.getArguments();
-                            return searchParticipants(args);
+                            return grantsOverview(args);
+                        })
+                        .dataFetcher("programsOverview", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return programsOverview(args);
+                        })
+                        .dataFetcher("projectsOverview", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return projectsOverview(args);
+                        })
+                        .dataFetcher("publicationsOverview", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return publicationsOverview(args);
                         })
                         .dataFetcher("numberOfGrants", env -> {
                             return numberOfGrants();
@@ -100,11 +116,15 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                         .dataFetcher("numberOfPublications", env -> {
                             return numberOfPublications();
                         })
+                        .dataFetcher("findProgramIdsInList", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return findProgramIdsInList(args);
+                        })
                 )
                 .build();
     }
 
-        private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint, String cardinalityAggName, String indexType) throws IOException {
+    private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint, String cardinalityAggName, String indexType) throws IOException {
         return subjectCountBy(category, params, endpoint, Map.of(), cardinalityAggName, indexType);
     }
 
@@ -120,6 +140,15 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return getGroupCount(category, query, endpoint, cardinalityAggName, only_includes);
     }
 
+    private List<Map<String, Object>> subjectCountByRange(String category, Map<String, Object> params, String endpoint, String cardinalityAggName, String indexType) throws IOException {
+        return subjectCountByRange(category, params, endpoint, Map.of(), cardinalityAggName, indexType);
+    }
+
+    private List<Map<String, Object>> subjectCountByRange(String category, Map<String, Object> params, String endpoint, Map<String, Object> additionalParams, String cardinalityAggName, String indexType) throws IOException {
+        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE), REGULAR_PARAMS, "nested_filters", indexType);
+        return getGroupCountByRange(category, query, endpoint, cardinalityAggName);
+    }
+
     private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint, String cardinalityAggName, String indexType) throws IOException {
         return filterSubjectCountBy(category, params, endpoint, Map.of(), cardinalityAggName, indexType);
     }
@@ -129,7 +158,29 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return getGroupCount(category, query, endpoint, cardinalityAggName, List.of());
     }
 
-        private List<Map<String, Object>> getGroupCount(String category, Map<String, Object> query, String endpoint, String cardinalityAggName, List<String> only_includes) throws IOException {
+    private JsonArray getNodeCount(String category, Map<String, Object> query, String endpoint) throws IOException {
+        query = insEsService.addNodeCountAggregations(query, category);
+        Request request = new Request("GET", endpoint);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject jsonObject = insEsService.send(request);
+        Map<String, JsonArray> aggs = insEsService.collectNodeCountAggs(jsonObject, category);
+        JsonArray buckets = aggs.get(category);
+
+        return buckets;
+    }
+
+    private List<Map<String, Object>> getGroupCountByRange(String category, Map<String, Object> query, String endpoint, String cardinalityAggName) throws IOException {
+        query = insEsService.addRangeCountAggregations(query, category, cardinalityAggName);
+        Request request = new Request("GET", endpoint);
+        request.setJsonEntity(gson.toJson(query));
+        JsonObject jsonObject = insEsService.send(request);
+        Map<String, JsonArray> aggs = insEsService.collectRangCountAggs(jsonObject, category);
+        JsonArray buckets = aggs.get(category);
+
+        return getGroupCountHelper(buckets, cardinalityAggName);
+    }
+
+    private List<Map<String, Object>> getGroupCount(String category, Map<String, Object> query, String endpoint, String cardinalityAggName, List<String> only_includes) throws IOException {
         if (RANGE_PARAMS.contains(category)) {
             query = insEsService.addRangeAggregations(query, category, only_includes);
             Request request = new Request("GET", endpoint);
@@ -170,6 +221,19 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return data;
     }
 
+    private List<Map<String, Object>> getBooleanGroupCountHelper(JsonObject filters) throws IOException {
+        List<Map<String, Object>> data = new ArrayList<>();
+        for (Map.Entry<String, JsonElement> group: filters.entrySet()) {
+            int count = group.getValue().getAsJsonObject().get("parent").getAsJsonObject().get("doc_count").getAsInt();
+            if (count > 0) {
+                data.add(Map.of("group", group.getKey(),
+                    "subjects", count
+                ));
+            }
+        }
+        return data;
+    }
+
     private List<Map<String, Object>> getGroupCountHelper(JsonArray buckets, String cardinalityAggName) throws IOException {
         List<Map<String, Object>> data = new ArrayList<>();
         for (JsonElement group: buckets) {
@@ -181,319 +245,59 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return data;
     }
 
-    private List<Map<String, Object>> overview(String endpoint, Map<String, Object> params, String[][] properties, String defaultSort, Map<String, String> mapping) throws IOException {
-        return overview(endpoint, params, properties, defaultSort, mapping, "");
-    }
-
-    // if the nestedProperty is set, this will filter based upon the params against the nested property for the endpoint's index.
-    // otherwise, this will filter based upon the params against the top level properties for the index
-    private List<Map<String, Object>> overview(String endpoint, Map<String, Object> params, String[][] properties, String defaultSort, Map<String, String> mapping, String nestedProperty) throws IOException {
-
-        Request request = new Request("GET", endpoint);
-        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION), Map.of(), nestedProperty);
-        String order_by = (String)params.get(ORDER_BY);
-        String direction = ((String)params.get(SORT_DIRECTION)).toLowerCase();
-        query.put("sort", mapSortOrder(order_by, direction, defaultSort, mapping));
-        int pageSize = (int) params.get(PAGE_SIZE);
-        int offset = (int) params.get(OFFSET);
-        List<Map<String, Object>> page = insEsService.collectPage(request, query, properties, pageSize, offset);
-        return page;
-    }
-
-    private Map<String, String> mapSortOrder(String order_by, String direction, String defaultSort, Map<String, String> mapping) {
-        String sortDirection = direction;
-        if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
-            sortDirection = "asc";
-        }
-
-        String sortOrder = defaultSort; // Default sort order
-        if (mapping.containsKey(order_by)) {
-            sortOrder = mapping.get(order_by);
-        } else {
-            logger.info("Order: \"" + order_by + "\" not recognized, use default order");
-        }
-        return Map.of(sortOrder, sortDirection);
-    }
-
-    private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint) throws IOException {
-        return subjectCountBy(category, params, endpoint, Map.of());
-    }
-
-    private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint, Map<String, Object> additionalParams) throws IOException {
-        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE), additionalParams);
-        return getGroupCount(category, query, endpoint);
-    }
-
-    private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint) throws IOException {
-        return filterSubjectCountBy(category, params, endpoint, Map.of());
-    }
-
-    private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint, Map<String, Object> additionalParams) throws IOException {
-        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, category), additionalParams);
-        return getGroupCount(category, query, endpoint);
-    }
-
-    private List<Map<String, Object>> getGroupCount(String category, Map<String, Object> query, String endpoint) throws IOException {
-        String[] AGG_NAMES = new String[] {category};
-        query = insEsService.addAggregations(query, AGG_NAMES);
-        Request request = new Request("GET", endpoint);
-        request.setJsonEntity(gson.toJson(query));
-        JsonObject jsonObject = insEsService.send(request);
-        Map<String, JsonArray> aggs = insEsService.collectTermAggs(jsonObject, AGG_NAMES);
-        JsonArray buckets = aggs.get(category);
-
-        return getGroupCountHelper(buckets);
-    }
-
-    private List<Map<String, Object>> getGroupCountHelper(JsonArray buckets) throws IOException {
-        List<Map<String, Object>> data = new ArrayList<>();
-        for (JsonElement group: buckets) {
-            data.add(Map.of("group", group.getAsJsonObject().get("key").getAsString(),
-                    "subjects", group.getAsJsonObject().get("doc_count").getAsInt()
-            ));
-
-        }
-        return data;
-    }
-
-    private List<Map<String, Object>> getGroupCardinalityCountHelper(JsonArray buckets) throws IOException {
-        List<Map<String, Object>> data = new ArrayList<>();
-        for (JsonElement group: buckets) {
-            data.add(Map.of("group", group.getAsJsonObject().get("key").getAsString(),
-                    "subjects", group.getAsJsonObject().getAsJsonObject("cardinality_count").get("value").getAsInt()
-            ));
-
-        }
-        return data;
-    }
-
-    private Map<String, Object> rangeFilterSubjectCountBy(String category, Map<String, Object> params) throws IOException {
-        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS,Set.of(PAGE_SIZE, category));
-        return getRangeCount(category, query);
-    }
-
-    private Map<String, Object> getRangeCount(String category, Map<String, Object> query) throws IOException {
-        String[] AGG_NAMES = new String[] {category};
-        query = insEsService.addAggregations(query, new String[]{}, new String(), AGG_NAMES);
-        Request request = new Request("GET", SUBJECTS_END_POINT);
-        request.setJsonEntity(gson.toJson(query));
-        JsonObject jsonObject = insEsService.send(request);
-        Map<String, JsonObject> aggs = insEsService.collectRangeAggs(jsonObject, AGG_NAMES);
-        return getRange(aggs.get(category).getAsJsonObject());
-    }
-
-    private Map<String, Object> getRange(JsonObject aggs) {
-        final String LOWER_BOUND = "lowerBound";
-        final String UPPER_BOUND = "upperBound";
-        Map<String, Object> range = new HashMap<>();
-        range.put("subjects", aggs.get("count").getAsInt());
-        JsonElement lowerBound = aggs.get("min");
-        if (!lowerBound.isJsonNull()) {
-            range.put(LOWER_BOUND, lowerBound.getAsDouble());
-        } else {
-            range.put(LOWER_BOUND, null);
-        }
-        JsonElement upperBound = aggs.get("max");
-        if (!upperBound.isJsonNull()) {
-            range.put("upperBound", aggs.get("max").getAsDouble());
-        } else {
-            range.put(UPPER_BOUND, null);
-        }
-
-        return range;
-    }
-
-    private Map<String, Object> globalSearch(Map<String, Object> params) throws IOException {
-        Map<String, Object> result = new HashMap<>();
-        String input = (String) params.get("input");
-        int size = (int) params.get("first");
-        int offset = (int) params.get("offset");
-        List<Map<String, Object>> searchCategories = new ArrayList<>();
-        searchCategories.add(Map.of(
-                GS_END_POINT, PROJECTS_END_POINT,
-                GS_COUNT_RESULT_FIELD, "project_count",
-                GS_COUNT_FIELD, "project_id", // returned results to count (unique) toward total result count
-                GS_AGG_RESULT_FIELD, "project_titles",
-                GS_AGG_FIELD, "project_title",
-                GS_RESULT_FIELD, "projects",
-                GS_SEARCH_FIELD, List.of("activity_code.search", "serial_number.search", "project_id.search", "application_id.search",
-                                        "project_title.search", "abstract_text.search", "queried_project_id.search",
-                                        "keywords.search", "org_name.search", "org_city.search", "org_state.search", "docs.search", "principal_investigators.search",
-                                        "program_officers.search", "full_foa.search", "programs.search"),
-                GS_SORT_FIELD, "project_id",
-                GS_COLLECT_FIELDS, new String[][]{
-                        new String[]{"project_id", "project_id"},
-                        new String[]{"queried_project_id", "queried_project_id"},
-                        new String[]{"application_id", "application_id"},
-                        new String[]{"project_title", "project_title"},
-                        new String[]{"abstract_text", "abstract_text"},
-                        new String[]{"keywords", "keywords"},
-                        new String[]{"org_name", "org_name"},
-                        new String[]{"org_city", "org_city"},
-                        new String[]{"org_state", "org_state"},
-                        new String[]{"lead_doc", "docs"},
-                        new String[]{"principal_investigators", "principal_investigators"},
-                        new String[]{"program_officers", "program_officers"},
-                        new String[]{"full_foa", "full_foa"},
-                        new String[]{"program", "programs"},
-                        new String[]{"type", "type"}
-                },
-                // GS_HIGHLIGHT_FIELDS, new String[][] {
-                //         new String[]{"highlight", "project_id.search"}
-                // },
-                GS_CATEGORY_TYPE, "project"
-        ));
-
-        for (Map<String, Object> category: searchCategories) {
-            String resultFieldName = (String) category.get(GS_RESULT_FIELD);
-            String resultCountFieldName = (String) category.get(GS_COUNT_FIELD);
-            String resultAggFieldName = (String) category.get(GS_AGG_FIELD);
-            String[][] properties = (String[][]) category.get(GS_COLLECT_FIELDS);
-            String[][] highlights = (String[][]) category.get(GS_HIGHLIGHT_FIELDS);
-            Map<String, Object> query = getGlobalSearchQuery(input, category, resultCountFieldName, resultAggFieldName);
-
-            // Get results
-            Request request = new Request("GET", (String)category.get(GS_END_POINT));
-            String sortFieldName = (String)category.get(GS_SORT_FIELD);
-            query.put("sort", Map.of(sortFieldName, "asc"));
-            // query = addHighlight(query, category);
-
-            // size and offset
-            query.put("size", size);
-            query.put("from", offset);
-            
-            request.setJsonEntity(gson.toJson(query));
-            JsonObject jsonObject = insEsService.send(request);
-            List<Map<String, Object>> objects = insEsService.collectPage(jsonObject, properties, highlights, (int)query.get("size"), 0);
-            
-            // Get count
-            Integer countResultFieldName = jsonObject.get("aggregations").getAsJsonObject().get("field_count").getAsJsonObject().get("value").getAsInt();
-            result.put((String)category.get(GS_COUNT_RESULT_FIELD), countResultFieldName);
-
-            // Get aggregation field
-            JsonArray aggResultFieldName = jsonObject.get("aggregations").getAsJsonObject().get("agg_field").getAsJsonObject().get("buckets").getAsJsonArray();
-            List<Map<String, Object>> aggResults = new ArrayList<Map<String, Object>>();
-            for (JsonElement bucket: aggResultFieldName) {
-                aggResults.add(Map.of("title", bucket.getAsJsonObject().get("key").getAsString()));
+    private Map<String, String[]> idsLists() throws IOException {
+        Map<String, String[][]> indexProperties = Map.of(
+            PROGRAMS_END_POINT, new String[][]{
+                    new String[]{"programIds", "program_id"}
             }
-            result.put((String)category.get(GS_AGG_RESULT_FIELD), aggResults);
-
-            
-            for (var object: objects) {
-                object.put(GS_CATEGORY_TYPE, category.get(GS_CATEGORY_TYPE));
-            }
-
-            List<Map<String, Object>> existingObjects = (List<Map<String, Object>>)result.getOrDefault(resultFieldName, null);
-            if (existingObjects != null) {
-                existingObjects.addAll(objects);
-                result.put(resultFieldName, existingObjects);
-            } else {
-                result.put(resultFieldName, objects);
-            }
-
-        }
-
-        List<Map<String, String>> about_results = searchAboutPage(input);
-        int about_count = about_results.size();
-        result.put("about_count", about_count);
-        result.put("about_page", paginate(about_results, size, offset));
-
-        return result;
-    }
-
-    private List paginate(List org, int pageSize, int offset) {
-        List<Object> result = new ArrayList<>();
-        int size = org.size();
-        if (offset <= size -1) {
-            int end_index = offset + pageSize;
-            if (end_index > size) {
-                end_index = size;
-            }
-            result = org.subList(offset, end_index);
-        }
-        return result;
-    }
-
-    private List<Map<String, String>> searchAboutPage(String input) throws IOException {
-        final String ABOUT_CONTENT = "content.paragraph";
-        Map<String, Object> query = Map.of(
-                "query", Map.of("match", Map.of(ABOUT_CONTENT, input)),
-                "highlight", Map.of(
-                        "fields", Map.of(ABOUT_CONTENT, Map.of()),
-                        "pre_tags", GS_HIGHLIGHT_DELIMITER,
-                        "post_tags", GS_HIGHLIGHT_DELIMITER
-                    ),
-                "size", InsESService.MAX_ES_SIZE
         );
-        
-        Request request = new Request("GET", GS_ABOUT_END_POINT);
-        request.setJsonEntity(gson.toJson(query));
-        JsonObject jsonObject = insEsService.send(request);
-
-        List<Map<String, String>> result = new ArrayList<>();
-
-        for (JsonElement hit: jsonObject.get("hits").getAsJsonObject().get("hits").getAsJsonArray()) {
-            for (JsonElement highlight: hit.getAsJsonObject().get("highlight").getAsJsonObject().get(ABOUT_CONTENT).getAsJsonArray()) {
-                String page = hit.getAsJsonObject().get("_source").getAsJsonObject().get("page").getAsString();
-                String title = hit.getAsJsonObject().get("_source").getAsJsonObject().get("title").getAsString();
-                result.add(Map.of(
-                        GS_CATEGORY_TYPE, GS_ABOUT,
-                        "page", page,
-                        "title", title,
-                        "text", highlight.getAsString()
-                ));
+        //Generic Query
+        Map<String, Object> query = esService.buildListQuery();
+        //Results Map
+        Map<String, String[]> results = new HashMap<>();
+        //Iterate through each index properties map and make a request to each endpoint then format the results as
+        // String arrays
+        String cacheKey = "programIDs";
+        Map<String, String[]> data = (Map<String, String[]>)caffeineCache.asMap().get(cacheKey);
+        if (data != null) {
+            logger.info("hit cache!");
+            return data;
+        } else {
+            for (String endpoint: indexProperties.keySet()){
+                Request request = new Request("GET", endpoint);
+                String[][] properties = indexProperties.get(endpoint);
+                List<String> fields = new ArrayList<>();
+                for (String[] prop: properties) {
+                    fields.add(prop[1]);
+                }
+                query.put("_source", fields);
+                
+                List<Map<String, Object>> result = esService.collectPage(request, query, properties, ESService.MAX_ES_SIZE,
+                        0);
+                Map<String, List<String>> indexResults = new HashMap<>();
+                Arrays.asList(properties).forEach(x -> indexResults.put(x[0], new ArrayList<>()));
+                for(Map<String, Object> resultElement: result){
+                    for(String key: indexResults.keySet()){
+                        List<String> tmp = indexResults.get(key);
+                        String v = (String) resultElement.get(key);
+                        if (!tmp.contains(v)) {
+                            tmp.add(v);
+                        }
+                    }
+                }
+                for(String key: indexResults.keySet()){
+                    results.put(key, indexResults.get(key).toArray(new String[indexResults.size()]));
+                }
             }
+            caffeineCache.put(cacheKey, results);
         }
-
-        return result;
-    }
-
-    private Map<String, Object> getGlobalSearchQuery(String input, Map<String, Object> category, String resultCountFieldName, String resultAggFieldName) {
-        List<String> searchFields = (List<String>)category.get(GS_SEARCH_FIELD);
-        List<Object> searchClauses = new ArrayList<>();
-        for (String searchFieldName: searchFields) {
-            searchClauses.add(Map.of("match_phrase_prefix", Map.of(searchFieldName, input)));
-        }
-        Map<String, Object> query = new HashMap<>();
-        query.put("query", Map.of("bool", Map.of("should", searchClauses)));
         
-        // get an accurate count of results, not just number of documents returned -- those may be different depending upon
-        //   the index schema
-        Map<String, Object> aggs = new HashMap<String, Object>();
-        if (resultCountFieldName != null) {
-            aggs.put("field_count", Map.of("cardinality", Map.of("field", resultCountFieldName)));
-        }
-        if (resultAggFieldName != null) {
-            aggs.put("agg_field", Map.of("terms", Map.of("field", resultAggFieldName)));
-        }
-        query.put("aggs", aggs);
-
-        return query;
+        return results;
     }
 
-    private Map<String, Object> addHighlight(Map<String, Object> query, Map<String, Object> category) {
-        Map<String, Object> result = new HashMap<>(query);
-        List<String> searchFields = (List<String>)category.get(GS_SEARCH_FIELD);
-        Map<String, Object> highlightClauses = new HashMap<>();
-        for (String searchFieldName: searchFields) {
-            highlightClauses.put(searchFieldName, Map.of());
-        }
-
-        result.put("highlight", Map.of(
-                "fields", highlightClauses,
-                "pre_tags", "",
-                "post_tags", "",
-                "fragment_size", 1
-                )
-        );
-        return result;
-    }
-
-    private Map<String, Object> searchParticipants(Map<String, Object> params) throws IOException {
+    private Map<String, Object> searchProjects(Map<String, Object> params) throws IOException {
         String cacheKey = generateCacheKey(params);
         Map<String, Object> data = (Map<String, Object>)caffeineCache.asMap().get(cacheKey);
-
-        // Early return for cache hit
         if (data != null) {
             logger.info("hit cache!");
             return data;
@@ -511,29 +315,47 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         PROJECT_TERM_AGGS.add(Map.of(
                 CARDINALITY_AGG_NAME, "project_id",
                 AGG_NAME, "focus_area",
-                WIDGET_QUERY,"projectCountByFocusArea",
                 FILTER_COUNT_QUERY, "filterProjectCountByFocusArea",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
-        PROJECT_TERM_AGGS.add(Map.of(
-                CARDINALITY_AGG_NAME, "project_id",
-                AGG_NAME, "program_name",
-                WIDGET_QUERY,"projectCountByProgramName",
-                FILTER_COUNT_QUERY, "filterProjectCountByProgramName",
-                AGG_ENDPOINT, PROJECTS_END_POINT
-        ));
 
-        Map<String, Object> query_participants = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "participants");
-        Map<String, Object> newQuery_participants = new HashMap<>(query_participants);
-        newQuery_participants.put("size", 0);
-        newQuery_participants.put("track_total_hits", 10000000);
-        Map<String, Object> fields = new HashMap<String, Object>();
-        newQuery_participants.put("aggs", fields);
-        Request participantsCountRequest = new Request("GET", PARTICIPANTS_END_POINT);
-        String jsonizedQuery = gson.toJson(newQuery_participants);
-        participantsCountRequest.setJsonEntity(jsonizedQuery);
-        JsonObject participantsCountResult = insEsService.send(participantsCountRequest);
+        // Get Grant counts for Explore page stats bar
+        Map<String, Object> grantsQuery = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "grants");
+        String grantsQueryJson = gson.toJson(grantsQuery);
+        Request grantsCountRequest = new Request("GET", GRANTS_COUNT_END_POINT);
+        grantsCountRequest.setJsonEntity(grantsQueryJson);
+        JsonObject grantsCountResult = insEsService.send(grantsCountRequest);
+        int numberOfGrants = grantsCountResult.get("count").getAsInt();
 
+        // Get Program counts for Explore page stats bar
+        Map<String, Object> programsQuery = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "programs");
+        String programsQueryJson = gson.toJson(programsQuery);
+        Request programsCountRequest = new Request("GET", PROGRAMS_COUNT_END_POINT);
+        programsCountRequest.setJsonEntity(programsQueryJson);
+        JsonObject programsCountResult = insEsService.send(programsCountRequest);
+        int numberOfPrograms = programsCountResult.get("count").getAsInt();
+
+        // Get Project counts for Explore page stats bar
+        Map<String, Object> projectsQuery = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "projects");
+        String projectsQueryJson = gson.toJson(projectsQuery);
+        Request projectsCountRequest = new Request("GET", PROJECTS_COUNT_END_POINT);
+        projectsCountRequest.setJsonEntity(projectsQueryJson);
+        JsonObject projectsCountResult = insEsService.send(projectsCountRequest);
+        int numberOfProjects = projectsCountResult.get("count").getAsInt();
+        
+        // Get Publication counts for Explore page stats bar
+        Map<String, Object> publicationsQuery = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "publications");
+        String publicationsQueryJson = gson.toJson(publicationsQuery);
+        Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
+        publicationsCountRequest.setJsonEntity(publicationsQueryJson);
+        JsonObject publicationsCountResult = insEsService.send(publicationsCountRequest);
+        int numberOfPublications = publicationsCountResult.get("count").getAsInt();
+
+        data.put("numberOfGrants", numberOfGrants);
+        data.put("numberOfPrograms", numberOfPrograms);
+        data.put("numberOfProjects", numberOfProjects);
+        data.put("numberOfPublications", numberOfPublications);
+        
         // widgets data and facet filter counts for projects
         for (var agg: PROJECT_TERM_AGGS) {
             String field = agg.get(AGG_NAME);
@@ -568,6 +390,260 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         caffeineCache.put(cacheKey, data);
 
         return data;
+    }
+
+    // Placeholder for now
+    private List<Map<String, Object>> projectsOverview(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+            // Demographics
+            new String[]{"participant_id", "participant_id"},
+            new String[]{"ethnicity", "ethnicity_str"},
+            new String[]{"race", "race_str"},
+            new String[]{"sex_at_birth", "sex_at_birth"},
+
+            // Studies
+            new String[]{"phs_accession", "phs_accession"},
+
+            // Additional fields for download
+            new String[]{"alternate_participant_id", "alternate_participant_id"},
+            new String[]{"study_id", "study_id"},
+        };
+
+        String defaultSort = "participant_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+            // Demographics
+            Map.entry("participant_id", "participant_id"),
+            Map.entry("ethnicity", "ethnicity_str"),
+            Map.entry("race", "race_str"),
+            Map.entry("sex_at_birth", "sex_at_birth"),
+
+            // Studies
+            Map.entry("phs_accession", "phs_accession"),
+
+            // Additional fields for download
+            Map.entry("alternate_participant_id", "alternate_participant_id"),
+            Map.entry("study_id", "study_id")
+        );
+
+        return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "projects");
+    }
+
+    // Placeholder for now
+    private List<Map<String, Object>> grantsOverview(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+            // Diagnoses
+            new String[]{"age_at_diagnosis", "age_at_diagnosis"},
+            new String[]{"anatomic_site", "anatomic_site"},
+            new String[]{"diagnosis_basis", "diagnosis_basis"},
+            new String[]{"diagnosis_classification", "diagnosis_classification"},
+            new String[]{"diagnosis_classification_system", "diagnosis_classification_system"},
+            new String[]{"diagnosis_verification_status", "diagnosis_verification_status"},
+            new String[]{"disease_phase", "disease_phase"},
+            new String[]{"tumor_classification", "tumor_classification"},
+
+            // Demographics
+            new String[]{"participant_id", "participant_id"},
+
+            // Studies
+            new String[]{"phs_accession", "phs_accession"},
+
+            // Additional fields for download
+            new String[]{"diagnosis_id", "diagnosis_id"},
+            new String[]{"diagnosis_comment", "diagnosis_comment"},
+            new String[]{"study_id", "study_id"},
+            new String[]{"toronto_childhood_cancer_staging", "toronto_childhood_cancer_staging"},
+            new String[]{"tumor_grade", "tumor_grade"},
+            new String[]{"tumor_stage_clinical_m", "tumor_stage_clinical_m"},
+            new String[]{"tumor_stage_clinical_n", "tumor_stage_clinical_n"},
+            new String[]{"tumor_stage_clinical_t", "tumor_stage_clinical_t"},
+        };
+
+        String defaultSort = "diagnosis_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+            // Diagnoses
+            Map.entry("age_at_diagnosis", "age_at_diagnosis"),
+            Map.entry("anatomic_site", "anatomic_site"),
+            Map.entry("diagnosis_basis", "diagnosis_basis"),
+            Map.entry("diagnosis_classification", "diagnosis_classification"),
+            Map.entry("diagnosis_classification_system", "diagnosis_classification_system"),
+            Map.entry("diagnosis_verification_status", "diagnosis_verification_status"),
+            Map.entry("disease_phase", "disease_phase"),
+            Map.entry("tumor_classification", "tumor_classification"),
+
+            // Demographics
+            Map.entry("participant_id", "participant_id"),
+
+            // Studies
+            Map.entry("phs_accession", "phs_accession"),
+
+            // Additional fields for download
+            Map.entry("diagnosis_id", "diagnosis_id"),
+            Map.entry("diagnosis_comment", "diagnosis_comment"),
+            Map.entry("study_id", "study_id"),
+            Map.entry("toronto_childhood_cancer_staging", "toronto_childhood_cancer_staging"),
+            Map.entry("tumor_grade", "tumor_grade"),
+            Map.entry("tumor_stage_clinical_m", "tumor_stage_clinical_m"),
+            Map.entry("tumor_stage_clinical_n", "tumor_stage_clinical_n"),
+            Map.entry("tumor_stage_clinical_t", "tumor_stage_clinical_t")
+        );
+
+        return overview(GRANTS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "grants");
+    }
+
+    // Placeholder for now
+    private List<Map<String, Object>> programsOverview(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+            // Studies
+            new String[]{"phs_accession", "phs_accession"},
+            new String[]{"study_acronym", "study_acronym"},
+            new String[]{"study_short_title", "study_short_title"},
+
+            // Additional fields for download
+            new String[]{"acl", "acl"},
+            new String[]{"consent", "consent"},
+            new String[]{"consent_number", "consent_number"},
+            new String[]{"external_url", "external_url"},
+            new String[]{"study_description", "study_description"},
+            new String[]{"study_id", "study_id"},
+            new String[]{"study_name", "study_name"},
+        };
+
+        String defaultSort = "study_acronym"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+            // Studies
+            Map.entry("phs_accession", "phs_accession"),
+            Map.entry("study_acronym", "study_acronym"),
+            Map.entry("study_short_title", "study_short_title"),
+
+            // Additional fields for download
+            Map.entry("acl", "acl"),
+            Map.entry("consent", "consent"),
+            Map.entry("consent_number", "consent_number"),
+            Map.entry("external_url", "external_url"),
+            Map.entry("study_description", "study_description"),
+            Map.entry("study_id", "study_id"),
+            Map.entry("study_name", "study_name")
+        );
+        
+        Request request = new Request("GET", PROGRAMS_END_POINT);
+        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION), REGULAR_PARAMS, "nested_filters", "participants");
+        String[] AGG_NAMES = new String[] {"study_id"};
+        query = insEsService.addAggregations(query, AGG_NAMES);
+        String queryJson = gson.toJson(query);
+        request.setJsonEntity(queryJson);
+        JsonObject jsonObject = insEsService.send(request);
+        Map<String, JsonArray> aggs = insEsService.collectTermAggs(jsonObject, AGG_NAMES);
+        JsonArray buckets = aggs.get("study_id");
+        List<String> data = new ArrayList<>();
+        for (var bucket: buckets) {
+            data.add(bucket.getAsJsonObject().get("key").getAsString());
+        }
+
+        String order_by = (String)params.get(ORDER_BY);
+        String direction = ((String)params.get(SORT_DIRECTION));
+        int pageSize = (int) params.get(PAGE_SIZE);
+        int offset = (int) params.get(OFFSET);
+        
+        Map<String, Object> study_params = new HashMap<>();
+        if (data.size() == 0) {
+            data.add("-1");
+        }
+        study_params.put("study_id", data);
+        study_params.put(ORDER_BY, order_by);
+        study_params.put(SORT_DIRECTION, direction);
+        study_params.put(PAGE_SIZE, pageSize);
+        study_params.put(OFFSET, offset);
+
+        return overview(STUDIES_END_POINT, study_params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "programs");
+    }
+
+    // Placeholder for now
+    private List<Map<String, Object>> publicationsOverview(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+            // Participants
+            new String[]{"participant_id", "participant_id"},
+
+            // Studies
+            new String[]{"phs_accession", "phs_accession"},
+
+            // Survivals
+            new String[]{"age_at_last_known_survival_status", "age_at_last_known_survival_status"},
+            new String[]{"first_event", "first_event"},
+            new String[]{"last_known_survival_status", "last_known_survival_status"},
+
+            // Additional fields for download
+            new String[]{"age_at_event_free_survival_status", "age_at_event_free_survival_status"},
+            new String[]{"event_free_survival_status", "event_free_survival_status"},
+            new String[]{"study_id", "study_id"},
+            new String[]{"survival_id", "survival_id"},
+        };
+
+        String defaultSort = "participant_id"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+            // Participants
+            Map.entry("participant_id", "participant_id"),
+
+            // Studies
+            Map.entry("phs_accession", "phs_accession"),
+
+            // Survivals
+            Map.entry("age_at_last_known_survival_status", "age_at_last_known_survival_status"),
+            Map.entry("first_event", "first_event"),
+            Map.entry("last_known_survival_status", "last_known_survival_status"),
+
+            // Additional fields for download
+            Map.entry("age_at_event_free_survival_status", "age_at_event_free_survival_status"),
+            Map.entry("event_free_survival_status", "event_free_survival_status"),
+            Map.entry("study_id", "study_id"),
+            Map.entry("survival_id", "survival_id")
+        );
+
+        return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "publications");
+    }
+
+    // if the nestedProperty is set, this will filter based upon the params against the nested property for the endpoint's index.
+    // otherwise, this will filter based upon the params against the top level properties for the index
+    private List<Map<String, Object>> overview(String endpoint, Map<String, Object> params, String[][] properties, String defaultSort, Map<String, String> mapping, Set<String> regular_fields, String nestedProperty, String overviewType) throws IOException {
+        Request request = new Request("GET", endpoint);
+        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION), regular_fields, nestedProperty, overviewType);
+        String order_by = (String)params.get(ORDER_BY);
+        String direction = ((String)params.get(SORT_DIRECTION)).toLowerCase();
+        query.put("sort", mapSortOrder(order_by, direction, defaultSort, mapping));
+        int pageSize = (int) params.get(PAGE_SIZE);
+        int offset = (int) params.get(OFFSET);
+        List<Map<String, Object>> page = insEsService.collectPage(request, query, properties, pageSize, offset);
+        return page;
+    }
+
+    private List<Map<String, Object>> findProgramIdsInList(Map<String, Object> params) throws IOException {
+        final String[][] properties = new String[][]{
+                new String[]{"program_id", "program_id"},
+                new String[]{"program_name", "program_name"}
+        };
+
+        Map<String, Object> query = esService.buildListQuery(params, Set.of(), false);
+        Request request = new Request("GET", PROGRAMS_END_POINT);
+
+        return esService.collectPage(request, query, properties, ESService.MAX_ES_SIZE, 0);
+    }
+
+    private Map<String, String> mapSortOrder(String order_by, String direction, String defaultSort, Map<String, String> mapping) {
+        String sortDirection = direction;
+        if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
+            sortDirection = "asc";
+        }
+
+        String sortOrder = defaultSort; // Default sort order
+        if (mapping.containsKey(order_by)) {
+            sortOrder = mapping.get(order_by);
+        } else {
+            logger.info("Order: \"" + order_by + "\" not recognized, use default order");
+        }
+        return Map.of(sortOrder, sortDirection);
     }
 
     private Integer numberOfGrants() throws Exception {
@@ -632,15 +708,6 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         int count = counts.get("num_publications").getAsInt();
 
         return count;
-    }
-
-    private final static class BENTO_INDEX {
-        private static final String SAMPLES = "samples";
-    }
-
-    private final static class BENTO_FIELDS {
-        private static final String SAMPLE_NESTED_FILE_INFO = "file_info";
-        private static final String FILES = "files";
     }
 
     private String generateCacheKey(Map<String, Object> params) throws IOException {
