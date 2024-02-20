@@ -257,7 +257,7 @@ public class InsESService extends ESService {
         subField_ranges.put("ranges", Set.of(Map.of("key", "0 - 4", "from", 0, "to", 4 * 365), Map.of("key", "5 - 9", "from", 4 * 365, "to", 9 * 365), Map.of("key", "10 - 14", "from", 9 * 365, "to", 14 * 365), Map.of("key", "15 - 19", "from", 14 * 365, "to", 19 * 365), Map.of("key", "20 - 29", "from", 19 * 365, "to", 29 * 365), Map.of("key", "> 29", "from", 29 * 365)));
         
         subField.put("range", subField_ranges);
-        if (! (cardinalityAggName == null)) {
+        if (cardinalityAggName != null) {
             subField.put("aggs", Map.of("cardinality_count", Map.of("cardinality", Map.of("field", cardinalityAggName, "precision_threshold", 40000))));
         }
         fields.put(rangeAggName, subField);
@@ -308,7 +308,7 @@ public class InsESService extends ESService {
             if (only_includes.size() > 0) {
                 subField.put("include", only_includes);
             }
-            if (! (subCardinalityAggName == null)) {
+            if (subCardinalityAggName != null) {
                 fields.put(field, Map.of("terms", subField, "aggs", addCardinalityHelper(subCardinalityAggName)));
             } else {
                 fields.put(field, Map.of("terms", subField));

@@ -238,7 +238,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         List<Map<String, Object>> data = new ArrayList<>();
         for (JsonElement group: buckets) {
             data.add(Map.of("group", group.getAsJsonObject().get("key").getAsString(),
-                    "subjects", !(cardinalityAggName == null) ? group.getAsJsonObject().get("cardinality_count").getAsJsonObject().get("value").getAsInt() : group.getAsJsonObject().get("doc_count").getAsInt()
+                    "subjects", cardinalityAggName != null ? group.getAsJsonObject().get("cardinality_count").getAsJsonObject().get("value").getAsInt() : group.getAsJsonObject().get("doc_count").getAsInt()
             ));
 
         }
