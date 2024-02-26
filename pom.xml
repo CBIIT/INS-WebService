@@ -17,15 +17,15 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.0.7</version>
+        <version>3.0.13</version>
     </parent>
 
 
     <properties>
         <java.version>17</java.version>
-        <spring.version>6.0.9</spring.version>
-        <netty.version>4.1.69.Final</netty.version>
-        <spring.restdocs.version>3.0.0</spring.restdocs.version>
+        <spring.version>6.0.14</spring.version>
+        <spring.restdocs.version>3.0.1</spring.restdocs.version>
+        <snakeyaml.version>2.0</snakeyaml.version>
     </properties>
 
     <dependencies>
@@ -71,28 +71,46 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
             <version>${spring.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-web</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>6.0.17</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.restdocs</groupId>
             <artifactId>spring-restdocs-core</artifactId>
             <version>${spring.restdocs.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-web</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.restdocs</groupId>
             <artifactId>spring-restdocs-mockmvc</artifactId>
             <version>${spring.restdocs.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>32.0.1-jre</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-web</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- GraphQL -->
         <dependency>
             <groupId>com.graphql-java</groupId>
             <artifactId>graphql-java</artifactId>
-            <version>19.5</version>
+            <version>21.3</version>
         </dependency>
         <!-- GSON -->
         <dependency>
@@ -101,10 +119,9 @@
             <version>2.9.1</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <version>3.1.8</version>
+        <dependency>  
+			<groupId>com.github.ben-manes.caffeine</groupId>  
+			<artifactId>caffeine</artifactId>
         </dependency>
         <!-- Unirest Java -->
         <dependency>
@@ -154,12 +171,18 @@
         <dependency>
             <groupId>org.neo4j</groupId>
             <artifactId>neo4j-graphql-java</artifactId>
-            <version>1.7.0</version>
+            <version>1.8.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.graphql-java</groupId>
+                    <artifactId>graphql-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.neo4j.driver</groupId>
             <artifactId>neo4j-java-driver</artifactId>
-            <version>4.2.0</version>
+            <version>4.4.9</version>
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
@@ -227,7 +250,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
-            <version>1.12.411</version>
+            <version>1.12.642</version>
             <scope>compile</scope>
         </dependency>
         <!-- Lombok -->
@@ -248,7 +271,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20230227</version>
+            <version>20231013</version>
         </dependency>
     </dependencies>
 
