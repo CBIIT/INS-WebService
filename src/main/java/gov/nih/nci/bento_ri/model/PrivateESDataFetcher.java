@@ -190,8 +190,9 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         } else {
             String[] AGG_NAMES = new String[] {category};
             query = insEsService.addAggregations(query, AGG_NAMES, cardinalityAggName, only_includes);
+            String queryJson = gson.toJson(query);
             Request request = new Request("GET", endpoint);
-            request.setJsonEntity(gson.toJson(query));
+            request.setJsonEntity(queryJson);
             JsonObject jsonObject = insEsService.send(request);
             Map<String, JsonArray> aggs = insEsService.collectTermAggs(jsonObject, AGG_NAMES);
             JsonArray buckets = aggs.get(category);
@@ -295,8 +296,8 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         // Query related values
         final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
         PROJECT_TERM_AGGS.add(Map.of(
-                CARDINALITY_AGG_NAME, "project_id",
-                AGG_NAME, "focus_area",
+                // CARDINALITY_AGG_NAME, "project_id",
+                AGG_NAME, "programs.focus_area",
                 FILTER_COUNT_QUERY, "filterProjectCountByFocusArea",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
