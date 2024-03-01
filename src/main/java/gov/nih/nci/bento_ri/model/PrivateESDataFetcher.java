@@ -244,7 +244,8 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private Map<String, String[]> idsLists() throws IOException {
         Map<String, String[][]> indexProperties = Map.of(
             PROGRAMS_END_POINT, new String[][]{
-                    new String[]{"programIds", "program_id"}
+                new String[]{"programIds", "program_id"},
+                new String[]{"programNames", "program_name"}
             }
         );
         //Generic Query
@@ -279,7 +280,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                 results.put(key, indexResults.get(key).toArray(new String[indexResults.size()]));
             }
         }
-        
+
         return results;
     }
 
