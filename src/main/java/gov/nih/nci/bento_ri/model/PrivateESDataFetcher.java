@@ -473,51 +473,37 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return overview(GRANTS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "grants");
     }
 
-    // Placeholder for now
     private List<Map<String, Object>> programsOverview(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
-            // Studies
-            new String[]{"phs_accession", "phs_accession"},
-            new String[]{"study_acronym", "study_acronym"},
-            new String[]{"study_short_title", "study_short_title"},
+            new String[]{"data_link", "data_link"},
+            new String[]{"focus_area_str", "focus_area_str"},
+            new String[]{"program_id", "program_id"},
+            new String[]{"program_link", "program_link"},
+            new String[]{"program_name", "program_name"},
 
             // Additional fields for download
-            new String[]{"acl", "acl"},
-            new String[]{"consent", "consent"},
-            new String[]{"consent_number", "consent_number"},
-            new String[]{"external_url", "external_url"},
-            new String[]{"study_description", "study_description"},
-            new String[]{"study_id", "study_id"},
-            new String[]{"study_name", "study_name"},
+            // Stub
         };
 
-        String defaultSort = "study_acronym"; // Default sort order
+        String defaultSort = "program_name"; // Default sort order
 
         Map<String, String> mapping = Map.ofEntries(
-            // Studies
-            Map.entry("phs_accession", "phs_accession"),
-            Map.entry("study_acronym", "study_acronym"),
-            Map.entry("study_short_title", "study_short_title"),
-
-            // Additional fields for download
-            Map.entry("acl", "acl"),
-            Map.entry("consent", "consent"),
-            Map.entry("consent_number", "consent_number"),
-            Map.entry("external_url", "external_url"),
-            Map.entry("study_description", "study_description"),
-            Map.entry("study_id", "study_id"),
-            Map.entry("study_name", "study_name")
+            Map.entry("data_link", "data_link"),
+            Map.entry("focus_area_str", "focus_area_str"),
+            Map.entry("program_id", "program_id"),
+            Map.entry("program_link", "program_link"),
+            Map.entry("program_name", "program_name")
         );
         
         Request request = new Request("GET", PROGRAMS_END_POINT);
-        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION), REGULAR_PARAMS, "nested_filters", "participants");
-        String[] AGG_NAMES = new String[] {"study_id"};
+        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION), REGULAR_PARAMS, "nested_filters", "programs");
+        String[] AGG_NAMES = new String[] {"program_id"};
         query = insEsService.addAggregations(query, AGG_NAMES);
         String queryJson = gson.toJson(query);
         request.setJsonEntity(queryJson);
         JsonObject jsonObject = insEsService.send(request);
         Map<String, JsonArray> aggs = insEsService.collectTermAggs(jsonObject, AGG_NAMES);
-        JsonArray buckets = aggs.get("study_id");
+        JsonArray buckets = aggs.get("program_id");
         List<String> data = new ArrayList<>();
         for (var bucket: buckets) {
             data.add(bucket.getAsJsonObject().get("key").getAsString());
@@ -528,17 +514,17 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         int pageSize = (int) params.get(PAGE_SIZE);
         int offset = (int) params.get(OFFSET);
         
-        Map<String, Object> study_params = new HashMap<>();
+        Map<String, Object> program_params = new HashMap<>();
         if (data.size() == 0) {
             data.add("-1");
         }
-        study_params.put("study_id", data);
-        study_params.put(ORDER_BY, order_by);
-        study_params.put(SORT_DIRECTION, direction);
-        study_params.put(PAGE_SIZE, pageSize);
-        study_params.put(OFFSET, offset);
+        program_params.put("program_id", data);
+        program_params.put(ORDER_BY, order_by);
+        program_params.put(SORT_DIRECTION, direction);
+        program_params.put(PAGE_SIZE, pageSize);
+        program_params.put(OFFSET, offset);
 
-        return overview(STUDIES_END_POINT, study_params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "programs");
+        return overview(PROGRAMS_END_POINT, program_params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "programs");
     }
 
     // Placeholder for now
