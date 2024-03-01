@@ -297,22 +297,60 @@ public class InsESService extends ESService {
         return newQuery;
     }
 
+    /*
+        For many-to-many (program field in projects index), I want this structure:
+        {
+            "size": 0,
+            "query": {
+                "match_all": {}
+            },
+            "aggs": {
+                "programs.focus_area": {
+                    "nested": {
+                        "path": "programs"
+                    },
+                    "aggs": {
+                        "focus_area": {
+                            "terms": {
+                                "field": "programs.focus_area",
+                                "size": 100000
+                            }
+                        }
+                    }
+                }
+            }
+        }
+     */
     public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames, String subCardinalityAggName, String[] rangeAggNames, List<String> only_includes) {
         Map<String, Object> newQuery = new HashMap<>(query);
         newQuery.put("size", 0);
         Map<String, Object> fields = new HashMap<String, Object>();
         for (String field: termAggNames) {
+            Map<String, Object> fieldMap = new HashMap<String, Object>();
             Map<String, Object> subField = new HashMap<String, Object>();
+            String[] nestingSplit = field.split("\\.", 2);
+
             subField.put("field", field);
             subField.put("size", 100000);
             if (only_includes.size() > 0) {
                 subField.put("include", only_includes);
             }
+
             if (subCardinalityAggName != null) {
-                fields.put(field, Map.of("terms", subField, "aggs", addCardinalityHelper(subCardinalityAggName)));
-            } else {
-                fields.put(field, Map.of("terms", subField));
+                fieldMap.put("terms", subField);
+                fieldMap.put("aggs", addCardinalityHelper(subCardinalityAggName));
+            } else if (nestingSplit.length < 2) {
+                fieldMap.put("terms", subField);
+            } else { // Handle nested field (one level deep only)
+                Map<String, Object> termsMap = Map.of("terms", subField);
+                Map<String, Object> aggsMap = Map.of(nestingSplit[1], termsMap);
+                Map<String, Object> nestedPath = Map.of("path", nestingSplit[0]);
+
+                fieldMap.put("nested", nestedPath);
+                fieldMap.put("aggs", aggsMap);
             }
+
+            fields.put(field, fieldMap);
         }
         newQuery.put("aggs", fields);
         return newQuery;
@@ -352,6 +390,26 @@ public class InsESService extends ESService {
         JsonArray buckets = aggs.getAsJsonObject(aggName).getAsJsonArray("buckets");
         for (var bucket: buckets) {
             data.add(bucket.getAsJsonObject().get("key").getAsString());
+        }
+        return data;
+    }
+
+    public Map<String, JsonArray> collectTermAggs(JsonObject jsonObject, String[] termAggNames) {
+        Map<String, JsonArray> data = new HashMap<>();
+        JsonObject aggs = jsonObject.getAsJsonObject("aggregations");
+        for (String aggName: termAggNames) {
+            JsonObject agg = aggs.getAsJsonObject(aggName);
+            String[] nestedSplit = aggName.split("\\.", 2);
+
+            // Terms buckets
+            if (nestedSplit.length < 2) {
+                data.put(aggName, agg.getAsJsonArray("buckets"));
+            } else {
+                String nestedAggName = nestedSplit[1];
+                JsonObject nestedAggs = agg.getAsJsonObject(nestedAggName);
+                // data.put(nestedAggName, nestedAggs.getAsJsonArray("buckets"));
+                data.put(aggName, nestedAggs.getAsJsonArray("buckets"));
+            }
         }
         return data;
     }
