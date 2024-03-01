@@ -117,14 +117,14 @@ type PublicGlobalSearchResult {
     model: [GS_Model]
 }
 
+type IdsListsES {
+    programIds: [String]
+    programNames: [String]
+}
+
 type ProjectResult {
     project_id: String
     program_id: String
-}
-
-type IdsListsES {
-    subjectIds: [String]
-    sampleIds: [String]
 }
 
 type ProgramInfo {
