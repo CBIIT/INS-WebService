@@ -11,10 +11,8 @@ import graphql.schema.idl.RuntimeWiring;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opensearch.client.Request;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -29,8 +27,6 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private static final Logger logger = LogManager.getLogger(PrivateESDataFetcher.class);
     private final YamlQueryFactory yamlQueryFactory;
     private InsESService insEsService;
-    @Autowired
-    private Cache<String, Object> caffeineCache;
 
     // parameters used in queries
     final String PAGE_SIZE = "first";
@@ -257,53 +253,38 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Map<String, String[]> results = new HashMap<>();
         //Iterate through each index properties map and make a request to each endpoint then format the results as
         // String arrays
-        String cacheKey = "programIDs";
-        Map<String, String[]> data = (Map<String, String[]>)caffeineCache.asMap().get(cacheKey);
-        if (data != null) {
-            logger.info("hit cache!");
-            return data;
-        } else {
-            for (String endpoint: indexProperties.keySet()){
-                Request request = new Request("GET", endpoint);
-                String[][] properties = indexProperties.get(endpoint);
-                List<String> fields = new ArrayList<>();
-                for (String[] prop: properties) {
-                    fields.add(prop[1]);
-                }
-                query.put("_source", fields);
-                
-                List<Map<String, Object>> result = esService.collectPage(request, query, properties, ESService.MAX_ES_SIZE,
-                        0);
-                Map<String, List<String>> indexResults = new HashMap<>();
-                Arrays.asList(properties).forEach(x -> indexResults.put(x[0], new ArrayList<>()));
-                for(Map<String, Object> resultElement: result){
-                    for(String key: indexResults.keySet()){
-                        List<String> tmp = indexResults.get(key);
-                        String v = (String) resultElement.get(key);
-                        if (!tmp.contains(v)) {
-                            tmp.add(v);
-                        }
+        for (String endpoint: indexProperties.keySet()){
+            Request request = new Request("GET", endpoint);
+            String[][] properties = indexProperties.get(endpoint);
+            List<String> fields = new ArrayList<>();
+            for (String[] prop: properties) {
+                fields.add(prop[1]);
+            }
+            query.put("_source", fields);
+            
+            List<Map<String, Object>> result = esService.collectPage(request, query, properties, ESService.MAX_ES_SIZE,
+                    0);
+            Map<String, List<String>> indexResults = new HashMap<>();
+            Arrays.asList(properties).forEach(x -> indexResults.put(x[0], new ArrayList<>()));
+            for(Map<String, Object> resultElement: result){
+                for(String key: indexResults.keySet()){
+                    List<String> tmp = indexResults.get(key);
+                    String v = (String) resultElement.get(key);
+                    if (!tmp.contains(v)) {
+                        tmp.add(v);
                     }
                 }
-                for(String key: indexResults.keySet()){
-                    results.put(key, indexResults.get(key).toArray(new String[indexResults.size()]));
-                }
             }
-            caffeineCache.put(cacheKey, results);
+            for(String key: indexResults.keySet()){
+                results.put(key, indexResults.get(key).toArray(new String[indexResults.size()]));
+            }
         }
         
         return results;
     }
 
     private Map<String, Object> searchProjects(Map<String, Object> params) throws IOException {
-        String cacheKey = generateCacheKey(params);
-        Map<String, Object> data = (Map<String, Object>)caffeineCache.asMap().get(cacheKey);
-        if (data != null) {
-            logger.info("hit cache!");
-            return data;
-        }
-
-        data = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
 
         final String CARDINALITY_AGG_NAME = "cardinality_agg_name";
         final String AGG_NAME = "agg_name";
@@ -386,8 +367,6 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                 
             }
         }
-
-        caffeineCache.put(cacheKey, data);
 
         return data;
     }
