@@ -296,8 +296,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         // Query related values
         final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
         PROJECT_TERM_AGGS.add(Map.of(
-                // CARDINALITY_AGG_NAME, "project_id",
-                AGG_NAME, "programs.focus_area",
+                AGG_NAME, "focus_area",
                 FILTER_COUNT_QUERY, "filterProjectCountByFocusArea",
                 AGG_ENDPOINT, PROJECTS_END_POINT
         ));
