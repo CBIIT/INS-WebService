@@ -246,6 +246,7 @@ type QueryType {
     numberOfPublications: Int
 
     searchProjects (
+        program_ids: [String] = []
         focus_area: [String] = []
     ): SearchResult
 
