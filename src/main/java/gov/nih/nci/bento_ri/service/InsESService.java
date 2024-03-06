@@ -159,8 +159,8 @@ public class InsESService extends ESService {
                 // Term parameters (default)
                 List<String> valueSet = (List<String>) params.get(key);
                 
-                if (key.equals("participant_ids")) {
-                    key = "participant_id";
+                if (key.equals("program_ids")) {
+                    key = "program_id";
                 }
                 // list with only one empty string [""] means return all records
                 if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
