@@ -260,6 +260,8 @@ type QueryType {
     ): [GrantsOverview]
 
     programsOverview (
+        program_ids: [String] = []
+        program_names: [String] = []
         focus_area: [String] = []
         order_by: String = "",
         sort_direction: String = "ASC",
