@@ -60,7 +60,6 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
 
     final Set<String> REGULAR_PARAMS = Set.of(
         // Programs
-        "program_id",
         "focus_area"
     );
 
