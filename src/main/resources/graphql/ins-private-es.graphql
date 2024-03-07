@@ -247,6 +247,7 @@ type QueryType {
 
     searchProjects (
         program_ids: [String] = []
+        program_names: [String] = []
         focus_area: [String] = []
     ): SearchResult
 

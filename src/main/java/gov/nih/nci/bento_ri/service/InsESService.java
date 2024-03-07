@@ -161,7 +161,10 @@ public class InsESService extends ESService {
                 
                 if (key.equals("program_ids")) {
                     key = "program_id";
+                } else if (key.equals("program_names")) {
+                    key = "program_name";
                 }
+
                 // list with only one empty string [""] means return all records
                 if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
                     if (PROGRAM_PARAMS.contains(key) && !indexType.equals("programs")) {
