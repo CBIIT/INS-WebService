@@ -6,6 +6,7 @@ type ProgramsOverview {
     data_link: String
     focus_area_str: String
     program_id: String
+    program_acronym: String
     program_link: String
     program_name: String
 }
@@ -123,6 +124,7 @@ type PublicGlobalSearchResult {
 
 type IdsListsES {
     program_id: String
+    program_acronym: String
     program_name: String
 }
 

@@ -241,6 +241,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Map<String, String[][]> indexProperties = Map.of(
             PROGRAMS_END_POINT, new String[][]{
                 new String[]{"program_id", "program_id"},
+                new String[]{"program_acronym", "program_acronym"},
                 new String[]{"program_name", "program_name"}
             }
         );
@@ -458,6 +459,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             new String[]{"data_link", "data_link"},
             new String[]{"focus_area_str", "focus_area_str"},
             new String[]{"program_id", "program_id"},
+            new String[]{"program_acronym", "program_acronym"},
             new String[]{"program_link", "program_link"},
             new String[]{"program_name", "program_name"},
 
@@ -471,6 +473,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             Map.entry("data_link", "data_link"),
             Map.entry("focus_area_str", "focus_area_str"),
             Map.entry("program_id", "program_id"),
+            Map.entry("program_acronym", "program_acronym"),
             Map.entry("program_link", "program_link"),
             Map.entry("program_name", "program_name")
         );
