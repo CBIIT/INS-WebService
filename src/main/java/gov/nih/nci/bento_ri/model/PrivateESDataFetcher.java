@@ -367,108 +367,70 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return data;
     }
 
-    // Placeholder for now
-    private List<Map<String, Object>> projectsOverview(Map<String, Object> params) throws IOException {
-        final String[][] PROPERTIES = new String[][]{
-            // Demographics
-            new String[]{"participant_id", "participant_id"},
-            new String[]{"ethnicity", "ethnicity_str"},
-            new String[]{"race", "race_str"},
-            new String[]{"sex_at_birth", "sex_at_birth"},
-
-            // Studies
-            new String[]{"phs_accession", "phs_accession"},
-
-            // Additional fields for download
-            new String[]{"alternate_participant_id", "alternate_participant_id"},
-            new String[]{"study_id", "study_id"},
-        };
-
-        String defaultSort = "participant_id"; // Default sort order
-
-        Map<String, String> mapping = Map.ofEntries(
-            // Demographics
-            Map.entry("participant_id", "participant_id"),
-            Map.entry("ethnicity", "ethnicity_str"),
-            Map.entry("race", "race_str"),
-            Map.entry("sex_at_birth", "sex_at_birth"),
-
-            // Studies
-            Map.entry("phs_accession", "phs_accession"),
-
-            // Additional fields for download
-            Map.entry("alternate_participant_id", "alternate_participant_id"),
-            Map.entry("study_id", "study_id")
-        );
-
-        return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "projects");
-    }
-
-    // Placeholder for now
     private List<Map<String, Object>> grantsOverview(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
-            // Diagnoses
-            new String[]{"age_at_diagnosis", "age_at_diagnosis"},
-            new String[]{"anatomic_site", "anatomic_site"},
-            new String[]{"diagnosis_basis", "diagnosis_basis"},
-            new String[]{"diagnosis_classification", "diagnosis_classification"},
-            new String[]{"diagnosis_classification_system", "diagnosis_classification_system"},
-            new String[]{"diagnosis_verification_status", "diagnosis_verification_status"},
-            new String[]{"disease_phase", "disease_phase"},
-            new String[]{"tumor_classification", "tumor_classification"},
+            // Grants
+            new String[]{"fiscal_year", "fiscal_year"},
+            new String[]{"grant_id", "grant_id"},
+            new String[]{"grant_title", "grant_title"},
+            new String[]{"principal_investigators", "principal_investigators"},
+            new String[]{"program_officers", "program_officers"},
+            new String[]{"project_end_date", "project_end_date"},
 
-            // Demographics
-            new String[]{"participant_id", "participant_id"},
-
-            // Studies
-            new String[]{"phs_accession", "phs_accession"},
-
-            // Additional fields for download
-            new String[]{"diagnosis_id", "diagnosis_id"},
-            new String[]{"diagnosis_comment", "diagnosis_comment"},
-            new String[]{"study_id", "study_id"},
-            new String[]{"toronto_childhood_cancer_staging", "toronto_childhood_cancer_staging"},
-            new String[]{"tumor_grade", "tumor_grade"},
-            new String[]{"tumor_stage_clinical_m", "tumor_stage_clinical_m"},
-            new String[]{"tumor_stage_clinical_n", "tumor_stage_clinical_n"},
-            new String[]{"tumor_stage_clinical_t", "tumor_stage_clinical_t"},
+            // Projects
+            new String[]{"project_id", "project_id"},
         };
 
-        String defaultSort = "diagnosis_id"; // Default sort order
+        String defaultSort = "grant_id"; // Default sort order
 
         Map<String, String> mapping = Map.ofEntries(
-            // Diagnoses
-            Map.entry("age_at_diagnosis", "age_at_diagnosis"),
-            Map.entry("anatomic_site", "anatomic_site"),
-            Map.entry("diagnosis_basis", "diagnosis_basis"),
-            Map.entry("diagnosis_classification", "diagnosis_classification"),
-            Map.entry("diagnosis_classification_system", "diagnosis_classification_system"),
-            Map.entry("diagnosis_verification_status", "diagnosis_verification_status"),
-            Map.entry("disease_phase", "disease_phase"),
-            Map.entry("tumor_classification", "tumor_classification"),
+            // Grants
+            Map.entry("fiscal_year", "fiscal_year"),
+            Map.entry("grant_id", "grant_id"),
+            Map.entry("grant_title", "grant_title"),
+            Map.entry("principal_investigators", "principal_investigators"),
+            Map.entry("program_officers", "program_officers"),
+            Map.entry("project_end_date", "project_end_date"),
 
-            // Demographics
-            Map.entry("participant_id", "participant_id"),
-
-            // Studies
-            Map.entry("phs_accession", "phs_accession"),
-
-            // Additional fields for download
-            Map.entry("diagnosis_id", "diagnosis_id"),
-            Map.entry("diagnosis_comment", "diagnosis_comment"),
-            Map.entry("study_id", "study_id"),
-            Map.entry("toronto_childhood_cancer_staging", "toronto_childhood_cancer_staging"),
-            Map.entry("tumor_grade", "tumor_grade"),
-            Map.entry("tumor_stage_clinical_m", "tumor_stage_clinical_m"),
-            Map.entry("tumor_stage_clinical_n", "tumor_stage_clinical_n"),
-            Map.entry("tumor_stage_clinical_t", "tumor_stage_clinical_t")
+            // Projects
+            Map.entry("project_id", "project_id")
         );
+
+        // Request request = new Request("GET", GRANTS_END_POINT);
+        // Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION), REGULAR_PARAMS, "nested_filters", "grants");
+        // String[] AGG_NAMES = new String[] {"grant_id"};
+        // query = insEsService.addAggregations(query, AGG_NAMES);
+        // String queryJson = gson.toJson(query);
+        // request.setJsonEntity(queryJson);
+        // JsonObject jsonObject = insEsService.send(request);
+        // Map<String, JsonArray> aggs = insEsService.collectTermAggs(jsonObject, AGG_NAMES);
+        // JsonArray buckets = aggs.get("grant_id");
+        // List<String> data = new ArrayList<>();
+        // for (var bucket: buckets) {
+        //     data.add(bucket.getAsJsonObject().get("key").getAsString());
+        // }
+
+        // String order_by = (String)params.get(ORDER_BY);
+        // String direction = ((String)params.get(SORT_DIRECTION));
+        // int pageSize = (int) params.get(PAGE_SIZE);
+        // int offset = (int) params.get(OFFSET);
+        
+        // Map<String, Object> grant_params = new HashMap<>();
+        // if (data.size() == 0) {
+        //     data.add("-1");
+        // }
+        // grant_params.put("grant_id", data);
+        // grant_params.put(ORDER_BY, order_by);
+        // grant_params.put(SORT_DIRECTION, direction);
+        // grant_params.put(PAGE_SIZE, pageSize);
+        // grant_params.put(OFFSET, offset);
 
         return overview(GRANTS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "grants");
     }
 
     private List<Map<String, Object>> programsOverview(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
+            // Programs
             new String[]{"data_link", "data_link"},
             new String[]{"focus_area_str", "focus_area_str"},
             new String[]{"program_id", "program_id"},
@@ -521,46 +483,75 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return overview(PROGRAMS_END_POINT, program_params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "programs");
     }
 
-    // Placeholder for now
-    private List<Map<String, Object>> publicationsOverview(Map<String, Object> params) throws IOException {
+    private List<Map<String, Object>> projectsOverview(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
-            // Participants
-            new String[]{"participant_id", "participant_id"},
+            // Projects
+            new String[]{"org_name", "org_name"},
+            new String[]{"project_end_date", "project_end_date"},
+            new String[]{"project_id", "project_id"},
+            new String[]{"project_start_date", "project_start_date"},
+            new String[]{"project_title", "project_title"},
 
-            // Studies
-            new String[]{"phs_accession", "phs_accession"},
-
-            // Survivals
-            new String[]{"age_at_last_known_survival_status", "age_at_last_known_survival_status"},
-            new String[]{"first_event", "first_event"},
-            new String[]{"last_known_survival_status", "last_known_survival_status"},
+            // Programs
+            new String[]{"program_names", "program_names"},
 
             // Additional fields for download
-            new String[]{"age_at_event_free_survival_status", "age_at_event_free_survival_status"},
-            new String[]{"event_free_survival_status", "event_free_survival_status"},
-            new String[]{"study_id", "study_id"},
-            new String[]{"survival_id", "survival_id"},
+            // Stub
         };
 
-        String defaultSort = "participant_id"; // Default sort order
+        String defaultSort = "project_id"; // Default sort order
 
         Map<String, String> mapping = Map.ofEntries(
-            // Participants
-            Map.entry("participant_id", "participant_id"),
+            // Projects
+            Map.entry("org_name", "org_name"),
+            Map.entry("project_end_date", "project_end_date"),
+            Map.entry("project_id", "project_id"),
+            Map.entry("project_start_date", "project_start_date"),
+            Map.entry("project_title", "project_title"),
 
-            // Studies
-            Map.entry("phs_accession", "phs_accession"),
-
-            // Survivals
-            Map.entry("age_at_last_known_survival_status", "age_at_last_known_survival_status"),
-            Map.entry("first_event", "first_event"),
-            Map.entry("last_known_survival_status", "last_known_survival_status"),
+            // Programs
+            Map.entry("program_names", "program_names")
 
             // Additional fields for download
-            Map.entry("age_at_event_free_survival_status", "age_at_event_free_survival_status"),
-            Map.entry("event_free_survival_status", "event_free_survival_status"),
-            Map.entry("study_id", "study_id"),
-            Map.entry("survival_id", "survival_id")
+            // Stub
+        );
+
+        return overview(PROJECTS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "projects");
+    }
+
+    private List<Map<String, Object>> publicationsOverview(Map<String, Object> params) throws IOException {
+        final String[][] PROPERTIES = new String[][]{
+            // Publications
+            new String[]{"authors", "authors"},
+            new String[]{"cited_by", "cited_by"},
+            new String[]{"pmid", "pmid"},
+            new String[]{"publication_date", "publication_date"},
+            new String[]{"relative_citation_ratio", "relative_citation_ratio"},
+            new String[]{"title", "title"},
+
+            // Projects
+            new String[]{"project_ids", "project_ids"},
+
+            // Additional fields for download
+            // Stub
+        };
+
+        String defaultSort = "pmid"; // Default sort order
+
+        Map<String, String> mapping = Map.ofEntries(
+            // Publications
+            Map.entry("authors", "authors"),
+            Map.entry("cited_by", "cited_by"),
+            Map.entry("pmid", "pmid"),
+            Map.entry("publication_date", "publication_date"),
+            Map.entry("relative_citation_ratio", "relative_citation_ratio"),
+            Map.entry("title", "title"),
+
+            // Projects
+            Map.entry("project_ids", "project_ids")
+
+            // Additional fields for download
+            // Stub
         );
 
         return overview(PUBLICATIONS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "publications");

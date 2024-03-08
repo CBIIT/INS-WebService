@@ -1,17 +1,39 @@
 type GrantsOverview {
+    fiscal_year: Int
     grant_id: String
+    grant_title: String
+    principal_investigators: String
+    program_officers: String
+    project_end_date: String
+    project_id: String
 }
 
 type ProgramsOverview {
     data_link: String
     focus_area_str: String
+    program_acronym: String
     program_id: String
     program_link: String
     program_name: String
 }
 
 type ProjectsOverview {
+    org_name: String
+    program_names: String
+    project_end_date: String
     project_id: String
+    project_start_date: String
+    project_title: String
+}
+
+type PublicationsOverview {
+    authors: String
+    cited_by: Int
+    pmid: String
+    project_ids: String
+    publication_date: String
+    relative_citation_ratio: Float
+    title: String
 }
 
 type SearchResult {
@@ -252,6 +274,8 @@ type QueryType {
     ): SearchResult
 
     grantsOverview (
+        program_ids: [String] = []
+        program_names: [String] = []
         focus_area: [String] = []
         order_by: String = "",
         sort_direction: String = "ASC",
@@ -268,6 +292,26 @@ type QueryType {
         first: Int = 10,
         offset: Int = 0
     ): [ProgramsOverview]
+
+    projectsOverview (
+        program_ids: [String] = []
+        program_names: [String] = []
+        focus_area: [String] = []
+        order_by: String = "",
+        sort_direction: String = "ASC",
+        first: Int = 10,
+        offset: Int = 0
+    ): [ProjectsOverview]
+
+    publicationsOverview (
+        program_ids: [String] = []
+        program_names: [String] = []
+        focus_area: [String] = []
+        order_by: String = "",
+        sort_direction: String = "ASC",
+        first: Int = 10,
+        offset: Int = 0
+    ): [PublicationsOverview]
 
     findProjectIdsInList(project_ids: [String] = []): [ProjectResult]
 
