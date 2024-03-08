@@ -122,8 +122,8 @@ type PublicGlobalSearchResult {
 }
 
 type IdsListsES {
-    programIds: [String]
-    programNames: [String]
+    program_id: String
+    program_name: String
 }
 
 type ProjectResult {
@@ -273,7 +273,7 @@ type QueryType {
 
     globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
 
-    idsLists: IdsListsES
+    idsLists: [IdsListsES]
 
     programInfo: [ProgramInfo]
 

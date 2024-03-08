@@ -237,17 +237,17 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return data;
     }
 
-    private Map<String, String[]> idsLists() throws IOException {
+    private List<Map<String, Object>> idsLists() throws IOException {
         Map<String, String[][]> indexProperties = Map.of(
             PROGRAMS_END_POINT, new String[][]{
-                new String[]{"programIds", "program_id"},
-                new String[]{"programNames", "program_name"}
+                new String[]{"program_id", "program_id"},
+                new String[]{"program_name", "program_name"}
             }
         );
         //Generic Query
         Map<String, Object> query = esService.buildListQuery();
         //Results Map
-        Map<String, String[]> results = new HashMap<>();
+        List<Map<String, Object>> results = new ArrayList<>();
         //Iterate through each index properties map and make a request to each endpoint then format the results as
         // String arrays
         for (String endpoint: indexProperties.keySet()){
@@ -259,22 +259,8 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             }
             query.put("_source", fields);
             
-            List<Map<String, Object>> result = esService.collectPage(request, query, properties, ESService.MAX_ES_SIZE,
-                    0);
-            Map<String, List<String>> indexResults = new HashMap<>();
-            Arrays.asList(properties).forEach(x -> indexResults.put(x[0], new ArrayList<>()));
-            for(Map<String, Object> resultElement: result){
-                for(String key: indexResults.keySet()){
-                    List<String> tmp = indexResults.get(key);
-                    String v = (String) resultElement.get(key);
-                    if (!tmp.contains(v)) {
-                        tmp.add(v);
-                    }
-                }
-            }
-            for(String key: indexResults.keySet()){
-                results.put(key, indexResults.get(key).toArray(new String[indexResults.size()]));
-            }
+            List<Map<String, Object>> result = esService.collectPage(request, query, properties, ESService.MAX_ES_SIZE,0);
+            results.addAll(result);
         }
 
         return results;
