@@ -13,7 +13,6 @@ type ProgramsOverview {
     focus_area_str: String
     program_acronym: String
     program_id: String
-    program_acronym: String
     program_link: String
     program_name: String
 }
