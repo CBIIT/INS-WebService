@@ -26,7 +26,7 @@ public class InsESService extends ESService {
     public static final String SCROLL_ENDPOINT = "/_search/scroll";
     public static final String JSON_OBJECT = "jsonObject";
     public static final String AGGS = "aggs";
-    public static final int MAX_ES_SIZE = 500000;
+    public static final int MAX_ES_SIZE = 10000;
     final Set<String> PROGRAM_PARAMS = Set.of(
         "program_id", "program_name", "focus_area"
     );
