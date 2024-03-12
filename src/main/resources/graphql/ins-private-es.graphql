@@ -42,7 +42,9 @@ type SearchResult {
     numberOfProjects: Int
     numberOfPublications: Int
 
-    projectCountByFocusArea: [FacetCount]
+    programCountByDoc: [FacetCount]
+    programCountByFocusArea: [FacetCount]
+    publicationCountByRelativeCitationRatio: [FacetCount]
 
     filterProjectCountByFocusArea: [FacetCount]
 }
