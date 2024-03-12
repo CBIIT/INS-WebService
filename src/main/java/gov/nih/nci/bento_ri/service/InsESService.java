@@ -30,6 +30,17 @@ public class InsESService extends ESService {
     final Set<String> PROGRAM_PARAMS = Set.of(
         "program_id", "program_name", "focus_area"
     );
+    final Map<String, Set<Map<String, Object>>> RANGES = Map.ofEntries(
+        Map.entry("relative_citation_ratio", Set.of(
+            Map.of("key", "< 0.2", "from", 0, "to", 0.2),
+            Map.of("key", "0.2 to 0.5", "from", 0.2, "to", 0.5),
+            Map.of("key", "0.5 to 0.8", "from", 0.5, "to", 0.8),
+            Map.of("key", "0.8 to 1.25", "from", 0.8, "to", 1.25),
+            Map.of("key", "1.25 to 2", "from", 1.25, "to", 2),
+            Map.of("key", "2 to 5", "from", 2, "to", 5),
+            Map.of("key", "> 5", "from", 5)
+        ))
+    );
 
     static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
@@ -257,7 +268,13 @@ public class InsESService extends ESService {
         Map<String, Object> subField = new HashMap<String, Object>();
         Map<String, Object> subField_ranges = new HashMap<String, Object>();
         subField_ranges.put("field", rangeAggName);
-        subField_ranges.put("ranges", Set.of(Map.of("key", "0 - 4", "from", 0, "to", 4 * 365), Map.of("key", "5 - 9", "from", 4 * 365, "to", 9 * 365), Map.of("key", "10 - 14", "from", 9 * 365, "to", 14 * 365), Map.of("key", "15 - 19", "from", 14 * 365, "to", 19 * 365), Map.of("key", "20 - 29", "from", 19 * 365, "to", 29 * 365), Map.of("key", "> 29", "from", 29 * 365)));
+
+        // Check whether there's a range defined for the field
+        if (RANGES.containsKey(rangeAggName)) {
+            subField_ranges.put("ranges", RANGES.get(rangeAggName));
+        } else {
+            subField_ranges.put("ranges", Set.of(Map.of("key", "0 - 4", "from", 0, "to", 4 * 365), Map.of("key", "5 - 9", "from", 4 * 365, "to", 9 * 365), Map.of("key", "10 - 14", "from", 9 * 365, "to", 14 * 365), Map.of("key", "15 - 19", "from", 14 * 365, "to", 19 * 365), Map.of("key", "20 - 29", "from", 19 * 365, "to", 29 * 365), Map.of("key", "> 29", "from", 29 * 365)));
+        }
         
         subField.put("range", subField_ranges);
         if (cardinalityAggName != null) {

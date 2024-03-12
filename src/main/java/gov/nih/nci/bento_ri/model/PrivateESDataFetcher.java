@@ -46,7 +46,9 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     final String PUBLICATIONS_COUNT_END_POINT = "/publications/_count";
 
     // For slider fields
-    final Set<String> RANGE_PARAMS = Set.of();
+    final Set<String> RANGE_PARAMS = Set.of(
+        "relative_citation_ratio"
+    );
 
     final Set<String> BOOLEAN_PARAMS = Set.of();
 
@@ -278,9 +280,24 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         // Query related values
         final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
         PROJECT_TERM_AGGS.add(Map.of(
-                AGG_NAME, "focus_area",
-                FILTER_COUNT_QUERY, "filterProjectCountByFocusArea",
-                AGG_ENDPOINT, PROJECTS_END_POINT
+            WIDGET_QUERY, "programCountByDoc",
+            AGG_NAME, "doc",
+            AGG_ENDPOINT, PROGRAMS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+            WIDGET_QUERY, "programCountByFocusArea",
+            AGG_NAME, "focus_area",
+            AGG_ENDPOINT, PROGRAMS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+            WIDGET_QUERY, "publicationCountByRelativeCitationRatio",
+            AGG_NAME, "relative_citation_ratio",
+            AGG_ENDPOINT, PUBLICATIONS_END_POINT
+        ));
+        PROJECT_TERM_AGGS.add(Map.of(
+            AGG_NAME, "focus_area",
+            FILTER_COUNT_QUERY, "filterProjectCountByFocusArea",
+            AGG_ENDPOINT, PROJECTS_END_POINT
         ));
 
         // Get Grant counts for Explore page stats bar
