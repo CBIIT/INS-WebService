@@ -390,14 +390,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Map<String, String> mapping = Map.ofEntries(
             // Grants
             Map.entry("fiscal_year", "fiscal_year"),
-            Map.entry("grant_id", "grant_id"),
-            Map.entry("grant_title", "grant_title"),
-            Map.entry("principal_investigators", "principal_investigators"),
-            Map.entry("program_officers", "program_officers"),
+            Map.entry("grant_id", "grant_id.sort"),
+            Map.entry("grant_title", "grant_title.sort"),
+            Map.entry("principal_investigators", "principal_investigators.sort"),
+            Map.entry("program_officers", "program_officers.sort"),
             Map.entry("project_end_date", "project_end_date"),
 
             // Projects
-            Map.entry("project_id", "project_id")
+            Map.entry("project_id", "project_id.sort")
         );
 
         // Request request = new Request("GET", GRANTS_END_POINT);
@@ -450,11 +450,11 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
 
         Map<String, String> mapping = Map.ofEntries(
             Map.entry("data_link", "data_link"),
-            Map.entry("focus_area_str", "focus_area_str"),
-            Map.entry("program_id", "program_id"),
-            Map.entry("program_acronym", "program_acronym"),
+            Map.entry("focus_area_str", "focus_area_str.sort"),
+            Map.entry("program_id", "program_id.sort"),
+            Map.entry("program_acronym", "program_acronym.sort"),
             Map.entry("program_link", "program_link"),
-            Map.entry("program_name", "program_name")
+            Map.entry("program_name", "program_name.sort")
         );
         
         Request request = new Request("GET", PROGRAMS_END_POINT);
@@ -509,14 +509,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
 
         Map<String, String> mapping = Map.ofEntries(
             // Projects
-            Map.entry("org_name", "org_name"),
+            Map.entry("org_name", "org_name.sort"),
             Map.entry("project_end_date", "project_end_date"),
-            Map.entry("project_id", "project_id"),
+            Map.entry("project_id", "project_id.sort"),
             Map.entry("project_start_date", "project_start_date"),
-            Map.entry("project_title", "project_title"),
+            Map.entry("project_title", "project_title.sort"),
 
             // Programs
-            Map.entry("program_names", "program_names")
+            Map.entry("program_names", "program_names.sort")
 
             // Additional fields for download
             // Stub
@@ -546,15 +546,15 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
 
         Map<String, String> mapping = Map.ofEntries(
             // Publications
-            Map.entry("authors", "authors"),
+            Map.entry("authors", "authors.sort"),
             Map.entry("cited_by", "cited_by"),
-            Map.entry("pmid", "pmid"),
+            Map.entry("pmid", "pmid.sort"),
             Map.entry("publication_date", "publication_date"),
             Map.entry("relative_citation_ratio", "relative_citation_ratio"),
-            Map.entry("title", "title"),
+            Map.entry("title", "title.sort"),
 
             // Projects
-            Map.entry("project_ids", "project_ids")
+            Map.entry("project_ids", "project_ids.sort")
 
             // Additional fields for download
             // Stub
