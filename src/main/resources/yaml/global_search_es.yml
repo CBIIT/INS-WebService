@@ -15,8 +15,8 @@ queries:
         highlight:
           fields:
             - content.paragraph
-          preTag: b
-          postTag: b
+          preTag: $
+          postTag: $
         result:
           type: global_about
       - name: about_count
