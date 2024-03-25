@@ -109,6 +109,10 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                         .dataFetcher("numberOfPublications", env -> {
                             return numberOfPublications();
                         })
+                        .dataFetcher("programDetails", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return programDetails(args);
+                        })
                         .dataFetcher("findProgramIdsInList", env -> {
                             Map<String, Object> args = env.getArguments();
                             return findProgramIdsInList(args);
@@ -666,6 +670,59 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         int count = counts.get("num_publications").getAsInt();
 
         return count;
+    }
+
+    /**
+     * Gets the details for a single Program record
+     *
+     * @param programId The ID of the Program
+     * @return A map of the Program record's properties
+     * @throws IOException
+     */
+    private Map<String, Object> programDetails(Map<String, Object> params) throws IOException {
+        Map<String, Object> program;
+        String programId = (String) params.get("program_id");
+        List<Map<String, Object>> programs;
+
+        final String[][] PROPERTIES = new String[][]{
+            new String[]{"contact_nih", "contact_nih"},
+            new String[]{"contact_pi", "contact_pi"},
+            new String[]{"doc", "doc"},
+            new String[]{"focus_area", "focus_area"},
+            new String[]{"nofo", "nofo"},
+            new String[]{"program_acronym", "program_acronym"},
+            new String[]{"program_link", "program_link"},
+            new String[]{"program_name", "program_name"},
+        };
+
+        Map<String, String> mapping = Map.ofEntries(
+            Map.entry("contact_nih", "contact_nih"),
+            Map.entry("contact_pi", "contact_pi"),
+            Map.entry("doc", "doc"),
+            Map.entry("focus_area", "focus_area"),
+            Map.entry("nofo", "nofo"),
+            Map.entry("program_acronym", "program_acronym"),
+            Map.entry("program_link", "program_link"),
+            Map.entry("program_name", "program_name")
+        );
+
+        Map<String, Object> program_params = Map.ofEntries(
+            Map.entry("program_id", programId),
+            // Map.entry(ORDER_BY, order_by),
+            // Map.entry(SORT_DIRECTION, direction),
+            Map.entry(PAGE_SIZE, 1),
+            Map.entry(OFFSET, 0)
+        );
+
+        programs = overview(PROGRAMS_END_POINT, program_params, PROPERTIES, "program_id", mapping, REGULAR_PARAMS, "nested_filters", "programs");
+
+        try {
+            program = programs.get(0);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
+
+        return program;
     }
 
     private String generateCacheKey(Map<String, Object> params) throws IOException {
