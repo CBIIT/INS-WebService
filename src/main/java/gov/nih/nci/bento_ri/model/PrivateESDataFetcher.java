@@ -707,9 +707,9 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         );
 
         Map<String, Object> program_params = Map.ofEntries(
-            Map.entry("program_id", programId),
-            // Map.entry(ORDER_BY, order_by),
-            // Map.entry(SORT_DIRECTION, direction),
+            Map.entry("program_id", List.of(programId)),
+            Map.entry(ORDER_BY, "program_id"),
+            Map.entry(SORT_DIRECTION, "ASC"),
             Map.entry(PAGE_SIZE, 1),
             Map.entry(OFFSET, 0)
         );
