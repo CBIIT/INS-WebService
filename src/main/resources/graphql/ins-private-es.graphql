@@ -141,19 +141,15 @@ type ProgramInfo {
     num_subjects: Int
 }
 
-type ProgramDetail {
+type ProgramDetails {
+    contact_nih: String
+    contact_pi: String
+    doc: [String]
+    focus_area: [String]
+    nofo: [String]
     program_acronym: String
-    program_id: String
+    program_link: String
     program_name: String
-    program_full_description: String
-    institution_name: String
-    program_external_url: String
-    num_subjects: Int
-    num_samples: Int
-    num_lab_procedures: Int
-    disease_subtypes: [String]
-    studies: [StudyInfo]
-    diagnoses: [FacetCount]
 }
 
 type StudyInfo {
@@ -294,7 +290,7 @@ type QueryType {
     ): [PublicationsOverview]
 
     programInfo: [ProgramInfo]
-    programDetail(program_id: String):  ProgramDetail
+    programDetails(program_id: String):  ProgramDetails
     subjectDetail(subject_id: String): SubjectDetail
     armDetail(study_acronym: String): ArmDetail
     samplesForSubjectId(subject_id: String): [SampleDetail]
