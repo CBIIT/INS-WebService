@@ -37,12 +37,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     final String GRANTS_END_POINT = "/grants/_search";
     final String PROGRAMS_END_POINT = "/programs/_search";
     final String PROJECTS_END_POINT = "/projects/_search";
+    final String FACETED_PROJECTS_END_POINT = "/faceted_projects/_search";
     final String PUBLICATIONS_END_POINT = "/publications/_search";
     final String HOME_STATS_END_POINT = "/home_stats/_search";
 
     final String GRANTS_COUNT_END_POINT = "/grants/_count";
     final String PROGRAMS_COUNT_END_POINT = "/programs/_count";
     final String PROJECTS_COUNT_END_POINT = "/projects/_count";
+    final String FACETED_PROJECTS_COUNT_END_POINT = "/faceted_projects/_count";
     final String PUBLICATIONS_COUNT_END_POINT = "/publications/_count";
 
     // For slider fields
@@ -295,9 +297,10 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             AGG_ENDPOINT, PUBLICATIONS_END_POINT
         ));
         PROJECT_TERM_AGGS.add(Map.of(
+            CARDINALITY_AGG_NAME, "project_id",
             AGG_NAME, "focus_area",
             FILTER_COUNT_QUERY, "filterProjectCountByFocusArea",
-            AGG_ENDPOINT, PROJECTS_END_POINT
+            AGG_ENDPOINT, FACETED_PROJECTS_END_POINT
         ));
 
         // Get Grant counts for Explore page stats bar

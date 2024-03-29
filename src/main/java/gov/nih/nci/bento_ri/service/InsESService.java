@@ -178,7 +178,7 @@ public class InsESService extends ESService {
 
                 // list with only one empty string [""] means return all records
                 if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
-                    if (PROGRAM_PARAMS.contains(key) && !indexType.equals("programs")) {
+                    if (PROGRAM_PARAMS.contains(key) && !List.of("faceted_projects", "programs").contains(indexType)) {
                         program_filters.add(Map.of(
                             "terms", Map.of("programs." + key, valueSet)
                         ));
