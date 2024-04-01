@@ -19,6 +19,7 @@ type ProgramsOverview {
 
 type ProjectsOverview {
     org_name: String
+    program_ids: String
     program_names: String
     project_end_date: String
     project_id: String
@@ -152,6 +153,18 @@ type ProgramDetails {
     program_name: String
 }
 
+type ProjectDetails {
+    abstract_text: String
+    opportunity_number: String
+    org_name: String
+    program_acronyms: String
+    program_ids: String
+    project_end_date: String
+    project_id: String
+    project_start_date: String
+    project_title: String
+}
+
 type StudyInfo {
     study_acronym: String
     study_name: String
@@ -250,13 +263,17 @@ type QueryType {
     ): SearchResult
 
     grantsOverview (
+        # Explore page
         program_ids: [String] = []
         program_names: [String] = []
         focus_area: [String] = []
         order_by: String = "",
         sort_direction: String = "ASC",
         first: Int = 10,
-        offset: Int = 0
+        offset: Int = 0,
+
+        # Project Details page
+        project_id: [String] = []
     ): [GrantsOverview]
 
     programsOverview (
@@ -286,11 +303,15 @@ type QueryType {
         order_by: String = "",
         sort_direction: String = "ASC",
         first: Int = 10,
-        offset: Int = 0
+        offset: Int = 0,
+
+        # Project Details page
+        project_id: [String] = []
     ): [PublicationsOverview]
 
     programInfo: [ProgramInfo]
     programDetails(program_id: String):  ProgramDetails
+    projectDetails(project_id: String):  ProjectDetails
     subjectDetail(subject_id: String): SubjectDetail
     armDetail(study_acronym: String): ArmDetail
     samplesForSubjectId(subject_id: String): [SampleDetail]
