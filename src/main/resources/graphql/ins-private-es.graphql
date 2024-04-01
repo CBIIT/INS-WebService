@@ -1,0 +1,302 @@
+type GrantsOverview {
+    fiscal_year: Int
+    grant_id: String
+    grant_title: String
+    principal_investigators: String
+    program_officers: String
+    project_end_date: String
+    project_id: String
+}
+
+type ProgramsOverview {
+    data_link: String
+    focus_area_str: String
+    program_acronym: String
+    program_id: String
+    program_link: String
+    program_name: String
+}
+
+type ProjectsOverview {
+    org_name: String
+    program_names: String
+    project_end_date: String
+    project_id: String
+    project_start_date: String
+    project_title: String
+}
+
+type PublicationsOverview {
+    authors: String
+    cited_by: Int
+    pmid: String
+    project_ids: String
+    publication_date: String
+    relative_citation_ratio: Float
+    title: String
+}
+
+type SearchResult {
+    numberOfGrants: Int
+    numberOfPrograms: Int
+    numberOfProjects: Int
+    numberOfPublications: Int
+
+    programCountByDoc: [FacetCount]
+    programCountByFocusArea: [FacetCount]
+    publicationCountByRelativeCitationRatio: [FacetCount]
+
+    filterProjectCountByFocusArea: [FacetCount]
+}
+
+type FacetCount {
+    group: String
+    subjects: Int
+}
+
+type RangeCount {
+    lowerBound: Float
+    upperBound: Float
+    subjects: Int
+}
+
+type GS_Program {
+    type: String
+    program_id: String
+    program_code: String
+    program_name: String
+}
+
+type GS_Study {
+    type: String
+    study_id: String
+    program_id: String
+    study_name: String
+    study_type: String
+    study_code: String
+}
+
+type GS_Subject {
+    type: String
+    subject_id: String
+    program_id: String
+    program_code: String
+    study: String
+    diagnosis: String
+    age: Int
+}
+
+type GS_Sample {
+    type: String
+    sample_id: String
+    program_id: String
+    subject_id: String
+    diagnosis: String
+    sample_anatomic_site: String
+    tissue_type: String
+}
+
+type GS_Model {
+    type: String
+    node_name: String
+    property_name: String
+    property_description: String
+    property_required: String
+    property_type: String
+    value: String
+    highlight: String
+}
+
+type GS_About {
+    page: String
+    title: String
+    type: String
+    text: [String]
+}
+
+type GlobalSearchResult {
+    about_count: Int
+    about_page: [GS_About]
+}
+
+type IdsListsES {
+    program_id: String
+    program_acronym: String
+    program_name: String
+}
+
+type ProjectResult {
+    project_id: String
+    program_id: String
+}
+
+type ProgramInfo {
+    program_acronym: String
+    program_id: String
+    program_name: String
+    start_date: String
+    end_date: String
+    pubmed_id: String
+    num_studies: Int
+    num_subjects: Int
+}
+
+type ProgramDetail {
+    program_acronym: String
+    program_id: String
+    program_name: String
+    program_full_description: String
+    institution_name: String
+    program_external_url: String
+    num_subjects: Int
+    num_samples: Int
+    num_lab_procedures: Int
+    disease_subtypes: [String]
+    studies: [StudyInfo]
+    diagnoses: [FacetCount]
+}
+
+type StudyInfo {
+    study_acronym: String
+    study_name: String
+    study_full_description: String
+    study_type: String
+    study_info: String
+    num_subjects: Int
+}
+
+type SubjectDetail {
+    subject_id: String
+    program_acronym: String
+    program_id: String
+    study_acronym: String
+    study_name: String
+    gender: String
+    race: String
+    ethnicity: String
+    age_at_index: Int
+    menopause_status: String
+    vital_status: String
+    cause_of_death: String
+    disease_type: String
+    disease_subtype: String
+    tumor_grade: String
+    tumor_largest_dimension_diameter: Float
+    er_status: String
+    pr_status: String
+    nuclear_grade: String
+    recurrence_score: String
+    primary_surgical_procedure: String
+    chemotherapy_regimen_group: String
+    chemotherapy_regimen: String
+    endocrine_therapy_type: String
+    dfs_event_indicator: String
+    recurrence_free_indicator: String
+    distant_recurrence_indicator: String
+    dfs_event_type: String
+    first_recurrence_type: String
+    days_to_progression: Int
+    days_to_recurrence: Int
+    test_name: String
+    samples: [SubjectDetailSample]
+    num_samples: Int
+    num_lab_procedures: Int
+}
+
+type SubjectDetailSample {
+    sample_id: String
+    sample_anatomic_site: String
+    composition: String
+    method_of_sample_procurement: String
+    tissue_type: String
+    sample_type: String
+}
+
+type ArmDetail {
+    study_acronym: String
+    study_name: String
+    study_type: String
+    study_full_description: String
+    study_info: String
+    num_subjects: Int
+    num_samples: Int
+    num_lab_procedures: Int
+    diagnoses: [FacetCount]
+}
+
+schema {
+    query: QueryType
+}
+
+type SampleDetail {
+    sample_id: String
+    tissue_type: String
+    sample_type: String
+    composition: String
+    method_of_sample_procurement: String
+    sample_anatomic_site: String
+}
+
+type QueryType {
+    esVersion: String
+    findProjectIdsInList(project_ids: [String] = []): [ProjectResult]
+    globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
+    idsLists: [IdsListsES]
+    numberOfGrants: Int
+    numberOfPrograms: Int
+    numberOfProjects: Int
+    numberOfPublications: Int
+
+    searchProjects (
+        program_ids: [String] = []
+        program_names: [String] = []
+        focus_area: [String] = []
+    ): SearchResult
+
+    grantsOverview (
+        program_ids: [String] = []
+        program_names: [String] = []
+        focus_area: [String] = []
+        order_by: String = "",
+        sort_direction: String = "ASC",
+        first: Int = 10,
+        offset: Int = 0
+    ): [GrantsOverview]
+
+    programsOverview (
+        program_ids: [String] = []
+        program_names: [String] = []
+        focus_area: [String] = []
+        order_by: String = "",
+        sort_direction: String = "ASC",
+        first: Int = 10,
+        offset: Int = 0
+    ): [ProgramsOverview]
+
+    projectsOverview (
+        program_ids: [String] = []
+        program_names: [String] = []
+        focus_area: [String] = []
+        order_by: String = "",
+        sort_direction: String = "ASC",
+        first: Int = 10,
+        offset: Int = 0
+    ): [ProjectsOverview]
+
+    publicationsOverview (
+        program_ids: [String] = []
+        program_names: [String] = []
+        focus_area: [String] = []
+        order_by: String = "",
+        sort_direction: String = "ASC",
+        first: Int = 10,
+        offset: Int = 0
+    ): [PublicationsOverview]
+
+    programInfo: [ProgramInfo]
+    programDetail(program_id: String):  ProgramDetail
+    subjectDetail(subject_id: String): SubjectDetail
+    armDetail(study_acronym: String): ArmDetail
+    samplesForSubjectId(subject_id: String): [SampleDetail]
+    projectsInList(project_ids: [String] = []): [ProjectsOverview]
+}

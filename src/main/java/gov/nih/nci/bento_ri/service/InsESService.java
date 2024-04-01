@@ -8,21 +8,15 @@ import gov.nih.nci.bento.service.connector.AWSClient;
 import gov.nih.nci.bento.service.connector.AbstractClient;
 import gov.nih.nci.bento.service.connector.DefaultClient;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.joda.time.chrono.AssembledChronology.Fields;
 import org.opensearch.client.*;
-import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.http.AWSRequestSigningApacheInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.*;
@@ -33,6 +27,20 @@ public class InsESService extends ESService {
     public static final String JSON_OBJECT = "jsonObject";
     public static final String AGGS = "aggs";
     public static final int MAX_ES_SIZE = 10000;
+    final Set<String> PROGRAM_PARAMS = Set.of(
+        "program_id", "program_name", "focus_area"
+    );
+    final Map<String, Set<Map<String, Object>>> RANGES = Map.ofEntries(
+        Map.entry("relative_citation_ratio", Set.of(
+            Map.of("key", "< 0.2", "from", 0, "to", 0.2),
+            Map.of("key", "0.2 to 0.5", "from", 0.2, "to", 0.5),
+            Map.of("key", "0.5 to 0.8", "from", 0.5, "to", 0.8),
+            Map.of("key", "0.8 to 1.25", "from", 0.8, "to", 1.25),
+            Map.of("key", "1.25 to 2", "from", 1.25, "to", 2),
+            Map.of("key", "2 to 5", "from", 2, "to", 5),
+            Map.of("key", "> 5", "from", 5)
+        ))
+    );
 
     static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
@@ -53,29 +61,6 @@ public class InsESService extends ESService {
         AbstractClient abstractClient = config.isEsSignRequests() ? new AWSClient(config) : new DefaultClient(config);
         client = abstractClient.getLowLevelElasticClient();
     }
-
-    // Base on host name to use signed request (AWS) or not (local)
-    // public RestClient searchClient(String serviceName, String region) {
-    //     String host = config.getEsHost().trim();
-    //     String scheme = config.getEsScheme();
-    //     int port = config.getEsPort();
-    //     if (config.getEsSignRequests()) {
-    //         AWS4Signer signer = new AWS4Signer();
-    //         signer.setServiceName(serviceName);
-    //         signer.setRegionName(region);
-    //         HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer, credentialsProvider);
-    //         return RestClient.builder(new HttpHost(host, port, scheme)).setHttpClientConfigCallback(hacb -> hacb.addInterceptorLast(interceptor)).build();
-    //     } else {
-    //         var lowLevelBuilder = RestClient.builder(new HttpHost(host, port, scheme));
-    //         return lowLevelBuilder.build();
-    //     }
-    // }
-
-    // @PostConstruct
-    // public void init() {
-    //     logger.info("Initializing Elasticsearch client");
-    //     client = searchClient("es", "us-east-1");
-    // }
 
     @PreDestroy
     private void close() throws IOException {
@@ -147,254 +132,275 @@ public class InsESService extends ESService {
         return result;
     }
 
-    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params) throws IOException {
-        return buildFacetFilterQuery(params, Set.of());
-    }
-
-    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams)  throws IOException {
-        return buildFacetFilterQuery(params, rangeParams, Set.of());
-    }
-
-    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams)  throws IOException {
-        return buildFacetFilterQuery(params, rangeParams, excludedParams, Map.of());
-    }
-
-    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams, Map<String, Object> additionalParams) throws IOException {
-        return buildFacetFilterQuery(params, rangeParams, excludedParams, additionalParams, "");
-    }
-
-    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams, Map<String,Object> additionalParams, String nestedProperty) throws IOException {
+    public Map<String, Object> buildFacetFilterQuery(Map<String, Object> params, Set<String> rangeParams, Set<String> excludedParams, Set<String> regular_fields, String nestedProperty, String indexType) throws IOException {
         Map<String, Object> result = new HashMap<>();
 
         List<Object> filter = new ArrayList<>();
-        for (var key: params.keySet()) {
-            if (excludedParams.contains(key)) {
+        List<Object> program_filters = new ArrayList<>();
+        
+        for (String key: params.keySet()) {
+            String finalKey = key;
+            if (excludedParams.contains(finalKey)) {
                 continue;
             }
 
             if (rangeParams.contains(key)) {
                 // Range parameters, should contain two doubles, first lower bound, then upper bound
                 // Any other values after those two will be ignored
-                List<Double> bounds = (List<Double>) params.get(key);
+                List<Integer> bounds = (List<Integer>) params.get(key);
                 if (bounds.size() >= 2) {
-                    Double lower = bounds.get(0);
-                    Double higher = bounds.get(1);
+                    Integer lower = bounds.get(0);
+                    Integer higher = bounds.get(1);
                     if (lower == null && higher == null) {
                         throw new IOException("Lower bound and Upper bound can't be both null!");
                     }
-                    Map<String, Double> range = new HashMap<>();
+                    Map<String, Integer> range = new HashMap<>();
                     if (lower != null) {
                         range.put("gte", lower);
                     }
                     if (higher != null) {
                         range.put("lte", higher);
-                    }
-                    if (nestedProperty.equals("")) {  // nested queries are on nested property keys
+                    } else {
                         filter.add(Map.of(
                             "range", Map.of(key, range)
                         ));
-                    } else {
-                        filter.add(Map.of(
-                            "range", Map.of(nestedProperty+"."+key, range)
-                        ));
                     }
-
                 }
             } else {
                 // Term parameters (default)
                 List<String> valueSet = (List<String>) params.get(key);
+                
+                if (key.equals("program_ids")) {
+                    key = "program_id";
+                } else if (key.equals("program_names")) {
+                    key = "program_name";
+                }
+
                 // list with only one empty string [""] means return all records
                 if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
-                    if (nestedProperty.equals("")) {  // nested queries are on nested property keys
+                    if (PROGRAM_PARAMS.contains(key) && !List.of("faceted_projects", "programs").contains(indexType)) {
+                        program_filters.add(Map.of(
+                            "terms", Map.of("programs." + key, valueSet)
+                        ));
+                    } else {
                         filter.add(Map.of(
                             "terms", Map.of(key, valueSet)
                         ));
-                    } else {
-                        filter.add(Map.of(
-                        "terms", Map.of(nestedProperty+"."+key, valueSet)
-                        ));
                     }
                 }
             }
         }
 
-        for (var key: additionalParams.keySet()) {
-            if (excludedParams.contains(key)) {
-                continue;
-            }
-
-            if (rangeParams.contains(key)) {
-                // Range parameters, should contain two doubles, first lower bound, then upper bound
-                // Any other values after those two will be ignored
-                List<Double> bounds = (List<Double>) additionalParams.get(key);
-                if (bounds.size() >= 2) {
-                    Double lower = bounds.get(0);
-                    Double higher = bounds.get(1);
-                    if (lower == null && higher == null) {
-                        throw new IOException("Lower bound and Upper bound can't be both null!");
-                    }
-                    Map<String, Double> range = new HashMap<>();
-                    if (lower != null) {
-                        range.put("gte", lower);
-                    }
-                    if (higher != null) {
-                        range.put("lte", higher);
-                    }
-                    if (nestedProperty.equals("")) {  // nested queries are on nested property keys
-                        filter.add(Map.of(
-                            "range", Map.of(key, range)
-                        ));
-                    } else {
-                        filter.add(Map.of(
-                            "range", Map.of(nestedProperty+"."+key, range)
-                        ));
-                    }
-                }
-            } else {
-                // it is assumed that if we're adding additional parameters in the backend,
-                //   that we know what we're doing and don't require as much validation
-                //   as with normal 'params' passed from the user/frontend
-                if (nestedProperty.equals("")) {  // nested queries are on nested property keys
-                    filter.add(Map.of(
-                        "terms", Map.of(key, additionalParams.get(key))
-                    ));
-                } else {
-                    filter.add(Map.of(
-                        "terms", Map.of(nestedProperty+"."+key, additionalParams.get(key))
-                    ));
-                }
-            }
-        }
-
-        for (var key: additionalParams.keySet()) {
-            if (excludedParams.contains(key)) {
-                continue;
-            }
-
-            if (rangeParams.contains(key)) {
-                // Range parameters, should contain two doubles, first lower bound, then upper bound
-                // Any other values after those two will be ignored
-                List<Double> bounds = (List<Double>) additionalParams.get(key);
-                if (bounds.size() >= 2) {
-                    Double lower = bounds.get(0);
-                    Double higher = bounds.get(1);
-                    if (lower == null && higher == null) {
-                        throw new IOException("Lower bound and Upper bound can't be both null!");
-                    }
-                    Map<String, Double> range = new HashMap<>();
-                    if (lower != null) {
-                        range.put("gte", lower);
-                    }
-                    if (higher != null) {
-                        range.put("lte", higher);
-                    }
-                    filter.add(Map.of(
-                            "range", Map.of(key, range)
-                    ));
-                }
-            } else {
-                // it is assumed that if we're adding additional parameters in the backend,
-                //   that we know what we're doing and don't require as much validation
-                //   as with normal 'params' passed from the user/frontend
-                filter.add(Map.of(
-                    "terms", Map.of(key, additionalParams.get(key))
-                ));
-            }
-        }
-
-        if (filter.size() == 0) {
-            result.put("query", Map.of("match_all", Map.of()));    
-        } else if (nestedProperty.equals("")) {  // the nestedParams has to be explicitly set, otherwise the default behavior should be as before
-            result.put("query", Map.of("bool", Map.of("filter", filter)));
+        int FilterLen = filter.size();
+        int programFilterLen = program_filters.size();
+        if (FilterLen + programFilterLen == 0) {
+            result.put("query", Map.of("match_all", Map.of()));
         } else {
-            result.put("query", Map.of("nested", Map.of("path", nestedProperty, "query", Map.of("bool", Map.of("filter", filter)), "inner_hits", Map.of())));
+            if (programFilterLen > 0) {
+                filter.add(Map.of("nested", Map.of("path", "programs", "query", Map.of("bool", Map.of("filter", program_filters)), "inner_hits", Map.of())));
+            }
+
+            result.put("query", Map.of("bool", Map.of("filter", filter)));
         }
         
         return result;
     }
 
-    public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames) {
-        return addAggregations(query, termAggNames, new String(), new String[]{});
+    public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames, String cardinalityAggName, List<String> only_includes) {
+        return addAggregations(query, termAggNames, cardinalityAggName, new String[]{}, only_includes);
     }
 
-    public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames, String cardinalityAggName) {
-        return addAggregations(query, termAggNames, cardinalityAggName, new String[]{});
-    }
-
-    public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames, String subCardinalityAggName, String[] rangeAggNames) {
+    public Map<String, Object> addNodeCountAggregations(Map<String, Object> query, String nodeName) {
         Map<String, Object> newQuery = new HashMap<>(query);
         newQuery.put("size", 0);
-        // newQuery.put("aggs", getAllAggregations(termAggNames, rangeAggNames));
-        // List<Map<String, Object>> fields = new LinkedList<Map<String, Object>>();
+
+        // "aggs" : {
+        //     "langs" : {
+        //         "terms" : { "field" : "language",  "size" : 500 }
+        //     }
+        // }
+
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(nodeName, Map.of("terms", Map.of("field", nodeName)));
+        newQuery.put("aggs", fields);
+        
+        return newQuery;
+    }
+
+    public Map<String, Object> addRangeCountAggregations(Map<String, Object> query, String rangeAggName, String cardinalityAggName) {
+        Map<String, Object> newQuery = new HashMap<>(query);
+        newQuery.put("size", 0);
+
+            //   "aggs": {
+            //     "age_at_diagnosis": {
+            //        "range": {
+            //           "field": "age_at_diagnosis",
+            //           "ranges": [
+            //              {
+            //                 "from": 0,
+            //                 "to": 1000
+            //              },
+            //              {
+            //                 "from": 1000,
+            //                 "to": 10000
+            //              },
+            //              {
+            //                 "from": 10000,
+            //                 "to": 25000
+            //              },
+            //              {
+            //                 "from": 25000
+            //              }
+            //           ]
+            //        },
+            //        "aggs": {
+            //           "unique_count": {
+            //            "cardinality": {
+            //                "field": "participant_id",
+            //                "precision_threshold": 40000
+            //            }
+            //          }
+            //        }
+            //      }
+            //    }
+
+        Map<String, Object> fields = new HashMap<String, Object>();
+        Map<String, Object> subField = new HashMap<String, Object>();
+        Map<String, Object> subField_ranges = new HashMap<String, Object>();
+        subField_ranges.put("field", rangeAggName);
+
+        // Check whether there's a range defined for the field
+        if (RANGES.containsKey(rangeAggName)) {
+            subField_ranges.put("ranges", RANGES.get(rangeAggName));
+        } else {
+            subField_ranges.put("ranges", Set.of(Map.of("key", "0 - 4", "from", 0, "to", 4 * 365), Map.of("key", "5 - 9", "from", 4 * 365, "to", 9 * 365), Map.of("key", "10 - 14", "from", 9 * 365, "to", 14 * 365), Map.of("key", "15 - 19", "from", 14 * 365, "to", 19 * 365), Map.of("key", "20 - 29", "from", 19 * 365, "to", 29 * 365), Map.of("key", "> 29", "from", 29 * 365)));
+        }
+        
+        subField.put("range", subField_ranges);
+        if (cardinalityAggName != null) {
+            subField.put("aggs", Map.of("cardinality_count", Map.of("cardinality", Map.of("field", cardinalityAggName, "precision_threshold", 40000))));
+        }
+        fields.put(rangeAggName, subField);
+        newQuery.put("aggs", fields);
+        
+        return newQuery;
+    }
+
+    public Map<String, Object> addRangeAggregations(Map<String, Object> query, String rangeAggName, List<String> only_includes) {
+        Map<String, Object> newQuery = new HashMap<>(query);
+        newQuery.put("size", 0);
+
+        //       "aggs": {
+        //         "inner": {
+        //           "filter":{  
+        //             "range":{  
+        //              "age_at_diagnosis":{  
+        //               "gt":0
+        //              }
+        //             }
+        //            },
+        //            "aggs": {
+        //              "age_stats": { 
+        //               "stats": { 
+        //                 "field": "age_at_diagnosis"
+        //               }
+        //             }
+        //           }
+
+        Map<String, Object> fields = new HashMap<String, Object>();
+        Map<String, Object> subField = new HashMap<String, Object>();
+        subField.put("filter", Map.of("range", Map.of(rangeAggName, Map.of("gt", -1))));
+        subField.put("aggs", Map.of("range_stats", Map.of("stats", Map.of("field", rangeAggName))));
+        fields.put("inner", subField);
+        newQuery.put("aggs", fields);
+        
+        return newQuery;
+    }
+
+    /*
+        For many-to-many (program field in projects index), I want this structure:
+        {
+            "size": 0,
+            "query": {
+                "match_all": {}
+            },
+            "aggs": {
+                "programs.focus_area": {
+                    "nested": {
+                        "path": "programs"
+                    },
+                    "aggs": {
+                        "focus_area": {
+                            "terms": {
+                                "field": "programs.focus_area",
+                                "size": 100000
+                            }
+                        }
+                    }
+                }
+            }
+        }
+     */
+    public Map<String, Object> addAggregations(Map<String, Object> query, String[] termAggNames, String subCardinalityAggName, String[] rangeAggNames, List<String> only_includes) {
+        Map<String, Object> newQuery = new HashMap<>(query);
+        newQuery.put("size", 0);
         Map<String, Object> fields = new HashMap<String, Object>();
         for (String field: termAggNames) {
-            // the "size": 50 is so that we can have more than 10 buckets returned for our aggregations (the default)
-            Map<String, Object> subField = Map.of("field", field, "size", 50);
-            if (!subCardinalityAggName.isEmpty()) {
-                fields.put(field, Map.of("terms", subField, "aggs", addCardinalityHelper(subCardinalityAggName)));
-            } else {
-                fields.put(field, Map.of("terms", subField));
+            Map<String, Object> fieldMap = new HashMap<String, Object>();
+            Map<String, Object> subField = new HashMap<String, Object>();
+            String[] nestingSplit = field.split("\\.", 2);
+
+            subField.put("field", field);
+            subField.put("size", 100000);
+            if (only_includes.size() > 0) {
+                subField.put("include", only_includes);
             }
+
+            if (subCardinalityAggName != null) {
+                fieldMap.put("terms", subField);
+                fieldMap.put("aggs", addCardinalityHelper(subCardinalityAggName));
+            } else if (nestingSplit.length < 2) {
+                fieldMap.put("terms", subField);
+            } else { // Handle nested field (one level deep only)
+                Map<String, Object> termsMap = Map.of("terms", subField);
+                Map<String, Object> aggsMap = Map.of(nestingSplit[1], termsMap);
+                Map<String, Object> nestedPath = Map.of("path", nestingSplit[0]);
+
+                fieldMap.put("nested", nestedPath);
+                fieldMap.put("aggs", aggsMap);
+            }
+
+            fields.put(field, fieldMap);
         }
         newQuery.put("aggs", fields);
         return newQuery;
     }
 
-    public Map<String, Object> addCardinalityAggregation(Map<String, Object> query, String cardinalityAggName) {
-        Map<String, Object> newQuery = new HashMap<>(query);
-        newQuery.put("size", 0);
-        newQuery.put("aggs", addCardinalityHelper(cardinalityAggName));
-        return newQuery;
-    }
-
     public Map<String, Object> addCardinalityHelper(String cardinalityAggName) {
-        return Map.of("cardinality_count", Map.of("cardinality", Map.of("field", cardinalityAggName)));
+        return Map.of("cardinality_count", Map.of("cardinality", Map.of("field", cardinalityAggName, "precision_threshold", 40000)));
     }
 
-    public void addSubAggregations(Map<String, Object> query, String mainAggName, String[] subTermAggNames) {
-        addSubAggregations(query, mainAggName, subTermAggNames, new String[]{});
-    }
-
-    public void addSubAggregations(Map<String, Object> query, String mainAggName, String[] subTermAggNames, String[] subRangeAggNames) {
-        Map<String, Object> mainAgg = (Map<String, Object>) ((Map<String, Object>) query.get("aggregations")).get(mainAggName);
-        Map<String, Object> subAggs = getAllAggregations(subTermAggNames, subRangeAggNames);
-        mainAgg.put("aggregations", subAggs);
-    }
-
-    private Map<String, Object> getAllAggregations(String[]  termAggNames, String[] rangeAggNames) {
-        Map<String, Object> aggs = new HashMap<>();
-        for (String aggName: termAggNames) {
-            // Terms
-            aggs.put(aggName, getTermAggregation(aggName));
-        }
-
-        for (String aggName: rangeAggNames) {
-            // Range
-            aggs.put(aggName, getRangeAggregation(aggName));
-        }
-        return aggs;
-    }
-
-    private Map<String, Object> getTermAggregation(String aggName) {
-        Map<String, Object> agg = new HashMap<>();
-        // agg.put("terms", Map.of("field", aggName, "size", MAX_ES_SIZE));
-        agg.put("terms", Map.of("field", aggName));
-        return agg;
-    }
-
-    private Map<String, Object> getRangeAggregation(String aggName) {
-        Map<String, Object> agg = new HashMap<>();
-        agg.put("stats", Map.of("field", aggName));
-        return agg;
-    }
-
-    public Map<String, JsonArray> collectTermAggs(JsonObject jsonObject, String[] termAggNames) {
+    public Map<String, JsonArray> collectNodeCountAggs(JsonObject jsonObject, String nodeName) {
         Map<String, JsonArray> data = new HashMap<>();
         JsonObject aggs = jsonObject.getAsJsonObject("aggregations");
-        for (String aggName: termAggNames) {
-            // Terms buckets
-            data.put(aggName, aggs.getAsJsonObject(aggName).getAsJsonArray("buckets"));
-        }
+        data.put(nodeName, aggs.getAsJsonObject(nodeName).getAsJsonArray("buckets"));
+        
+        return data;
+    }
+
+    public Map<String, JsonArray> collectRangCountAggs(JsonObject jsonObject, String rangeAggName) {
+        Map<String, JsonArray> data = new HashMap<>();
+        JsonObject aggs = jsonObject.getAsJsonObject("aggregations");
+        data.put(rangeAggName, aggs.getAsJsonObject(rangeAggName).getAsJsonArray("buckets"));
+        
+        return data;
+    }
+
+    public Map<String, JsonObject> collectRangAggs(JsonObject jsonObject, String rangeAggName) {
+        Map<String, JsonObject> data = new HashMap<>();
+        JsonObject aggs = jsonObject.getAsJsonObject("aggregations");
+        data.put(rangeAggName, aggs.getAsJsonObject("inner").getAsJsonObject("range_stats"));
+        
         return data;
     }
 
@@ -404,6 +410,26 @@ public class InsESService extends ESService {
         JsonArray buckets = aggs.getAsJsonObject(aggName).getAsJsonArray("buckets");
         for (var bucket: buckets) {
             data.add(bucket.getAsJsonObject().get("key").getAsString());
+        }
+        return data;
+    }
+
+    public Map<String, JsonArray> collectTermAggs(JsonObject jsonObject, String[] termAggNames) {
+        Map<String, JsonArray> data = new HashMap<>();
+        JsonObject aggs = jsonObject.getAsJsonObject("aggregations");
+        for (String aggName: termAggNames) {
+            JsonObject agg = aggs.getAsJsonObject(aggName);
+            String[] nestedSplit = aggName.split("\\.", 2);
+
+            // Terms buckets
+            if (nestedSplit.length < 2) {
+                data.put(aggName, agg.getAsJsonArray("buckets"));
+            } else {
+                String nestedAggName = nestedSplit[1];
+                JsonObject nestedAggs = agg.getAsJsonObject(nestedAggName);
+                // data.put(nestedAggName, nestedAggs.getAsJsonArray("buckets"));
+                data.put(aggName, nestedAggs.getAsJsonArray("buckets"));
+            }
         }
         return data;
     }
@@ -418,90 +444,6 @@ public class InsESService extends ESService {
         return data;
     }
 
-
-
-    public List<String> collectBucketKeys(JsonArray buckets) {
-        List<String> keys = new ArrayList<>();
-        for (var bucket: buckets) {
-            keys.add(bucket.getAsJsonObject().get("key").getAsString());
-        }
-        return keys;
-    }
-
-    public List<String> collectField(Request request, String fieldName) throws IOException {
-        List<String> results = new ArrayList<>();
-
-        if (!request.getParameters().containsKey("scroll"))
-            request.addParameter("scroll", "10S");
-        JsonObject jsonObject = send(request);
-        JsonArray searchHits = jsonObject.getAsJsonObject("hits").getAsJsonArray("hits");
-
-        while (searchHits != null && searchHits.size() > 0) {
-            logger.info("Current " + fieldName + " records: " + results.size() + " collecting...");
-            for (int i = 0; i < searchHits.size(); i++) {
-                String value = searchHits.get(i).getAsJsonObject().get("_source").getAsJsonObject().get(fieldName).getAsString();
-                results.add(value);
-            }
-
-            Request scrollRequest = new Request("POST", SCROLL_ENDPOINT);
-            String scrollId = jsonObject.get("_scroll_id").getAsString();
-            Map<String, Object> scrollQuery = Map.of(
-                    "scroll", "10S",
-                    "scroll_id", scrollId
-            );
-            scrollRequest.setJsonEntity(gson.toJson(scrollQuery));
-            jsonObject = send(scrollRequest);
-            searchHits = jsonObject.getAsJsonObject("hits").getAsJsonArray("hits");
-        }
-
-        String scrollId = jsonObject.get("_scroll_id").getAsString();
-        Request clearScrollRequest = new Request("DELETE", SCROLL_ENDPOINT);
-        clearScrollRequest.setJsonEntity("{\"scroll_id\":\"" + scrollId +"\"}");
-        send(clearScrollRequest);
-
-        return results;
-    }
-
-    public List<String> collectFieldForArray(Request request, String fieldName) throws IOException {
-        List<String> results = new ArrayList<>();
-
-        if (!request.getParameters().containsKey("scroll"))
-            request.addParameter("scroll", "10S");
-        JsonObject jsonObject = send(request);
-        JsonArray searchHits = jsonObject.getAsJsonObject("hits").getAsJsonArray("hits");
-
-        while (searchHits != null && searchHits.size() > 0) {
-            logger.info("Current " + fieldName + " records: " + results.size() + " collecting...");
-            for (int i = 0; i < searchHits.size(); i++) {
-                JsonArray values = searchHits.get(i).getAsJsonObject().get("_source").getAsJsonObject().get(fieldName).getAsJsonArray();
-                for (int j = 0; j < values.size(); j++) {
-                    results.add(values.get(j).getAsString());
-                }
-            }
-
-            Request scrollRequest = new Request("POST", SCROLL_ENDPOINT);
-            String scrollId = jsonObject.get("_scroll_id").getAsString();
-            Map<String, Object> scrollQuery = Map.of(
-                    "scroll", "10S",
-                    "scroll_id", scrollId
-            );
-            scrollRequest.setJsonEntity(gson.toJson(scrollQuery));
-            jsonObject = send(scrollRequest);
-            searchHits = jsonObject.getAsJsonObject("hits").getAsJsonArray("hits");
-        }
-
-        String scrollId = jsonObject.get("_scroll_id").getAsString();
-        Request clearScrollRequest = new Request("DELETE", SCROLL_ENDPOINT);
-        clearScrollRequest.setJsonEntity("{\"scroll_id\":\"" + scrollId +"\"}");
-        send(clearScrollRequest);
-
-        return results;
-    }
-
-    public int getTotalHits(JsonObject jsonObject) {
-        return jsonObject.get("hits").getAsJsonObject().get("total").getAsJsonObject().get("value").getAsInt();
-    }
-
     public List<Map<String, Object>> collectPage(Request request, Map<String, Object> query, String[][] properties, int pageSize, int offset) throws IOException {
         // data over limit of Elasticsearch, have to use roll API
         if (pageSize > MAX_ES_SIZE) {
@@ -514,7 +456,8 @@ public class InsESService extends ESService {
         // data within limit can use just from/size
         query.put("size", pageSize);
         query.put("from", offset);
-        request.setJsonEntity(gson.toJson(query));
+        String queryJson = gson.toJson(query);
+        request.setJsonEntity(queryJson);
 
         JsonObject jsonObject = send(request);
         return collectPage(jsonObject, properties, pageSize);
@@ -588,16 +531,6 @@ public class InsESService extends ESService {
                 String dataField = prop[1];
                 JsonElement element = searchHits.get(i).getAsJsonObject().get("_source").getAsJsonObject().get(dataField);
                 row.put(propName, getValue(element));
-            }
-            if (highlights != null) {
-                for (String[] highlight: highlights) {
-                    String hlName = highlight[0];
-                    String hlField = highlight[1];
-                    JsonElement element = searchHits.get(i).getAsJsonObject().get("highlight").getAsJsonObject().get(hlField);
-                    if (element != null) {
-                        row.put(hlName, ((List<String>)getValue(element)).get(0));
-                    }
-                }
             }
             data.add(row);
             if (data.size() >= pageSize) {
