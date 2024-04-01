@@ -30,6 +30,9 @@ public class InsESService extends ESService {
     final Set<String> PROGRAM_PARAMS = Set.of(
         "program_id", "program_name", "focus_area"
     );
+    final Set<String> PROJECT_PARAMS = Set.of(
+        "project_id"
+    );
     final Map<String, Set<Map<String, Object>>> RANGES = Map.ofEntries(
         Map.entry("relative_citation_ratio", Set.of(
             Map.of("key", "< 0.2", "from", 0, "to", 0.2),
@@ -137,6 +140,7 @@ public class InsESService extends ESService {
 
         List<Object> filter = new ArrayList<>();
         List<Object> program_filters = new ArrayList<>();
+        List<Object> project_filters = new ArrayList<>();
         
         for (String key: params.keySet()) {
             String finalKey = key;
@@ -182,6 +186,10 @@ public class InsESService extends ESService {
                         program_filters.add(Map.of(
                             "terms", Map.of("programs." + key, valueSet)
                         ));
+                    } else if (PROJECT_PARAMS.contains(key) && List.of("publications").contains(indexType)) {
+                        project_filters.add(Map.of(
+                            "terms", Map.of("projects." + key, valueSet)
+                        ));
                     } else {
                         filter.add(Map.of(
                             "terms", Map.of(key, valueSet)
@@ -193,11 +201,16 @@ public class InsESService extends ESService {
 
         int FilterLen = filter.size();
         int programFilterLen = program_filters.size();
-        if (FilterLen + programFilterLen == 0) {
+        int projectFilterLen = project_filters.size();
+        if (FilterLen + projectFilterLen == 0) {
             result.put("query", Map.of("match_all", Map.of()));
         } else {
             if (programFilterLen > 0) {
                 filter.add(Map.of("nested", Map.of("path", "programs", "query", Map.of("bool", Map.of("filter", program_filters)), "inner_hits", Map.of())));
+            }
+
+            if (projectFilterLen > 0) {
+                filter.add(Map.of("nested", Map.of("path", "projects", "query", Map.of("bool", Map.of("filter", project_filters)), "inner_hits", Map.of())));
             }
 
             result.put("query", Map.of("bool", Map.of("filter", filter)));

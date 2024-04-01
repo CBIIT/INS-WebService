@@ -62,9 +62,13 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         "focus_area"
     );
 
+    // For general use, like facet filter
     final Set<String> REGULAR_PARAMS = Set.of(
         // Programs
-        "focus_area"
+        "focus_area",
+
+        // Projects
+        "project_id"
     );
 
     public PrivateESDataFetcher(InsESService esService) {
@@ -114,6 +118,10 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                         .dataFetcher("programDetails", env -> {
                             Map<String, Object> args = env.getArguments();
                             return programDetails(args);
+                        })
+                        .dataFetcher("projectDetails", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return projectDetails(args);
                         })
                         .dataFetcher("findProgramIdsInList", env -> {
                             Map<String, Object> args = env.getArguments();
@@ -506,6 +514,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             new String[]{"project_title", "project_title"},
 
             // Programs
+            new String[]{"program_ids", "program_ids"},
             new String[]{"program_names", "program_names"},
 
             // Additional fields for download
@@ -726,6 +735,61 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         }
 
         return program;
+    }
+
+    /**
+     * Gets the details for a single Project record
+     *
+     * @param projectId The ID of the Project
+     * @return A map of the Project record's properties
+     * @throws IOException
+     */
+    private Map<String, Object> projectDetails(Map<String, Object> params) throws IOException {
+        Map<String, Object> project;
+        String projectId = (String) params.get("project_id");
+        List<Map<String, Object>> projects;
+
+        final String[][] PROPERTIES = new String[][]{
+            new String[]{"abstract_text", "abstract_text"},
+            new String[]{"opportunity_number", "opportunity_number"},
+            new String[]{"org_name", "org_name"},
+            new String[]{"program_acronyms", "program_acronyms"},
+            new String[]{"program_ids", "program_ids"},
+            new String[]{"project_end_date", "project_end_date"},
+            new String[]{"project_id", "project_id"},
+            new String[]{"project_start_date", "project_start_date"},
+            new String[]{"project_title", "project_title"},
+        };
+
+        Map<String, String> mapping = Map.ofEntries(
+            Map.entry("abstract_text", "abstract_text"),
+            Map.entry("opportunity_number", "opportunity_number"),
+            Map.entry("org_name", "org_name"),
+            Map.entry("program_acronyms", "program_acronyms"),
+            Map.entry("program_ids", "program_ids"),
+            Map.entry("project_end_date", "project_end_date"),
+            Map.entry("project_id", "project_id"),
+            Map.entry("project_start_date", "project_start_date"),
+            Map.entry("project_title", "project_title")
+        );
+
+        Map<String, Object> project_params = Map.ofEntries(
+            Map.entry("project_id", List.of(projectId)),
+            Map.entry(ORDER_BY, "project_id"),
+            Map.entry(SORT_DIRECTION, "ASC"),
+            Map.entry(PAGE_SIZE, 1),
+            Map.entry(OFFSET, 0)
+        );
+
+        projects = overview(PROJECTS_END_POINT, project_params, PROPERTIES, "project_id", mapping, REGULAR_PARAMS, "nested_filters", "projects");
+
+        try {
+            project = projects.get(0);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
+
+        return project;
     }
 
     private String generateCacheKey(Map<String, Object> params) throws IOException {
