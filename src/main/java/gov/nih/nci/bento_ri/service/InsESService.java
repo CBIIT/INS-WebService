@@ -202,7 +202,7 @@ public class InsESService extends ESService {
         int FilterLen = filter.size();
         int programFilterLen = program_filters.size();
         int projectFilterLen = project_filters.size();
-        if (FilterLen + projectFilterLen == 0) {
+        if (FilterLen + programFilterLen + projectFilterLen == 0) {
             result.put("query", Map.of("match_all", Map.of()));
         } else {
             if (programFilterLen > 0) {
