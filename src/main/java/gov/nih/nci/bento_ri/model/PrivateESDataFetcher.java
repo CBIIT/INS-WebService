@@ -82,6 +82,10 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return RuntimeWiring.newRuntimeWiring()
                 .type(newTypeWiring("QueryType")
                         .dataFetchers(yamlQueryFactory.createYamlQueries(Const.ES_ACCESS_TYPE.PRIVATE))
+                        .dataFetcher("stats", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return stats(args);
+                        })
                         .dataFetcher("idsLists", env -> idsLists())
                         .dataFetcher("searchProjects", env -> {
                             Map<String, Object> args = env.getArguments();
@@ -253,6 +257,68 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return data;
     }
 
+    /**
+     * Get counts of filtered results
+     * @param params The filters applied
+     * @return Counts
+     * @throws IOException
+     */
+    private Map<String, Object> stats(Map<String, Object> params) throws IOException {
+        Map<String, Object> data = new HashMap<>();
+
+        // Get Grant counts for Explore page stats bar
+        Map<String, Object> grantsQuery = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "grants");
+        String grantsQueryJson = gson.toJson(grantsQuery);
+        Request grantsCountRequest = new Request("GET", GRANTS_COUNT_END_POINT);
+        grantsCountRequest.setJsonEntity(grantsQueryJson);
+        JsonObject grantsCountResult = insEsService.send(grantsCountRequest);
+        int numberOfGrants = grantsCountResult.get("count").getAsInt();
+
+        // Get Project counts for Explore page stats bar, and piggyback to get the Program counts
+        Map<String, Object> projectsQuery = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "projects");
+        projectsQuery.put("size", 0);
+        projectsQuery.put("aggs", Map.ofEntries(
+            Map.entry("programs.program_id", Map.ofEntries(
+                Map.entry("nested", Map.ofEntries(
+                    Map.entry("path", "programs")
+                )),
+                Map.entry("aggs", Map.ofEntries(
+                    Map.entry("num_programs", Map.ofEntries(
+                        Map.entry("cardinality", Map.ofEntries(
+                            Map.entry("field", "programs.program_id")
+                        ))
+                    ))
+                ))
+            ))
+        ));
+        String projectsQueryJson = gson.toJson(projectsQuery);
+        Request projectsCountRequest = new Request("GET", PROJECTS_END_POINT);
+        projectsCountRequest.setJsonEntity(projectsQueryJson);
+        JsonObject projectsCountResult = insEsService.send(projectsCountRequest);
+        int numberOfProjects = projectsCountResult.getAsJsonObject("hits")
+            .getAsJsonObject("total")
+            .get("value").getAsInt();
+        int numberOfPrograms = projectsCountResult.getAsJsonObject("aggregations")
+            .getAsJsonObject("programs.program_id")
+            .getAsJsonObject("num_programs")
+            .get("value").getAsInt();
+        
+        // Get Publication counts for Explore page stats bar
+        Map<String, Object> publicationsQuery = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "publications");
+        String publicationsQueryJson = gson.toJson(publicationsQuery);
+        Request publicationsCountRequest = new Request("GET", PUBLICATIONS_COUNT_END_POINT);
+        publicationsCountRequest.setJsonEntity(publicationsQueryJson);
+        JsonObject publicationsCountResult = insEsService.send(publicationsCountRequest);
+        int numberOfPublications = publicationsCountResult.get("count").getAsInt();
+
+        data.put("numberOfGrants", numberOfGrants);
+        data.put("numberOfPrograms", numberOfPrograms);
+        data.put("numberOfProjects", numberOfProjects);
+        data.put("numberOfPublications", numberOfPublications);
+
+        return data;
+    }
+
     private List<Map<String, Object>> idsLists() throws IOException {
         Map<String, String[][]> indexProperties = Map.of(
             PROGRAMS_END_POINT, new String[][]{
@@ -371,15 +437,12 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                 if (RANGE_PARAMS.contains(field)) {
                     List<Map<String, Object>> subjectCount = subjectCountByRange(field, params, endpoint, cardinalityAggName, indexType);
                     data.put(widgetQueryName, subjectCount);
+                } else if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
+                    List<Map<String, Object>> subjectCount = subjectCountBy(field, params, endpoint, cardinalityAggName, indexType);
+                    data.put(widgetQueryName, subjectCount);
                 } else {
-                    if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
-                        List<Map<String, Object>> subjectCount = subjectCountBy(field, params, endpoint, cardinalityAggName, indexType);
-                        data.put(widgetQueryName, subjectCount);
-                    } else {
-                        data.put(widgetQueryName, filterCount);
-                    }
+                    data.put(widgetQueryName, filterCount);
                 }
-                
             }
         }
 
@@ -414,35 +477,6 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             // Projects
             Map.entry("project_id", "project_id.sort")
         );
-
-        // Request request = new Request("GET", GRANTS_END_POINT);
-        // Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION), REGULAR_PARAMS, "nested_filters", "grants");
-        // String[] AGG_NAMES = new String[] {"grant_id"};
-        // query = insEsService.addAggregations(query, AGG_NAMES);
-        // String queryJson = gson.toJson(query);
-        // request.setJsonEntity(queryJson);
-        // JsonObject jsonObject = insEsService.send(request);
-        // Map<String, JsonArray> aggs = insEsService.collectTermAggs(jsonObject, AGG_NAMES);
-        // JsonArray buckets = aggs.get("grant_id");
-        // List<String> data = new ArrayList<>();
-        // for (var bucket: buckets) {
-        //     data.add(bucket.getAsJsonObject().get("key").getAsString());
-        // }
-
-        // String order_by = (String)params.get(ORDER_BY);
-        // String direction = ((String)params.get(SORT_DIRECTION));
-        // int pageSize = (int) params.get(PAGE_SIZE);
-        // int offset = (int) params.get(OFFSET);
-        
-        // Map<String, Object> grant_params = new HashMap<>();
-        // if (data.size() == 0) {
-        //     data.add("-1");
-        // }
-        // grant_params.put("grant_id", data);
-        // grant_params.put(ORDER_BY, order_by);
-        // grant_params.put(SORT_DIRECTION, direction);
-        // grant_params.put(PAGE_SIZE, pageSize);
-        // grant_params.put(OFFSET, offset);
 
         return overview(GRANTS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "grants");
     }
