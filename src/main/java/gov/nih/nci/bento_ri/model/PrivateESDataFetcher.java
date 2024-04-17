@@ -639,19 +639,32 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         return esService.collectPage(request, query, properties, ESService.MAX_ES_SIZE, 0);
     }
 
-    private Map<String, String> mapSortOrder(String order_by, String direction, String defaultSort, Map<String, String> mapping) {
+    private Map<String, Map<String, String>> mapSortOrder(String order_by, String direction, String defaultSort, Map<String, String> mapping) {
         String sortDirection = direction;
-        if (!sortDirection.equalsIgnoreCase("asc") && !sortDirection.equalsIgnoreCase("desc")) {
+        String sortOrder = defaultSort; // Default sort order
+        Map<String, String> missingDirection = Map.ofEntries(
+            Map.entry("asc", "_first"),
+            Map.entry("desc", "_last")
+        );
+
+        // Invalid sort direction defaults to ascending
+        if (!(sortDirection.equalsIgnoreCase("asc") || sortDirection.equalsIgnoreCase("desc"))) {
             sortDirection = "asc";
         }
 
-        String sortOrder = defaultSort; // Default sort order
+        // Handle sort order
         if (mapping.containsKey(order_by)) {
             sortOrder = mapping.get(order_by);
         } else {
             logger.info("Order: \"" + order_by + "\" not recognized, use default order");
         }
-        return Map.of(sortOrder, sortDirection);
+
+        return Map.ofEntries(
+            Map.entry(sortOrder, Map.ofEntries(
+                Map.entry("order", sortDirection),
+                Map.entry("missing", missingDirection.get(sortDirection))
+            ))
+        );
     }
 
     private Integer numberOfGrants() throws Exception {
