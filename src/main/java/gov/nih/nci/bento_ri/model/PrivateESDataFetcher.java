@@ -502,40 +502,12 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             Map.entry("focus_area_str", "focus_area_str.sort"),
             Map.entry("program_id", "program_id.sort"),
             Map.entry("program_acronym", "program_acronym.sort"),
+            Map.entry("data_link_and_program_acronym", "data_link_and_program_acronym.sort"),
             Map.entry("program_link", "program_link"),
             Map.entry("program_name", "program_name.sort")
         );
-        
-        Request request = new Request("GET", PROGRAMS_END_POINT);
-        Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, OFFSET, ORDER_BY, SORT_DIRECTION), REGULAR_PARAMS, "nested_filters", "programs");
-        String[] AGG_NAMES = new String[] {"program_id"};
-        query = insEsService.addAggregations(query, AGG_NAMES);
-        String queryJson = gson.toJson(query);
-        request.setJsonEntity(queryJson);
-        JsonObject jsonObject = insEsService.send(request);
-        Map<String, JsonArray> aggs = insEsService.collectTermAggs(jsonObject, AGG_NAMES);
-        JsonArray buckets = aggs.get("program_id");
-        List<String> data = new ArrayList<>();
-        for (var bucket: buckets) {
-            data.add(bucket.getAsJsonObject().get("key").getAsString());
-        }
 
-        String order_by = (String)params.get(ORDER_BY);
-        String direction = ((String)params.get(SORT_DIRECTION));
-        int pageSize = (int) params.get(PAGE_SIZE);
-        int offset = (int) params.get(OFFSET);
-        
-        Map<String, Object> program_params = new HashMap<>();
-        if (data.size() == 0) {
-            data.add("-1");
-        }
-        program_params.put("program_id", data);
-        program_params.put(ORDER_BY, order_by);
-        program_params.put(SORT_DIRECTION, direction);
-        program_params.put(PAGE_SIZE, pageSize);
-        program_params.put(OFFSET, offset);
-
-        return overview(PROGRAMS_END_POINT, program_params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "programs");
+        return overview(PROGRAMS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "programs");
     }
 
     private List<Map<String, Object>> projectsOverview(Map<String, Object> params) throws IOException {
