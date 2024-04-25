@@ -469,7 +469,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             // Grants
             Map.entry("fiscal_year", "fiscal_year"),
             Map.entry("grant_id", "grant_id.sort"),
-            Map.entry("grant_title", "grant_title.sort"),
+            Map.entry("grant_title", "grant_title_alphanum.sort"),
             Map.entry("principal_investigators", "principal_investigators.sort"),
             Map.entry("program_officers", "program_officers.sort"),
             Map.entry("project_end_date", "project_end_date"),
@@ -535,7 +535,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             Map.entry("project_end_date", "project_end_date"),
             Map.entry("project_id", "project_id.sort"),
             Map.entry("project_start_date", "project_start_date"),
-            Map.entry("project_title", "project_title.sort"),
+            Map.entry("project_title", "project_title_alphanum.sort"),
 
             // Programs
             Map.entry("program_names", "program_names.sort")
@@ -573,7 +573,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             Map.entry("pmid", "pmid.sort"),
             Map.entry("publication_date", "publication_date"),
             Map.entry("relative_citation_ratio", "relative_citation_ratio"),
-            Map.entry("title", "title.sort"),
+            Map.entry("title", "title_alphanum.sort"),
 
             // Projects
             Map.entry("project_ids", "project_ids.sort")
