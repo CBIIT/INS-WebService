@@ -485,6 +485,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         final String[][] PROPERTIES = new String[][]{
             // Programs
             new String[]{"data_link", "data_link"},
+            new String[]{"data_link_and_program_acronym", "data_link_and_program_acronym"},
             new String[]{"focus_area_str", "focus_area_str"},
             new String[]{"program_id", "program_id"},
             new String[]{"program_acronym", "program_acronym"},
