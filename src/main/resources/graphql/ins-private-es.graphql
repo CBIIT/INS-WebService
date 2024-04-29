@@ -55,6 +55,7 @@ type SearchResult {
     publicationCountByRelativeCitationRatio: [FacetCount]
 
     filterProjectCountByFocusArea: [FacetCount]
+    filterProjectCountByCancerType: [FacetCount]
 }
 
 type FacetCount {
@@ -278,6 +279,7 @@ type QueryType {
         program_ids: [String] = []
         program_names: [String] = []
         focus_area: [String] = []
+        cancer_type: [String] = []
     ): SearchResult
 
     grantsOverview (
