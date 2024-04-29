@@ -59,13 +59,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     // For multiple selection from a list
     final Set<String> INCLUDE_PARAMS  = Set.of(
         // Programs
-        "focus_area"
+        "focus_area", "cancer_type"
     );
 
     // For general use, like facet filter
     final Set<String> REGULAR_PARAMS = Set.of(
         // Programs
         "focus_area",
+        "cancer_type",
 
         // Projects
         "project_id"
@@ -380,6 +381,12 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             FILTER_COUNT_QUERY, "filterProjectCountByFocusArea",
             AGG_ENDPOINT, FACETED_PROJECTS_END_POINT
         ));
+        PROJECT_TERM_AGGS.add(Map.of(
+            CARDINALITY_AGG_NAME, "project_id",
+            AGG_NAME, "cancer_type",
+            FILTER_COUNT_QUERY, "filterProjectCountByCancerType",
+            AGG_ENDPOINT, FACETED_PROJECTS_END_POINT
+        ));
 
         // Get Grant counts for Explore page stats bar
         Map<String, Object> grantsQuery = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "grants");
@@ -432,17 +439,20 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             } else {
                 data.put(filterCountQueryName, filterCount);
             }
+
+            // Nothing more to do if this aggregator isn't for a widget
+            if (widgetQueryName == null) {
+                continue;
+            }
             
-            if (widgetQueryName != null) {
-                if (RANGE_PARAMS.contains(field)) {
-                    List<Map<String, Object>> subjectCount = subjectCountByRange(field, params, endpoint, cardinalityAggName, indexType);
-                    data.put(widgetQueryName, subjectCount);
-                } else if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
-                    List<Map<String, Object>> subjectCount = subjectCountBy(field, params, endpoint, cardinalityAggName, indexType);
-                    data.put(widgetQueryName, subjectCount);
-                } else {
-                    data.put(widgetQueryName, filterCount);
-                }
+            if (RANGE_PARAMS.contains(field)) {
+                List<Map<String, Object>> subjectCount = subjectCountByRange(field, params, endpoint, cardinalityAggName, indexType);
+                data.put(widgetQueryName, subjectCount);
+            } else if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
+                List<Map<String, Object>> subjectCount = subjectCountBy(field, params, endpoint, cardinalityAggName, indexType);
+                data.put(widgetQueryName, subjectCount);
+            } else {
+                data.put(widgetQueryName, filterCount);
             }
         }
 

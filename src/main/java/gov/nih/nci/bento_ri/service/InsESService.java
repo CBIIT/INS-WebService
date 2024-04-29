@@ -28,7 +28,8 @@ public class InsESService extends ESService {
     public static final String AGGS = "aggs";
     public static final int MAX_ES_SIZE = 10000;
     final Set<String> PROGRAM_PARAMS = Set.of(
-        "program_id", "program_name", "focus_area"
+        "program_id", "program_name", "focus_area",
+        "cancer_type"
     );
     final Set<String> PROJECT_PARAMS = Set.of(
         "project_id"
