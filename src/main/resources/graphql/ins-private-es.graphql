@@ -152,6 +152,7 @@ type ProgramInfo {
 }
 
 type ProgramDetails {
+    cancer_type: [String]
     contact_nih: String
     contact_pi: String
     doc: [String]

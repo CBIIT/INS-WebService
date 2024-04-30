@@ -727,6 +727,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         List<Map<String, Object>> programs;
 
         final String[][] PROPERTIES = new String[][]{
+            new String[]{"cancer_type", "cancer_type"},
             new String[]{"contact_nih", "contact_nih"},
             new String[]{"contact_pi", "contact_pi"},
             new String[]{"doc", "doc"},
@@ -738,6 +739,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         };
 
         Map<String, String> mapping = Map.ofEntries(
+            Map.entry("cancer_type", "cancer_type"),
             Map.entry("contact_nih", "contact_nih"),
             Map.entry("contact_pi", "contact_pi"),
             Map.entry("doc", "doc"),
