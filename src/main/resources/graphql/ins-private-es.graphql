@@ -268,9 +268,10 @@ type QueryType {
 
     stats (
         # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
         program_ids: [String] = []
         program_names: [String] = []
-        focus_area: [String] = []
 
         # Other filters
         project_id: [String] = []
