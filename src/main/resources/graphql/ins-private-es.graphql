@@ -9,6 +9,7 @@ type GrantsOverview {
 }
 
 type ProgramsOverview {
+    cancer_type_str: String
     data_link: String
     data_link_and_program_acronym: String
     focus_area_str: String
@@ -285,9 +286,10 @@ type QueryType {
 
     grantsOverview (
         # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
         program_ids: [String] = []
         program_names: [String] = []
-        focus_area: [String] = []
 
         # Other filters
         project_id: [String] = []
@@ -301,9 +303,10 @@ type QueryType {
 
     programsOverview (
         # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
         program_ids: [String] = []
         program_names: [String] = []
-        focus_area: [String] = []
 
         # Pagination
         order_by: String = "",
@@ -314,9 +317,10 @@ type QueryType {
 
     projectsOverview (
         # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
         program_ids: [String] = []
         program_names: [String] = []
-        focus_area: [String] = []
 
         # Pagination
         order_by: String = "",
@@ -327,9 +331,10 @@ type QueryType {
 
     publicationsOverview (
         # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
         program_ids: [String] = []
         program_names: [String] = []
-        focus_area: [String] = []
 
         # Other filters
         project_id: [String] = []
