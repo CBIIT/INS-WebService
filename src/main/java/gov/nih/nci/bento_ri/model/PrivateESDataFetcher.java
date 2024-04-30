@@ -494,6 +494,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private List<Map<String, Object>> programsOverview(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
             // Programs
+            new String[]{"cancer_type_str", "cancer_type_str"},
             new String[]{"data_link", "data_link"},
             new String[]{"data_link_and_program_acronym", "data_link_and_program_acronym"},
             new String[]{"focus_area_str", "focus_area_str"},
@@ -509,6 +510,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         String defaultSort = "program_name"; // Default sort order
 
         Map<String, String> mapping = Map.ofEntries(
+            Map.entry("cancer_type_str", "cancer_type_str.sort"),
             Map.entry("data_link", "data_link"),
             Map.entry("focus_area_str", "focus_area_str.sort"),
             Map.entry("program_id", "program_id.sort"),
