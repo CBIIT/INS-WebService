@@ -581,15 +581,15 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
 
         Map<String, String> mapping = Map.ofEntries(
             // Publications
-            Map.entry("authors", "authors.sort"),
+            Map.entry("authors", "authors_sort"),
             Map.entry("cited_by", "cited_by"),
-            Map.entry("pmid", "pmid.sort"),
+            Map.entry("pmid", "pmid_sort"),
             Map.entry("publication_date", "publication_date"),
             Map.entry("relative_citation_ratio", "relative_citation_ratio"),
-            Map.entry("title", "title_alphanum.sort"),
+            Map.entry("title", "title_sort"),
 
             // Projects
-            Map.entry("project_ids", "project_ids.sort")
+            Map.entry("project_ids", "project_ids_sort")
 
             // Additional fields for download
             // Stub
