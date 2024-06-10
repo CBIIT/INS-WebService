@@ -548,7 +548,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             Map.entry("project_end_date", "project_end_date"),
             Map.entry("project_id", "project_id_sort"),
             Map.entry("project_start_date", "project_start_date"),
-            Map.entry("project_title", "project_title.sort"),
+            Map.entry("project_title", "project_title_sort"),
 
             // Programs
             Map.entry("program_names", "program_names_sort")
