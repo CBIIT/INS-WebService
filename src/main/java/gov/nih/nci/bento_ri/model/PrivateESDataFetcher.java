@@ -478,14 +478,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Map<String, String> mapping = Map.ofEntries(
             // Grants
             Map.entry("fiscal_year", "fiscal_year"),
-            Map.entry("grant_id", "grant_id.sort"),
-            Map.entry("grant_title", "grant_title_alphanum.sort"),
-            Map.entry("principal_investigators", "principal_investigators.sort"),
-            Map.entry("program_officers", "program_officers.sort"),
+            Map.entry("grant_id", "grant_id_sort"),
+            Map.entry("grant_title", "grant_title_sort"),
+            Map.entry("principal_investigators", "principal_investigators_sort"),
+            Map.entry("program_officers", "program_officers_sort"),
             Map.entry("project_end_date", "project_end_date"),
 
             // Projects
-            Map.entry("project_id", "project_id.sort")
+            Map.entry("project_id", "project_id_sort")
         );
 
         return overview(GRANTS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "grants");
