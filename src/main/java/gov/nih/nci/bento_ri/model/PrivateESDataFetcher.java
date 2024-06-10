@@ -510,14 +510,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         String defaultSort = "program_name"; // Default sort order
 
         Map<String, String> mapping = Map.ofEntries(
-            Map.entry("cancer_type_str", "cancer_type_str.sort"),
-            Map.entry("data_link", "data_link"),
-            Map.entry("focus_area_str", "focus_area_str.sort"),
-            Map.entry("program_id", "program_id.sort"),
-            Map.entry("program_acronym", "program_acronym.sort"),
-            Map.entry("data_link_and_program_acronym", "data_link_and_program_acronym.sort"),
-            Map.entry("program_link", "program_link"),
-            Map.entry("program_name", "program_name.sort")
+            Map.entry("cancer_type_str", "cancer_type_sort"),
+            Map.entry("data_link", "data_link_sort"),
+            Map.entry("focus_area_str", "focus_area_sort"),
+            Map.entry("program_id", "program_id_sort"),
+            Map.entry("program_acronym", "program_acronym_sort"),
+            Map.entry("data_link_and_program_acronym", "data_link_and_program_acronym_sort"),
+            Map.entry("program_link", "program_link_sort"),
+            Map.entry("program_name", "program_name_sort")
         );
 
         return overview(PROGRAMS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "programs");
