@@ -544,14 +544,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
 
         Map<String, String> mapping = Map.ofEntries(
             // Projects
-            Map.entry("org_name", "org_name.sort"),
+            Map.entry("org_name", "org_name_sort"),
             Map.entry("project_end_date", "project_end_date"),
-            Map.entry("project_id", "project_id.sort"),
+            Map.entry("project_id", "project_id_sort"),
             Map.entry("project_start_date", "project_start_date"),
-            Map.entry("project_title", "project_title_alphanum.sort"),
+            Map.entry("project_title", "project_title.sort"),
 
             // Programs
-            Map.entry("program_names", "program_names.sort")
+            Map.entry("program_names", "program_names_sort")
 
             // Additional fields for download
             // Stub
