@@ -1,12 +1,12 @@
 # Build stage
-FROM maven:3.8.5-openjdk-17 as build
+FROM maven:3.8.5-openjdk-17 AS build
 
 WORKDIR /usr/src/app
 COPY . .
 RUN mvn package -DskipTests
 
 # Production stage
-FROM tomcat:10.1.15-jdk17
+FROM tomcat:10.1.16-jdk17 AS fnl_base_image
 
 # install dependencies and clean up unused files
 RUN apt-get update && apt-get install unzip
