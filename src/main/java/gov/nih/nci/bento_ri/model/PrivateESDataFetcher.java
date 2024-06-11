@@ -478,14 +478,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Map<String, String> mapping = Map.ofEntries(
             // Grants
             Map.entry("fiscal_year", "fiscal_year"),
-            Map.entry("grant_id", "grant_id.sort"),
-            Map.entry("grant_title", "grant_title_alphanum.sort"),
-            Map.entry("principal_investigators", "principal_investigators.sort"),
-            Map.entry("program_officers", "program_officers.sort"),
+            Map.entry("grant_id", "grant_id_sort"),
+            Map.entry("grant_title", "grant_title_sort"),
+            Map.entry("principal_investigators", "principal_investigators_sort"),
+            Map.entry("program_officers", "program_officers_sort"),
             Map.entry("project_end_date", "project_end_date"),
 
             // Projects
-            Map.entry("project_id", "project_id.sort")
+            Map.entry("project_id", "project_id_sort")
         );
 
         return overview(GRANTS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "grants");
@@ -510,14 +510,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         String defaultSort = "program_name"; // Default sort order
 
         Map<String, String> mapping = Map.ofEntries(
-            Map.entry("cancer_type_str", "cancer_type_str.sort"),
-            Map.entry("data_link", "data_link"),
-            Map.entry("focus_area_str", "focus_area_str.sort"),
-            Map.entry("program_id", "program_id.sort"),
-            Map.entry("program_acronym", "program_acronym.sort"),
-            Map.entry("data_link_and_program_acronym", "data_link_and_program_acronym.sort"),
-            Map.entry("program_link", "program_link"),
-            Map.entry("program_name", "program_name.sort")
+            Map.entry("cancer_type_str", "cancer_type_sort"),
+            Map.entry("data_link", "data_link_sort"),
+            Map.entry("focus_area_str", "focus_area_sort"),
+            Map.entry("program_id", "program_id_sort"),
+            Map.entry("program_acronym", "program_acronym_sort"),
+            Map.entry("data_link_and_program_acronym", "data_link_and_program_acronym_sort"),
+            Map.entry("program_link", "program_link_sort"),
+            Map.entry("program_name", "program_name_sort")
         );
 
         return overview(PROGRAMS_END_POINT, params, PROPERTIES, defaultSort, mapping, REGULAR_PARAMS, "nested_filters", "programs");
@@ -544,14 +544,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
 
         Map<String, String> mapping = Map.ofEntries(
             // Projects
-            Map.entry("org_name", "org_name.sort"),
+            Map.entry("org_name", "org_name_sort"),
             Map.entry("project_end_date", "project_end_date"),
-            Map.entry("project_id", "project_id.sort"),
+            Map.entry("project_id", "project_id_sort"),
             Map.entry("project_start_date", "project_start_date"),
-            Map.entry("project_title", "project_title_alphanum.sort"),
+            Map.entry("project_title", "project_title_sort"),
 
             // Programs
-            Map.entry("program_names", "program_names.sort")
+            Map.entry("program_names", "program_names_sort")
 
             // Additional fields for download
             // Stub
@@ -581,15 +581,15 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
 
         Map<String, String> mapping = Map.ofEntries(
             // Publications
-            Map.entry("authors", "authors.sort"),
+            Map.entry("authors", "authors_sort"),
             Map.entry("cited_by", "cited_by"),
-            Map.entry("pmid", "pmid.sort"),
+            Map.entry("pmid", "pmid_sort"),
             Map.entry("publication_date", "publication_date"),
             Map.entry("relative_citation_ratio", "relative_citation_ratio"),
-            Map.entry("title", "title_alphanum.sort"),
+            Map.entry("title", "title_sort"),
 
             // Projects
-            Map.entry("project_ids", "project_ids.sort")
+            Map.entry("project_ids", "project_ids_sort")
 
             // Additional fields for download
             // Stub
