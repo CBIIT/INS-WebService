@@ -279,6 +279,11 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Map<String, Object> projectsQuery = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(), REGULAR_PARAMS, "nested_filters", "projects");
         projectsQuery.put("size", 0);
         projectsQuery.put("aggs", Map.ofEntries(
+            Map.entry("project_id", Map.ofEntries(
+                Map.entry("cardinality", Map.ofEntries(
+                    Map.entry("field", "project_id")
+                ))
+            )),
             Map.entry("programs.program_id", Map.ofEntries(
                 Map.entry("nested", Map.ofEntries(
                     Map.entry("path", "programs")
@@ -296,8 +301,8 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Request projectsCountRequest = new Request("GET", PROJECTS_END_POINT);
         projectsCountRequest.setJsonEntity(projectsQueryJson);
         JsonObject projectsCountResult = insEsService.send(projectsCountRequest);
-        int numberOfProjects = projectsCountResult.getAsJsonObject("hits")
-            .getAsJsonObject("total")
+        int numberOfProjects = projectsCountResult.getAsJsonObject("aggregations")
+            .getAsJsonObject("project_id")
             .get("value").getAsInt();
         int numberOfPrograms = projectsCountResult.getAsJsonObject("aggregations")
             .getAsJsonObject("programs.program_id")
