@@ -21,8 +21,8 @@ type ProgramsOverview {
 
 type ProjectsOverview {
     org_name: String
-    program_ids: String
-    program_names: String
+    program_ids: [String]
+    program_names: [String]
     project_end_date: String
     project_id: String
     project_start_date: String
@@ -168,8 +168,8 @@ type ProjectDetails {
     abstract_text: String
     opportunity_number: String
     org_name: String
-    program_acronyms: String
-    program_ids: String
+    program_acronyms: [String]
+    program_ids: [String]
     project_end_date: String
     project_id: String
     project_start_date: String
