@@ -33,7 +33,7 @@ type PublicationsOverview {
     authors: String
     cited_by: Int
     pmid: String
-    project_ids: String
+    project_ids: [String]
     publication_date: String
     relative_citation_ratio: Float
     title: String
