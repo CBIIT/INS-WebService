@@ -133,7 +133,7 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>3.3.0</version>
+            <version>3.10.0</version>
         </dependency>
         <!-- Apache Tomcat -->
         <dependency>
@@ -250,7 +250,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-core</artifactId>
-            <version>1.12.642</version>
+            <version>1.12.770</version>
             <scope>compile</scope>
         </dependency>
         <!-- Lombok -->
