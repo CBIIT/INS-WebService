@@ -133,13 +133,14 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>3.3.0</version>
+            <version>3.10.0</version>
         </dependency>
         <!-- Apache Tomcat -->
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
-            <version>10.1.13</version>
+            <version>10.1.16</version>
+
         </dependency>
         <!-- JUnit -->
         <dependency>
