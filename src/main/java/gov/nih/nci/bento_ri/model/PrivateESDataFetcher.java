@@ -361,8 +361,8 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         // Query related values
         final List<Map<String, String>> PROJECT_TERM_AGGS = new ArrayList<>();
         PROJECT_TERM_AGGS.add(Map.of(
-            WIDGET_QUERY, "programCountByDoc",
-            AGG_NAME, "doc",
+            WIDGET_QUERY, "programCountByProgramDoc",
+            AGG_NAME, "program_doc",
             AGG_ENDPOINT, PROGRAMS_END_POINT
         ));
         PROJECT_TERM_AGGS.add(Map.of(
@@ -467,7 +467,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             new String[]{"grant_title", "grant_title"},
             new String[]{"principal_investigators", "principal_investigators"},
             new String[]{"program_officers", "program_officers"},
-            new String[]{"project_end_date", "project_end_date"},
+            new String[]{"grant_end_date", "grant_end_date"},
 
             // Projects
             new String[]{"project_id", "project_id"},
@@ -482,7 +482,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             Map.entry("grant_title", "grant_title_sort"),
             Map.entry("principal_investigators", "principal_investigators_sort"),
             Map.entry("program_officers", "program_officers_sort"),
-            Map.entry("project_end_date", "project_end_date"),
+            Map.entry("grant_end_date", "grant_end_date"),
 
             // Projects
             Map.entry("project_id", "project_id_sort")
@@ -526,7 +526,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private List<Map<String, Object>> projectsOverview(Map<String, Object> params) throws IOException {
         final String[][] PROPERTIES = new String[][]{
             // Projects
-            new String[]{"org_name", "org_name"},
+            new String[]{"project_org_name", "project_org_name"},
             new String[]{"project_end_date", "project_end_date"},
             new String[]{"project_id", "project_id"},
             new String[]{"project_start_date", "project_start_date"},
@@ -544,7 +544,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
 
         Map<String, String> mapping = Map.ofEntries(
             // Projects
-            Map.entry("org_name", "org_name_sort"),
+            Map.entry("project_org_name", "project_org_name_sort"),
             Map.entry("project_end_date", "project_end_date"),
             Map.entry("project_id", "project_id_sort"),
             Map.entry("project_start_date", "project_start_date"),
@@ -568,7 +568,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             new String[]{"pmid", "pmid"},
             new String[]{"publication_date", "publication_date"},
             new String[]{"relative_citation_ratio", "relative_citation_ratio"},
-            new String[]{"title", "title"},
+            new String[]{"publication_title", "publication_title"},
 
             // Projects
             new String[]{"project_ids", "project_ids"},
@@ -586,7 +586,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             Map.entry("pmid", "pmid_sort"),
             Map.entry("publication_date", "publication_date"),
             Map.entry("relative_citation_ratio", "relative_citation_ratio"),
-            Map.entry("title", "title_sort"),
+            Map.entry("publication_title", "publication_title_sort"),
 
             // Projects
             Map.entry("project_ids", "project_ids_sort")
@@ -732,7 +732,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             new String[]{"cancer_type", "cancer_type"},
             new String[]{"contact_nih", "contact_nih"},
             new String[]{"contact_pi", "contact_pi"},
-            new String[]{"doc", "doc"},
+            new String[]{"program_doc", "program_doc"},
             new String[]{"focus_area", "focus_area"},
             new String[]{"nofo", "nofo"},
             new String[]{"program_acronym", "program_acronym"},
@@ -744,7 +744,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             Map.entry("cancer_type", "cancer_type"),
             Map.entry("contact_nih", "contact_nih"),
             Map.entry("contact_pi", "contact_pi"),
-            Map.entry("doc", "doc"),
+            Map.entry("program_doc", "program_doc"),
             Map.entry("focus_area", "focus_area"),
             Map.entry("nofo", "nofo"),
             Map.entry("program_acronym", "program_acronym"),
@@ -784,9 +784,9 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         List<Map<String, Object>> projects;
 
         final String[][] PROPERTIES = new String[][]{
-            new String[]{"abstract_text", "abstract_text"},
-            new String[]{"opportunity_number", "opportunity_number"},
-            new String[]{"org_name", "org_name"},
+            new String[]{"project_abstract_text", "project_abstract_text"},
+            new String[]{"project_opportunity_number", "project_opportunity_number"},
+            new String[]{"project_org_name", "project_org_name"},
             new String[]{"program_acronyms", "program_acronyms"},
             new String[]{"program_ids", "program_ids"},
             new String[]{"project_end_date", "project_end_date"},
@@ -796,9 +796,9 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         };
 
         Map<String, String> mapping = Map.ofEntries(
-            Map.entry("abstract_text", "abstract_text"),
-            Map.entry("opportunity_number", "opportunity_number"),
-            Map.entry("org_name", "org_name"),
+            Map.entry("project_abstract_text", "project_abstract_text"),
+            Map.entry("project_opportunity_number", "project_opportunity_number"),
+            Map.entry("project_org_name", "project_org_name"),
             Map.entry("program_acronyms", "program_acronyms"),
             Map.entry("program_ids", "program_ids"),
             Map.entry("project_end_date", "project_end_date"),
