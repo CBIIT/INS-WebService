@@ -4,7 +4,7 @@ type GrantsOverview {
     grant_title: String
     principal_investigators: String
     program_officers: String
-    project_end_date: String
+    grant_end_date: String
     project_id: String
 }
 
@@ -20,7 +20,7 @@ type ProgramsOverview {
 }
 
 type ProjectsOverview {
-    org_name: String
+    project_org_name: String
     program_ids: String
     program_names: String
     project_end_date: String
@@ -36,7 +36,7 @@ type PublicationsOverview {
     project_ids: String
     publication_date: String
     relative_citation_ratio: Float
-    title: String
+    publication_title: String
 }
 
 type StatsResult {
@@ -52,7 +52,7 @@ type SearchResult {
     numberOfProjects: Int
     numberOfPublications: Int
 
-    programCountByDoc: [FacetCount]
+    programCountByProgramDoc: [FacetCount]
     programCountByFocusArea: [FacetCount]
     publicationCountByRelativeCitationRatio: [FacetCount]
 
@@ -156,7 +156,7 @@ type ProgramDetails {
     cancer_type: [String]
     contact_nih: String
     contact_pi: String
-    doc: [String]
+    program_doc: [String]
     focus_area: [String]
     nofo: [String]
     program_acronym: String
@@ -165,9 +165,9 @@ type ProgramDetails {
 }
 
 type ProjectDetails {
-    abstract_text: String
-    opportunity_number: String
-    org_name: String
+    project_abstract_text: String
+    project_opportunity_number: String
+    project_org_name: String
     program_acronyms: String
     program_ids: String
     project_end_date: String
