@@ -34,6 +34,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     final String ORDER_BY = "order_by";
     final String SORT_DIRECTION = "sort_direction";
 
+    final String DATASETS_END_POINT = "/datasets/_search";
     final String GRANTS_END_POINT = "/grants/_search";
     final String PROGRAMS_END_POINT = "/programs/_search";
     final String PROJECTS_END_POINT = "/projects/_search";
@@ -119,6 +120,10 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                         })
                         .dataFetcher("numberOfPublications", env -> {
                             return numberOfPublications();
+                        })
+                        .dataFetcher("datasetDetails", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return datasetDetails(args);
                         })
                         .dataFetcher("programDetails", env -> {
                             Map<String, Object> args = env.getArguments();
@@ -714,6 +719,81 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         int count = counts.get("num_publications").getAsInt();
 
         return count;
+    }
+
+    /**
+     * Gets the details for a single Dataset record
+     *
+     * @param dbGaP_phs The ID of the Dataset
+     * @return A map of the Dataset record's properties
+     * @throws IOException
+     */
+    private Map<String, Object> datasetDetails(Map<String, Object> params) throws IOException {
+        Map<String, Object> dataset;
+        String datasetId = (String) params.get("dbGaP_phs");
+        List<Map<String, Object>> datasets;
+
+        final String[][] PROPERTIES = new String[][]{
+            new String[]{"dataset_title", "dataset_title"},
+            new String[]{"description", "description"},
+            new String[]{"dbGaP_phs", "dbGaP_phs"},
+            new String[]{"dbGaP_URL", "dbGaP_URL"},
+            new String[]{"dataset_doc", "dataset_doc"},
+            new String[]{"release_date", "release_date"},
+            new String[]{"PI_name", "PI_name"},
+            new String[]{"funding_source", "funding_source"},
+            new String[]{"dataset_pmid", "dataset_pmid"},
+            new String[]{"study_type", "study_type"},
+            new String[]{"limitations_for_reuse", "limitations_for_reuse"},
+            new String[]{"assay_method", "assay_method"},
+            new String[]{"participant_count", "participant_count"},
+            new String[]{"sample_count", "sample_count"},
+            new String[]{"primary_disease", "primary_disease"},
+            new String[]{"related_genes", "related_genes"},
+            new String[]{"related_diseases", "related_diseases"},
+            new String[]{"related_terms", "related_terms"},
+            new String[]{"study_links", "study_links"},
+        };
+
+        Map<String, String> mapping = Map.ofEntries(
+            Map.entry("dataset_title", "dataset_title"),
+            Map.entry("description", "description"),
+            Map.entry("dbGaP_phs", "dbGaP_phs"),
+            Map.entry("dbGaP_URL", "dbGaP_URL"),
+            Map.entry("dataset_doc", "dataset_doc"),
+            Map.entry("release_date", "release_date"),
+            Map.entry("PI_name", "PI_name"),
+            Map.entry("funding_source", "funding_source"),
+            Map.entry("dataset_pmid", "dataset_pmid"),
+            Map.entry("study_type", "study_type"),
+            Map.entry("limitations_for_reuse", "limitations_for_reuse"),
+            Map.entry("assay_method", "assay_method"),
+            Map.entry("participant_count", "participant_count"),
+            Map.entry("sample_count", "sample_count"),
+            Map.entry("primary_disease", "primary_disease"),
+            Map.entry("related_genes", "related_genes"),
+            Map.entry("related_diseases", "related_diseases"),
+            Map.entry("related_terms", "related_terms"),
+            Map.entry("study_links", "study_links")
+        );
+
+        Map<String, Object> dataset_params = Map.ofEntries(
+            Map.entry("dbGaP_phs", List.of(datasetId)),
+            Map.entry(ORDER_BY, "dbGaP_phs"),
+            Map.entry(SORT_DIRECTION, "ASC"),
+            Map.entry(PAGE_SIZE, 1),
+            Map.entry(OFFSET, 0)
+        );
+
+        datasets = overview(DATASETS_END_POINT, dataset_params, PROPERTIES, "dbGaP_phs", mapping, REGULAR_PARAMS, "nested_filters", "datasets");
+
+        try {
+            dataset = datasets.get(0);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
+
+        return dataset;
     }
 
     /**

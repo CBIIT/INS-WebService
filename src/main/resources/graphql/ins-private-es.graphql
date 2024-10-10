@@ -152,6 +152,28 @@ type ProgramInfo {
     num_subjects: Int
 }
 
+type DatasetDetails {
+    dataset_title: String
+    description: String
+    dbGaP_phs: String
+    dbGaP_URL: String
+    dataset_doc: String
+    release_date: String
+    PI_name: String
+    funding_source: String
+    dataset_pmid: String
+    study_type: String
+    limitations_for_reuse: String
+    assay_method: String
+    participant_count: Int
+    sample_count: Int
+    primary_disease: String
+    related_genes: String
+    related_diseases: String
+    related_terms: String
+    study_links: String
+}
+
 type ProgramDetails {
     cancer_type: [String]
     contact_nih: String
@@ -349,6 +371,7 @@ type QueryType {
     ): [PublicationsOverview]
 
     programInfo: [ProgramInfo]
+    datasetDetails(dbGaP_phs: String):  DatasetDetails
     programDetails(program_id: String):  ProgramDetails
     projectDetails(project_id: String):  ProjectDetails
     subjectDetail(subject_id: String): SubjectDetail
