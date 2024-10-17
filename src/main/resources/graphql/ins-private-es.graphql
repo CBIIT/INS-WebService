@@ -284,6 +284,7 @@ type QueryType {
     findProjectIdsInList(project_ids: [String] = []): [ProjectResult]
     globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
     idsLists: [IdsListsES]
+    numberOfDatasets: Int
     numberOfGrants: Int
     numberOfPrograms: Int
     numberOfProjects: Int
