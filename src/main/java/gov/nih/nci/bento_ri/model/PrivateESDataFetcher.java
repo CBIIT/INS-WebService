@@ -109,6 +109,9 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return publicationsOverview(args);
                         })
+                        .dataFetcher("numberOfDatasets", env -> {
+                            return numberOfDatasets();
+                        })
                         .dataFetcher("numberOfGrants", env -> {
                             return numberOfGrants();
                         })
@@ -655,6 +658,27 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                 Map.entry("missing", missingDirection.get(sortDirection))
             ))
         );
+    }
+
+    /**
+     * Queries Opensearch for the total Datasets count
+     * @return
+     * @throws Exception
+     */
+    private Integer numberOfDatasets() throws Exception {
+        Request homeStatsRequest = new Request("GET", HOME_STATS_END_POINT);
+        JsonObject homeStatsResult = insEsService.send(homeStatsRequest);
+        JsonArray hits = homeStatsResult.getAsJsonObject("hits").getAsJsonArray("hits");
+        Iterator<JsonElement> hitsIter = hits.iterator();
+
+        if (!hitsIter.hasNext()) {
+            throw new Exception("Error: no results for homepage stats!");
+        }
+
+        JsonObject counts = hitsIter.next().getAsJsonObject().getAsJsonObject("_source");
+        int count = counts.get("num_datasets").getAsInt();
+
+        return count;
     }
 
     private Integer numberOfGrants() throws Exception {
