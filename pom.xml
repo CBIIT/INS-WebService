@@ -124,12 +124,7 @@
             <artifactId>jedis</artifactId>
             <version>3.10.0</version>
         </dependency>
-        <!-- Apache Tomcat -->
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
-            <version>10.1.36</version>
-        </dependency>
+       
         <!-- JUnit -->
         <dependency>
             <groupId>junit</groupId>
