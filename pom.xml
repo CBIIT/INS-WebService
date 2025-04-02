@@ -181,6 +181,7 @@
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
+             <version>10.1.36</version>
         </dependency>
         <!-- JUnit -->
         <dependency>
@@ -334,11 +335,13 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <jvmArguments>-Xms1g -Xmx2g</jvmArguments>
-                </configuration>
+              <groupId>org.springframework.boot</groupId>
+              <artifactId>spring-boot-maven-plugin</artifactId>
+              <configuration>
+                <jvmArguments>
+                  -Xms1g -Xmx2g -Dorg.apache.catalina.webresources.SkipResourceSetChecks=true
+                </jvmArguments>
+              </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
