@@ -155,8 +155,9 @@ type ProgramInfo {
 type DatasetDetails {
     dataset_title: String
     description: String
-    dbGaP_phs: String
-    dbGaP_URL: String
+    dataset_source_id: String
+    dataset_source_repo: String
+    dataset_source_url: String
     dataset_doc: String
     release_date: String
     PI_name: String
@@ -372,7 +373,7 @@ type QueryType {
     ): [PublicationsOverview]
 
     programInfo: [ProgramInfo]
-    datasetDetails(dbGaP_phs: String):  DatasetDetails
+    datasetDetails(dataset_source_id: String):  DatasetDetails
     programDetails(program_id: String):  ProgramDetails
     projectDetails(project_id: String):  ProjectDetails
     subjectDetail(subject_id: String): SubjectDetail
