@@ -748,20 +748,20 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     /**
      * Gets the details for a single Dataset record
      *
-     * @param dbGaP_phs The ID of the Dataset
+     * @param dataset_source_id The ID of the Dataset
      * @return A map of the Dataset record's properties
      * @throws IOException
      */
     private Map<String, Object> datasetDetails(Map<String, Object> params) throws IOException {
         Map<String, Object> dataset;
-        String datasetId = (String) params.get("dbGaP_phs");
+        String datasetId = (String) params.get("dataset_source_id");
         List<Map<String, Object>> datasets;
 
         final String[][] PROPERTIES = new String[][]{
             new String[]{"dataset_title", "dataset_title"},
             new String[]{"description", "description"},
-            new String[]{"dbGaP_phs", "dbGaP_phs"},
-            new String[]{"dbGaP_URL", "dbGaP_URL"},
+            new String[]{"dataset_source_id", "dataset_source_id"},
+            new String[]{"dataset_source_url", "dataset_source_url"},
             new String[]{"dataset_doc", "dataset_doc"},
             new String[]{"release_date", "release_date"},
             new String[]{"PI_name", "PI_name"},
@@ -782,8 +782,8 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Map<String, String> mapping = Map.ofEntries(
             Map.entry("dataset_title", "dataset_title"),
             Map.entry("description", "description"),
-            Map.entry("dbGaP_phs", "dbGaP_phs"),
-            Map.entry("dbGaP_URL", "dbGaP_URL"),
+            Map.entry("dataset_source_id", "dataset_source_id"),
+            Map.entry("dataset_source_url", "dataset_source_url"),
             Map.entry("dataset_doc", "dataset_doc"),
             Map.entry("release_date", "release_date"),
             Map.entry("PI_name", "PI_name"),
@@ -802,14 +802,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         );
 
         Map<String, Object> dataset_params = Map.ofEntries(
-            Map.entry("dbGaP_phs", List.of(datasetId)),
-            Map.entry(ORDER_BY, "dbGaP_phs"),
+            Map.entry("dataset_source_id", List.of(datasetId)),
+            Map.entry(ORDER_BY, "dataset_source_id"),
             Map.entry(SORT_DIRECTION, "ASC"),
             Map.entry(PAGE_SIZE, 1),
             Map.entry(OFFSET, 0)
         );
 
-        datasets = overview(DATASETS_END_POINT, dataset_params, PROPERTIES, "dbGaP_phs", mapping, REGULAR_PARAMS, "nested_filters", "datasets");
+        datasets = overview(DATASETS_END_POINT, dataset_params, PROPERTIES, "dataset_source_id", mapping, REGULAR_PARAMS, "nested_filters", "datasets");
 
         try {
             dataset = datasets.get(0);
