@@ -156,6 +156,7 @@ type DatasetDetails {
     dataset_title: String
     description: String
     dataset_source_id: String
+    dataset_source_repo: String
     dataset_source_url: String
     dataset_doc: String
     release_date: String
