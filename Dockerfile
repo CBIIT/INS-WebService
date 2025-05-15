@@ -1,14 +1,12 @@
 # Build stage
-
 FROM maven:3.9.6-eclipse-temurin-17 as build
-
 
 WORKDIR /usr/src/app
 COPY . .
 RUN mvn package -DskipTests
 
 # Production stage
-FROM tomcat:11.0.4-jdk17 AS fnl_base_image
+FROM tomcat:11.0.6-jdk17 AS fnl_base_image
 
 RUN apt-get update && apt-get -y upgrade
 
@@ -16,6 +14,9 @@ RUN apt-get update && apt-get -y upgrade
 RUN apt-get update && apt-get install unzip
 RUN rm -rf /usr/local/tomcat/webapps.dist
 RUN rm -rf /usr/local/tomcat/webapps/ROOT
+
+# Modify the server.xml file to block error reporting
+RUN sed -i 's|</Host>|  <Valve className="org.apache.catalina.valves.ErrorReportValve"\n               showReport="false"\n               showServerInfo="false" />\n\n      </Host>|' conf/server.xml 
 
 # expose ports
 EXPOSE 8080
