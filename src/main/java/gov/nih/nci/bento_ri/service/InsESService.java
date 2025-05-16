@@ -1,16 +1,19 @@
 package gov.nih.nci.bento_ri.service;
 
 import com.google.gson.*;
+
 import gov.nih.nci.bento.model.ConfigurationDAO;
 import gov.nih.nci.bento.service.ESService;
 import gov.nih.nci.bento.service.RedisService;
 import gov.nih.nci.bento.service.connector.AWSClient;
 import gov.nih.nci.bento.service.connector.AbstractClient;
 import gov.nih.nci.bento.service.connector.DefaultClient;
+import gov.nih.nci.bento.utility.TypeChecker;
 
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.opensearch.client.*;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
@@ -152,7 +155,14 @@ public class InsESService extends ESService {
             if (rangeParams.contains(key)) {
                 // Range parameters, should contain two doubles, first lower bound, then upper bound
                 // Any other values after those two will be ignored
-                List<Integer> bounds = (List<Integer>) params.get(key);
+                List<Integer> bounds = null;
+                Object boundsRaw = params.get(key);
+
+                if (TypeChecker.isListOfType(boundsRaw, Integer.class)) {
+                    @SuppressWarnings("unchecked")
+                    List<Integer> castedBounds = (List<Integer>) boundsRaw;
+                    bounds = castedBounds;
+                }
                 if (bounds.size() >= 2) {
                     Integer lower = bounds.get(0);
                     Integer higher = bounds.get(1);
@@ -173,7 +183,14 @@ public class InsESService extends ESService {
                 }
             } else {
                 // Term parameters (default)
-                List<String> valueSet = (List<String>) params.get(key);
+                List<String> valueSet = null;
+                Object valueSetRaw = params.get(key);
+
+                if (TypeChecker.isListOfType(valueSetRaw, String.class)) {
+                    @SuppressWarnings("unchecked")
+                    List<String> castedValueSet = (List<String>) valueSetRaw;
+                    valueSet = castedValueSet;
+                }
                 
                 if (key.equals("program_ids")) {
                     key = "program_id";
@@ -563,12 +580,22 @@ public class InsESService extends ESService {
             value = new HashMap<String, Object>();
             JsonObject object = element.getAsJsonObject();
             for (String key: object.keySet()) {
-                ((Map<String, Object>) value).put(key, getValue(object.get(key)));
+                if (TypeChecker.isMapStringObject(value)) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> castedValue = (Map<String, Object>) value;
+                    castedValue.put(key, getValue(object.get(key)));
+                    value = castedValue;
+                }
             }
         } else if (element.isJsonArray()) {
             value = new ArrayList<>();
             for (JsonElement entry: element.getAsJsonArray()) {
-                ((List<Object>)value).add(getValue(entry));
+                if (TypeChecker.isListOfType(value, Object.class)) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> castedValue = (List<Object>) value;
+                    castedValue.add(getValue(entry));
+                    value = castedValue;
+                }
             }
         } else {
             value = element.getAsString();
