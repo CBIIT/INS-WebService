@@ -2,10 +2,9 @@ package gov.nih.nci.bento_ri.model;
 
 import gov.nih.nci.bento.constants.Const;
 import gov.nih.nci.bento.model.AbstractPrivateESDataFetcher;
-import gov.nih.nci.bento.model.search.mapper.TypeMapperImpl;
-import gov.nih.nci.bento.model.search.mapper.TypeMapperService;
 import gov.nih.nci.bento.model.search.yaml.YamlQueryFactory;
 import gov.nih.nci.bento.service.ESService;
+import gov.nih.nci.bento.utility.TypeChecker;
 import gov.nih.nci.bento_ri.service.InsESService;
 import graphql.schema.idl.RuntimeWiring;
 import org.apache.logging.log4j.LogManager;
@@ -151,7 +150,15 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private List<Map<String, Object>> subjectCountBy(String category, Map<String, Object> params, String endpoint, Map<String, Object> additionalParams, String cardinalityAggName, String indexType) throws IOException {
         Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE), REGULAR_PARAMS, "nested_filters", indexType);
         List<String> only_includes;
-        List<String> valueSet = INCLUDE_PARAMS.contains(category) ? (List<String>)params.get(category) : List.of();
+        List<String> valueSet = null;
+        Object valueSetRaw = params.get(category);
+
+        if (TypeChecker.isListOfType(valueSetRaw, String.class)) {
+            @SuppressWarnings("unchecked")
+            List<String> castedValueSet = (List<String>) params.get(category);
+            valueSet = INCLUDE_PARAMS.contains(category) ? castedValueSet : List.of();
+        }
+
         if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))){
             only_includes = valueSet;
         } else {
@@ -176,17 +183,6 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private List<Map<String, Object>> filterSubjectCountBy(String category, Map<String, Object> params, String endpoint, Map<String, Object> additionalParams, String cardinalityAggName, String indexType) throws IOException {
         Map<String, Object> query = insEsService.buildFacetFilterQuery(params, RANGE_PARAMS, Set.of(PAGE_SIZE, category), REGULAR_PARAMS, "nested_filters", indexType);
         return getGroupCount(category, query, endpoint, cardinalityAggName, List.of());
-    }
-
-    private JsonArray getNodeCount(String category, Map<String, Object> query, String endpoint) throws IOException {
-        query = insEsService.addNodeCountAggregations(query, category);
-        Request request = new Request("GET", endpoint);
-        request.setJsonEntity(gson.toJson(query));
-        JsonObject jsonObject = insEsService.send(request);
-        Map<String, JsonArray> aggs = insEsService.collectNodeCountAggs(jsonObject, category);
-        JsonArray buckets = aggs.get(category);
-
-        return buckets;
     }
 
     private List<Map<String, Object>> getGroupCountByRange(String category, Map<String, Object> query, String endpoint, String cardinalityAggName) throws IOException {
@@ -238,19 +234,6 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                     "subjects", ranges.get("count").getAsInt(),
                     "upperBound", ranges.get("max").getAsInt()
             ));
-        }
-        return data;
-    }
-
-    private List<Map<String, Object>> getBooleanGroupCountHelper(JsonObject filters) throws IOException {
-        List<Map<String, Object>> data = new ArrayList<>();
-        for (Map.Entry<String, JsonElement> group: filters.entrySet()) {
-            int count = group.getValue().getAsJsonObject().get("parent").getAsJsonObject().get("doc_count").getAsInt();
-            if (count > 0) {
-                data.add(Map.of("group", group.getKey(),
-                    "subjects", count
-                ));
-            }
         }
         return data;
     }
@@ -436,12 +419,15 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         // widgets data and facet filter counts for projects
         for (var agg: PROJECT_TERM_AGGS) {
             String field = agg.get(AGG_NAME);
+            List<String> values = null;
+            Object valuesRaw = params.get(field);
             String widgetQueryName = agg.get(WIDGET_QUERY);
             String filterCountQueryName = agg.get(FILTER_COUNT_QUERY);
             String endpoint = agg.get(AGG_ENDPOINT);
             String indexType = endpoint.replace("/", "").replace("_search", "");
             String cardinalityAggName = agg.get(CARDINALITY_AGG_NAME);
             List<Map<String, Object>> filterCount = filterSubjectCountBy(field, params, endpoint, cardinalityAggName, indexType);
+
             if(RANGE_PARAMS.contains(field)) {
                 data.put(filterCountQueryName, filterCount.get(0));
             } else {
@@ -452,11 +438,17 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             if (widgetQueryName == null) {
                 continue;
             }
+
+            if (TypeChecker.isListOfType(valuesRaw, String.class)) {
+                @SuppressWarnings("unchecked")
+                List<String> castedValues = (List<String>) valuesRaw;
+                values = castedValues;
+            }
             
             if (RANGE_PARAMS.contains(field)) {
                 List<Map<String, Object>> subjectCount = subjectCountByRange(field, params, endpoint, cardinalityAggName, indexType);
                 data.put(widgetQueryName, subjectCount);
-            } else if (params.containsKey(field) && ((List<String>)params.get(field)).size() > 0) {
+            } else if (params.containsKey(field) && values.size() > 0) {
                 List<Map<String, Object>> subjectCount = subjectCountBy(field, params, endpoint, cardinalityAggName, indexType);
                 data.put(widgetQueryName, subjectCount);
             } else {
@@ -930,35 +922,5 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         }
 
         return project;
-    }
-
-    private String generateCacheKey(Map<String, Object> params) throws IOException {
-        List<String> keys = new ArrayList<>();
-        for (String key: params.keySet()) {
-            if (RANGE_PARAMS.contains(key)) {
-                // Range parameters, should contain two doubles, first lower bound, then upper bound
-                // Any other values after those two will be ignored
-                List<Integer> bounds = (List<Integer>) params.get(key);
-                if (bounds.size() >= 2) {
-                    Integer lower = bounds.get(0);
-                    Integer higher = bounds.get(1);
-                    if (lower == null && higher == null) {
-                        throw new IOException("Lower bound and Upper bound can't be both null!");
-                    }
-                    keys.add(key.concat(lower.toString()).concat(higher.toString()));
-                }
-            } else {
-                List<String> valueSet = (List<String>) params.get(key);
-                // list with only one empty string [""] means return all records
-                if (valueSet.size() > 0 && !(valueSet.size() == 1 && valueSet.get(0).equals(""))) {
-                    keys.add(key.concat(valueSet.toString()));
-                }
-            }
-        }
-        if (keys.size() == 0){
-            return "all";
-        } else {
-            return keys.toString();
-        }
     }
 }

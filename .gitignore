@@ -1,6 +1,7 @@
 .apt_generated
 .apt_generated_tests
 .classpath
+.devcontainer/
 .DS_Store
 .factorypath
 .idea
