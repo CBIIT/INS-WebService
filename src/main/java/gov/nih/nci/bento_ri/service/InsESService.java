@@ -17,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 import org.opensearch.client.*;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -52,9 +51,6 @@ public class InsESService extends ESService {
     static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
     private static final Logger logger = LogManager.getLogger(RedisService.class);
-
-    @Autowired
-    private ConfigurationDAO config;
 
     private RestClient client;
 
@@ -110,8 +106,10 @@ public class InsESService extends ESService {
             Object obj = params.get(key);
 
             List<String> valueSet;
-            if (obj instanceof List) {
-                valueSet = (List<String>) obj;
+            if (TypeChecker.isListOfType(obj, String.class)) {
+                @SuppressWarnings("unchecked")
+                List<String> castedValueSet = (List<String>) obj;
+                valueSet = castedValueSet;
             } else {
                 String value = (String)obj;
                 valueSet = List.of(value);
