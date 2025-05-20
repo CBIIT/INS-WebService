@@ -153,12 +153,16 @@ type ProgramInfo {
 }
 
 type DatasetDetails {
+    dataset_maximum_age_at_baseline: Int
+    dataset_minimum_age_at_baseline: Int
     dataset_title: String
     description: String
     dataset_source_id: String
     dataset_source_repo: String
     dataset_source_url: String
     dataset_doc: String
+    dataset_year_enrollment_ended: Int
+    dataset_year_enrollment_started: Int
     release_date: String
     PI_name: String
     funding_source: String

@@ -750,12 +750,16 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         List<Map<String, Object>> datasets;
 
         final String[][] PROPERTIES = new String[][]{
+            new String[]{"dataset_maximum_age_at_baseline", "dataset_maximum_age_at_baseline"},
+            new String[]{"dataset_minimum_age_at_baseline", "dataset_minimum_age_at_baseline"},
             new String[]{"dataset_title", "dataset_title"},
             new String[]{"description", "description"},
             new String[]{"dataset_source_id", "dataset_source_id"},
             new String[]{"dataset_source_repo", "dataset_source_repo"},
             new String[]{"dataset_source_url", "dataset_source_url"},
             new String[]{"dataset_doc", "dataset_doc"},
+            new String[]{"dataset_year_enrollment_ended", "dataset_year_enrollment_ended"},
+            new String[]{"dataset_year_enrollment_started", "dataset_year_enrollment_started"},
             new String[]{"release_date", "release_date"},
             new String[]{"PI_name", "PI_name"},
             new String[]{"funding_source", "funding_source"},
@@ -773,12 +777,16 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         };
 
         Map<String, String> mapping = Map.ofEntries(
+            Map.entry("dataset_maximum_age_at_baseline", "dataset_maximum_age_at_baseline"),
+            Map.entry("dataset_minimum_age_at_baseline", "dataset_minimum_age_at_baseline"),
             Map.entry("dataset_title", "dataset_title"),
             Map.entry("description", "description"),
             Map.entry("dataset_source_id", "dataset_source_id"),
             Map.entry("dataset_source_repo", "dataset_source_repo"),
             Map.entry("dataset_source_url", "dataset_source_url"),
             Map.entry("dataset_doc", "dataset_doc"),
+            Map.entry("dataset_year_enrollment_ended", "dataset_year_enrollment_ended"),
+            Map.entry("dataset_year_enrollment_started", "dataset_year_enrollment_started"),
             Map.entry("release_date", "release_date"),
             Map.entry("PI_name", "PI_name"),
             Map.entry("funding_source", "funding_source"),
