@@ -152,6 +152,14 @@ type ProgramInfo {
     num_subjects: Int
 }
 
+type DatasetFile {
+    access_level: String!
+    downloadUrl: String!
+    file_id: String!
+    file_name: String!
+    file_type: String
+}
+
 type DatasetDetails {
     dataset_maximum_age_at_baseline: Int
     dataset_minimum_age_at_baseline: Int
@@ -380,6 +388,7 @@ type QueryType {
 
     programInfo: [ProgramInfo]
     datasetDetails(dataset_source_id: String):  DatasetDetails
+    getDatasetFiles(dataset_uuid: String!, accessTypes: [String!]!): [DatasetFile]
     programDetails(program_id: String):  ProgramDetails
     projectDetails(project_id: String):  ProjectDetails
     subjectDetail(subject_id: String): SubjectDetail

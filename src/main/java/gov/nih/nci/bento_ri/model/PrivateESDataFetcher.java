@@ -127,6 +127,10 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                             Map<String, Object> args = env.getArguments();
                             return datasetDetails(args);
                         })
+                        .dataFetcher("getDatasetFiles", env -> {
+                            Map<String, Object> args = env.getArguments();
+                            return getDatasetFiles(args);
+                        })
                         .dataFetcher("programDetails", env -> {
                             Map<String, Object> args = env.getArguments();
                             return programDetails(args);
@@ -824,6 +828,54 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         }
 
         return dataset;
+    }
+
+    /**
+     * Gets the files for a single Dataset record
+     *
+     * @param datasetUuid The UUID of the Dataset
+     * @param accessTypes The access types of the files
+     * @return A list of the Dataset's files
+     * @throws IOException
+     */
+    private List<Map<String, Object>> getDatasetFiles(Map<String, Object> params) throws IOException {
+        // String datasetUuid = (String) params.get("dataset_uuid");
+        // List<String> accessTypes = (List<String>) params.get("accessTypes");
+
+        // Map<String, Object> query = Map.ofEntries(
+        //     Map.entry("dataset_uuid", List.of(datasetUuid)),
+        //     Map.entry("access_types", accessTypes)
+        // );
+
+        // Request request = new Request("GET", FILES_END_POINT);
+        // return esService.collectPage(request, query, properties, ESService.MAX_ES_SIZE, 0);
+        List<Map<String, Object>> files = new ArrayList<>();
+
+        Map<String, Object> file1 = new HashMap<>();
+        file1.put("file_id", "one");
+        file1.put("file_name", "One");
+        file1.put("file_type", "typeOne");
+        file1.put("downloadUrl", "fake.com/one");
+        file1.put("access_level", "Open");
+        files.add(file1);
+
+        Map<String, Object> file2 = new HashMap<>();
+        file2.put("file_id", "two");
+        file2.put("file_name", "Two");
+        file2.put("file_type", "typeTwo");
+        file2.put("downloadUrl", "fake.com/two");
+        file2.put("access_level", "Open");
+        files.add(file2);
+
+        Map<String, Object> file3 = new HashMap<>();
+        file3.put("file_id", "three");
+        file3.put("file_name", "Three");
+        file3.put("file_type", "typeThree");
+        file3.put("downloadUrl", "fake.com/three");
+        file3.put("access_level", "Controlled");
+        files.add(file3);
+
+        return files;
     }
 
     /**
