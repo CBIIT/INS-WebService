@@ -6,10 +6,13 @@ import gov.nih.nci.bento.model.search.yaml.YamlQueryFactory;
 import gov.nih.nci.bento.service.ESService;
 import gov.nih.nci.bento.utility.TypeChecker;
 import gov.nih.nci.bento_ri.service.InsESService;
+
 import graphql.schema.idl.RuntimeWiring;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opensearch.client.Request;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.JsonArray;
@@ -27,6 +30,9 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     private final YamlQueryFactory yamlQueryFactory;
     private InsESService insEsService;
 
+    @Value("${aws.cloudfront.url:#{environment.AWS_CLOUDFRONT_URL}}")
+    private String cloudFrontUrl;
+
     // parameters used in queries
     final String PAGE_SIZE = "first";
     final String OFFSET = "offset";
@@ -34,6 +40,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     final String SORT_DIRECTION = "sort_direction";
 
     final String DATASETS_END_POINT = "/datasets/_search";
+    final String FILES_END_POINT = "/files/_search";
     final String GRANTS_END_POINT = "/grants/_search";
     final String PROGRAMS_END_POINT = "/programs/_search";
     final String PROJECTS_END_POINT = "/projects/_search";
@@ -838,41 +845,71 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
      * @throws IOException
      */
     private List<Map<String, Object>> getDatasetFiles(Map<String, Object> params) throws IOException {
-        // String datasetSourceId = (String) params.get("dataset_source_id");
-        // List<String> accessTypes = (List<String>) params.get("accessTypes");
+        List<Map<String, Object>> files;
 
-        // Map<String, Object> query = Map.ofEntries(
-        //     Map.entry("dataset_source_id", List.of(datasetUuid)),
-        //     Map.entry("access_level", accessTypes)
-        // );
+        final String[][] PROPERTIES = new String[][]{
+            new String[]{"dataset_source_id", "dataset_source_id"},
+            new String[]{"file_url_repo_prefix", "file_url_repo_prefix"},
+            new String[]{"file_id", "file_id"},
+            new String[]{"file_name", "file_name"},
+            new String[]{"file_type", "file_type"},
+            new String[]{"file_url", "file_url"},
+            new String[]{"access_level", "access_level"}
+        };
 
-        // Request request = new Request("GET", FILES_END_POINT);
-        // return esService.collectPage(request, query, properties, ESService.MAX_ES_SIZE, 0);
-        List<Map<String, Object>> files = new ArrayList<>();
+        Map<String, String> mapping = Map.ofEntries(
+            Map.entry("dataset_source_id", "dataset_source_id.sort"),
+            Map.entry("file_url_repo_prefix", "file_url_repo_prefix.sort"),
+            Map.entry("file_id", "file_id.sort"),
+            Map.entry("file_name", "file_name.sort"),
+            Map.entry("file_type", "file_type.sort"),
+            Map.entry("file_url", "file_url.sort"),
+            Map.entry("access_level", "access_level.sort")
+        );
 
-        Map<String, Object> file1 = new HashMap<>();
-        file1.put("file_id", "one");
-        file1.put("file_name", "One");
-        file1.put("file_type", "typeOne");
-        file1.put("downloadUrl", "fake.com/one");
-        file1.put("access_level", "Open");
-        files.add(file1);
+        // Create a new params object rather than mutating the input
+        Map<String, Object> queryParams = new HashMap<>(params);
 
-        Map<String, Object> file2 = new HashMap<>();
-        file2.put("file_id", "two");
-        file2.put("file_name", "Two");
-        file2.put("file_type", "typeTwo");
-        file2.put("downloadUrl", "fake.com/two");
-        file2.put("access_level", "Open");
-        files.add(file2);
+        // Rename 'accessTypes' to 'access_level'
+        queryParams.put("access_level.search", queryParams.remove("accessTypes"));
 
-        Map<String, Object> file3 = new HashMap<>();
-        file3.put("file_id", "three");
-        file3.put("file_name", "Three");
-        file3.put("file_type", "typeThree");
-        file3.put("downloadUrl", "fake.com/three");
-        file3.put("access_level", "Controlled");
-        files.add(file3);
+        // Turn dataset_source_id into a list
+        queryParams.put("dataset_source_id.search", List.of(queryParams.remove("dataset_source_id")));
+
+        // Turn filters into lowercase
+        for (String key : queryParams.keySet()) {
+            @SuppressWarnings("unchecked")
+            List<String> list = (List<String>) queryParams.get(key);
+            List<String> lowerCaseList = new ArrayList<String>();
+            list.forEach(s -> lowerCaseList.add(s.toLowerCase()));
+            queryParams.put(key, lowerCaseList);
+        }
+
+        // Add missing sorting params if not present
+        queryParams.putIfAbsent(ORDER_BY, "file_name");
+        queryParams.putIfAbsent(SORT_DIRECTION, "ASC");
+        queryParams.putIfAbsent(PAGE_SIZE, InsESService.MAX_ES_SIZE); // use MAX_ES_SIZE for maximum files per request
+        queryParams.putIfAbsent(OFFSET, 0);
+
+        files = overview(FILES_END_POINT, queryParams, PROPERTIES, "file_name", mapping, REGULAR_PARAMS, "nested_filters", "files");
+
+        // Form URLs for download
+        for (Map<String, Object> file : files) {
+            String prefix = (String) file.get("file_url_repo_prefix");
+            String fname = (String) file.get("file_url");
+
+            // Compose downloadUrl, handling extra slashes
+            String url = cloudFrontUrl.endsWith("/") ? cloudFrontUrl.substring(0, cloudFrontUrl.length() - 1) : cloudFrontUrl;
+            url += "/" + (prefix != null ? prefix : "");
+            if (!url.endsWith("/") && fname != null && !fname.startsWith("/")) {
+                url += "/";
+            }
+            url += (fname != null ? fname : "");
+
+            file.put("downloadUrl", url);
+            file.remove("file_url_repo_prefix");
+            file.remove("file_url");
+        }
 
         return files;
     }
