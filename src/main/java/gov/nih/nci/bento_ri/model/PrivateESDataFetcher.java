@@ -833,18 +833,17 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     /**
      * Gets the files for a single Dataset record
      *
-     * @param datasetUuid The UUID of the Dataset
-     * @param accessTypes The access types of the files
+     * @param params The filters applied
      * @return A list of the Dataset's files
      * @throws IOException
      */
     private List<Map<String, Object>> getDatasetFiles(Map<String, Object> params) throws IOException {
-        // String datasetUuid = (String) params.get("dataset_uuid");
+        // String datasetSourceId = (String) params.get("dataset_source_id");
         // List<String> accessTypes = (List<String>) params.get("accessTypes");
 
         // Map<String, Object> query = Map.ofEntries(
-        //     Map.entry("dataset_uuid", List.of(datasetUuid)),
-        //     Map.entry("access_types", accessTypes)
+        //     Map.entry("dataset_source_id", List.of(datasetUuid)),
+        //     Map.entry("access_level", accessTypes)
         // );
 
         // Request request = new Request("GET", FILES_END_POINT);

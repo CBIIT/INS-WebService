@@ -388,7 +388,7 @@ type QueryType {
 
     programInfo: [ProgramInfo]
     datasetDetails(dataset_source_id: String):  DatasetDetails
-    getDatasetFiles(dataset_uuid: String!, accessTypes: [String!]!): [DatasetFile]
+    getDatasetFiles(dataset_source_id: String!, accessTypes: [String!]!): [DatasetFile]
     programDetails(program_id: String):  ProgramDetails
     projectDetails(project_id: String):  ProjectDetails
     subjectDetail(subject_id: String): SubjectDetail
