@@ -896,15 +896,15 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         // Form URLs for download
         for (Map<String, Object> file : files) {
             String prefix = (String) file.get("file_url_repo_prefix");
-            String fname = (String) file.get("file_url");
+            String fileUrl = (String) file.get("file_url"); // Required property, guaranteed by ETL
 
             // Compose downloadUrl, handling extra slashes
             String url = cloudFrontUrl.endsWith("/") ? cloudFrontUrl.substring(0, cloudFrontUrl.length() - 1) : cloudFrontUrl;
             url += "/" + (prefix != null ? prefix : "");
-            if (!url.endsWith("/") && fname != null && !fname.startsWith("/")) {
+            if (!url.endsWith("/") && !fileUrl.startsWith("/")) {
                 url += "/";
             }
-            url += (fname != null ? fname : "");
+            url += fileUrl;
 
             file.put("downloadUrl", url);
             file.remove("file_url_repo_prefix");
