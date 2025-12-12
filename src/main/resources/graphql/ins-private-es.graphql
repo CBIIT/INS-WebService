@@ -4,12 +4,14 @@ type GrantsOverview {
     grant_title: String
     principal_investigators: String
     program_officers: String
-    project_end_date: String
+    grant_end_date: String
     project_id: String
 }
 
 type ProgramsOverview {
+    cancer_type_str: String
     data_link: String
+    data_link_and_program_acronym: String
     focus_area_str: String
     program_acronym: String
     program_id: String
@@ -18,7 +20,8 @@ type ProgramsOverview {
 }
 
 type ProjectsOverview {
-    org_name: String
+    project_org_name: String
+    program_ids: String
     program_names: String
     project_end_date: String
     project_id: String
@@ -33,7 +36,14 @@ type PublicationsOverview {
     project_ids: String
     publication_date: String
     relative_citation_ratio: Float
-    title: String
+    publication_title: String
+}
+
+type StatsResult {
+    numberOfGrants: Int
+    numberOfPrograms: Int
+    numberOfProjects: Int
+    numberOfPublications: Int
 }
 
 type SearchResult {
@@ -42,11 +52,12 @@ type SearchResult {
     numberOfProjects: Int
     numberOfPublications: Int
 
-    programCountByDoc: [FacetCount]
+    programCountByProgramDoc: [FacetCount]
     programCountByFocusArea: [FacetCount]
     publicationCountByRelativeCitationRatio: [FacetCount]
 
     filterProjectCountByFocusArea: [FacetCount]
+    filterProjectCountByCancerType: [FacetCount]
 }
 
 type FacetCount {
@@ -141,19 +152,55 @@ type ProgramInfo {
     num_subjects: Int
 }
 
-type ProgramDetail {
+type DatasetDetails {
+    dataset_maximum_age_at_baseline: Int
+    dataset_minimum_age_at_baseline: Int
+    dataset_title: String
+    description: String
+    dataset_source_id: String
+    dataset_source_repo: String
+    dataset_source_url: String
+    dataset_doc: String
+    dataset_year_enrollment_ended: Int
+    dataset_year_enrollment_started: Int
+    release_date: String
+    PI_name: String
+    funding_source: String
+    dataset_pmid: String
+    study_type: String
+    limitations_for_reuse: String
+    assay_method: String
+    participant_count: Int
+    sample_count: Int
+    primary_disease: String
+    related_genes: String
+    related_diseases: String
+    related_terms: String
+    study_links: String
+}
+
+type ProgramDetails {
+    cancer_type: [String]
+    contact_nih: String
+    contact_pi: String
+    program_doc: [String]
+    focus_area: [String]
+    nofo: [String]
     program_acronym: String
-    program_id: String
+    program_link: String
     program_name: String
-    program_full_description: String
-    institution_name: String
-    program_external_url: String
-    num_subjects: Int
-    num_samples: Int
-    num_lab_procedures: Int
-    disease_subtypes: [String]
-    studies: [StudyInfo]
-    diagnoses: [FacetCount]
+}
+
+type ProjectDetails {
+    project_abstract_text: String
+    project_opportunity_number: String
+    project_org_name: String
+    program_acronyms: String
+    program_ids: String
+    project_end_date: String
+    project_id: String
+    project_start_date: String
+    project_title: String
 }
 
 type StudyInfo {
@@ -242,31 +289,56 @@ type QueryType {
     findProjectIdsInList(project_ids: [String] = []): [ProjectResult]
     globalSearch (input: String, first: Int = 10, offset: Int = 0): GlobalSearchResult
     idsLists: [IdsListsES]
+    numberOfDatasets: Int
     numberOfGrants: Int
     numberOfPrograms: Int
     numberOfProjects: Int
     numberOfPublications: Int
 
+    stats (
+        # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
+        program_ids: [String] = []
+        program_names: [String] = []
+
+        # Other filters
+        project_id: [String] = []
+    ): StatsResult
+
     searchProjects (
+        # Facet filters
         program_ids: [String] = []
         program_names: [String] = []
         focus_area: [String] = []
+        cancer_type: [String] = []
     ): SearchResult
 
     grantsOverview (
+        # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
         program_ids: [String] = []
         program_names: [String] = []
-        focus_area: [String] = []
+
+        # Other filters
+        project_id: [String] = []
+
+        # Pagination
         order_by: String = "",
         sort_direction: String = "ASC",
         first: Int = 10,
-        offset: Int = 0
+        offset: Int = 0,
     ): [GrantsOverview]
 
     programsOverview (
+        # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
         program_ids: [String] = []
         program_names: [String] = []
-        focus_area: [String] = []
+
+        # Pagination
         order_by: String = "",
         sort_direction: String = "ASC",
         first: Int = 10,
@@ -274,9 +346,13 @@ type QueryType {
     ): [ProgramsOverview]
 
     projectsOverview (
+        # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
         program_ids: [String] = []
         program_names: [String] = []
-        focus_area: [String] = []
+
+        # Pagination
         order_by: String = "",
         sort_direction: String = "ASC",
         first: Int = 10,
@@ -284,17 +360,26 @@ type QueryType {
     ): [ProjectsOverview]
 
     publicationsOverview (
+        # Facet filters
+        cancer_type: [String] = []
+        focus_area: [String] = []
         program_ids: [String] = []
         program_names: [String] = []
-        focus_area: [String] = []
+
+        # Other filters
+        project_id: [String] = []
+
+        # Pagination
         order_by: String = "",
         sort_direction: String = "ASC",
         first: Int = 10,
-        offset: Int = 0
+        offset: Int = 0,
     ): [PublicationsOverview]
 
     programInfo: [ProgramInfo]
-    programDetail(program_id: String):  ProgramDetail
+    datasetDetails(dataset_source_id: String):  DatasetDetails
+    programDetails(program_id: String):  ProgramDetails
+    projectDetails(project_id: String):  ProjectDetails
     subjectDetail(subject_id: String): SubjectDetail
     armDetail(study_acronym: String): ArmDetail
     samplesForSubjectId(subject_id: String): [SampleDetail]

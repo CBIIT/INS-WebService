@@ -1,20 +1,22 @@
 package gov.nih.nci.bento_ri.service;
 
 import com.google.gson.*;
+
 import gov.nih.nci.bento.model.ConfigurationDAO;
 import gov.nih.nci.bento.service.ESService;
 import gov.nih.nci.bento.service.RedisService;
 import gov.nih.nci.bento.service.connector.AWSClient;
 import gov.nih.nci.bento.service.connector.AbstractClient;
 import gov.nih.nci.bento.service.connector.DefaultClient;
+import gov.nih.nci.bento.utility.TypeChecker;
 
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import org.opensearch.client.*;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -28,7 +30,11 @@ public class InsESService extends ESService {
     public static final String AGGS = "aggs";
     public static final int MAX_ES_SIZE = 10000;
     final Set<String> PROGRAM_PARAMS = Set.of(
-        "program_id", "program_name", "focus_area"
+        "program_id", "program_name", "focus_area",
+        "cancer_type"
+    );
+    final Set<String> PROJECT_PARAMS = Set.of(
+        "project_id"
     );
     final Map<String, Set<Map<String, Object>>> RANGES = Map.ofEntries(
         Map.entry("relative_citation_ratio", Set.of(
@@ -45,9 +51,6 @@ public class InsESService extends ESService {
     static final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
 
     private static final Logger logger = LogManager.getLogger(RedisService.class);
-
-    @Autowired
-    private ConfigurationDAO config;
 
     private RestClient client;
 
@@ -103,8 +106,10 @@ public class InsESService extends ESService {
             Object obj = params.get(key);
 
             List<String> valueSet;
-            if (obj instanceof List) {
-                valueSet = (List<String>) obj;
+            if (TypeChecker.isListOfType(obj, String.class)) {
+                @SuppressWarnings("unchecked")
+                List<String> castedValueSet = (List<String>) obj;
+                valueSet = castedValueSet;
             } else {
                 String value = (String)obj;
                 valueSet = List.of(value);
@@ -137,6 +142,7 @@ public class InsESService extends ESService {
 
         List<Object> filter = new ArrayList<>();
         List<Object> program_filters = new ArrayList<>();
+        List<Object> project_filters = new ArrayList<>();
         
         for (String key: params.keySet()) {
             String finalKey = key;
@@ -147,7 +153,14 @@ public class InsESService extends ESService {
             if (rangeParams.contains(key)) {
                 // Range parameters, should contain two doubles, first lower bound, then upper bound
                 // Any other values after those two will be ignored
-                List<Integer> bounds = (List<Integer>) params.get(key);
+                List<Integer> bounds = null;
+                Object boundsRaw = params.get(key);
+
+                if (TypeChecker.isListOfType(boundsRaw, Integer.class)) {
+                    @SuppressWarnings("unchecked")
+                    List<Integer> castedBounds = (List<Integer>) boundsRaw;
+                    bounds = castedBounds;
+                }
                 if (bounds.size() >= 2) {
                     Integer lower = bounds.get(0);
                     Integer higher = bounds.get(1);
@@ -168,7 +181,14 @@ public class InsESService extends ESService {
                 }
             } else {
                 // Term parameters (default)
-                List<String> valueSet = (List<String>) params.get(key);
+                List<String> valueSet = null;
+                Object valueSetRaw = params.get(key);
+
+                if (TypeChecker.isListOfType(valueSetRaw, String.class)) {
+                    @SuppressWarnings("unchecked")
+                    List<String> castedValueSet = (List<String>) valueSetRaw;
+                    valueSet = castedValueSet;
+                }
                 
                 if (key.equals("program_ids")) {
                     key = "program_id";
@@ -182,6 +202,10 @@ public class InsESService extends ESService {
                         program_filters.add(Map.of(
                             "terms", Map.of("programs." + key, valueSet)
                         ));
+                    } else if (PROJECT_PARAMS.contains(key) && List.of("publications").contains(indexType)) {
+                        project_filters.add(Map.of(
+                            "terms", Map.of("projects." + key, valueSet)
+                        ));
                     } else {
                         filter.add(Map.of(
                             "terms", Map.of(key, valueSet)
@@ -193,11 +217,16 @@ public class InsESService extends ESService {
 
         int FilterLen = filter.size();
         int programFilterLen = program_filters.size();
-        if (FilterLen + programFilterLen == 0) {
+        int projectFilterLen = project_filters.size();
+        if (FilterLen + programFilterLen + projectFilterLen == 0) {
             result.put("query", Map.of("match_all", Map.of()));
         } else {
             if (programFilterLen > 0) {
                 filter.add(Map.of("nested", Map.of("path", "programs", "query", Map.of("bool", Map.of("filter", program_filters)), "inner_hits", Map.of())));
+            }
+
+            if (projectFilterLen > 0) {
+                filter.add(Map.of("nested", Map.of("path", "projects", "query", Map.of("bool", Map.of("filter", project_filters)), "inner_hits", Map.of())));
             }
 
             result.put("query", Map.of("bool", Map.of("filter", filter)));
@@ -549,12 +578,22 @@ public class InsESService extends ESService {
             value = new HashMap<String, Object>();
             JsonObject object = element.getAsJsonObject();
             for (String key: object.keySet()) {
-                ((Map<String, Object>) value).put(key, getValue(object.get(key)));
+                if (TypeChecker.isMapStringObject(value)) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> castedValue = (Map<String, Object>) value;
+                    castedValue.put(key, getValue(object.get(key)));
+                    value = castedValue;
+                }
             }
         } else if (element.isJsonArray()) {
             value = new ArrayList<>();
             for (JsonElement entry: element.getAsJsonArray()) {
-                ((List<Object>)value).add(getValue(entry));
+                if (TypeChecker.isListOfType(value, Object.class)) {
+                    @SuppressWarnings("unchecked")
+                    List<Object> castedValue = (List<Object>) value;
+                    castedValue.add(getValue(entry));
+                    value = castedValue;
+                }
             }
         } else {
             value = element.getAsString();
