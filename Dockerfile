@@ -1,12 +1,12 @@
 # Build stage
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM maven:3.9.11-eclipse-temurin-17 AS build
 
 WORKDIR /usr/src/app
 COPY . .
 RUN mvn package -DskipTests
 
 # Production stage
-FROM tomcat:11.0.12-jdk17 AS fnl_base_image
+FROM tomcat:11.0.13-jdk17 AS fnl_base_image
 
 RUN apt-get update && apt-get -y upgrade
 
