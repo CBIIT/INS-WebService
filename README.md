@@ -1,4 +1,6 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/197ca1f70b6a47618332548b6da480c1)](https://www.codacy.com/gh/CBIIT/bento-backend?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CBIIT/bento-backend&amp;utm_campaign=Badge_Grade)
+[![Test](https://github.com/CBIIT/INS-WebService/actions/workflows/test.yml/badge.svg)](https://github.com/CBIIT/INS-WebService/actions/workflows/test.yml)
+[![Coverage Status](https://coveralls.io/repos/github/CBIIT/INS-WebService/badge.svg)](https://coveralls.io/github/CBIIT/INS-WebService)
 
 # Bento Backend Framework Configuration Guide
 This is the user documentation for the Bento Backend.
