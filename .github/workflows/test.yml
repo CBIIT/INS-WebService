@@ -32,7 +32,7 @@ jobs:
           cache: "maven"
 
       - name: Run Tests
-        run: mvn -Dmaven.test.failure.ignore=true test
+        run: mvn test
 
       - name: Coveralls GitHub Action
         uses: coverallsapp/github-action@v2
