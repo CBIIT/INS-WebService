@@ -163,6 +163,7 @@ type DatasetFile {
 type DatasetDetails {
     dataset_maximum_age_at_baseline: Int
     dataset_minimum_age_at_baseline: Int
+    dataset_storage_distribution: String
     dataset_title: String
     description: String
     experimental_approaches: String
