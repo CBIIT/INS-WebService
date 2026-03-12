@@ -763,6 +763,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         final String[][] PROPERTIES = new String[][]{
             new String[]{"dataset_maximum_age_at_baseline", "dataset_maximum_age_at_baseline"},
             new String[]{"dataset_minimum_age_at_baseline", "dataset_minimum_age_at_baseline"},
+            new String[]{"dataset_storage_distribution", "dataset_storage_distribution"},
             new String[]{"dataset_title", "dataset_title"},
             new String[]{"description", "description"},
             new String[]{"experimental_approaches", "experimental_approaches"},
@@ -792,6 +793,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Map<String, String> mapping = Map.ofEntries(
             Map.entry("dataset_maximum_age_at_baseline", "dataset_maximum_age_at_baseline"),
             Map.entry("dataset_minimum_age_at_baseline", "dataset_minimum_age_at_baseline"),
+            Map.entry("dataset_storage_distribution", "dataset_storage_distribution"),
             Map.entry("dataset_title", "dataset_title"),
             Map.entry("description", "description"),
             Map.entry("experimental_approaches", "experimental_approaches"),
