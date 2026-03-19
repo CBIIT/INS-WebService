@@ -751,16 +751,17 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     /**
      * Gets the details for a single Dataset record
      *
-     * @param dataset_source_id The ID of the Dataset
+     * @param params The filters applied
      * @return A map of the Dataset record's properties
      * @throws IOException
      */
     private Map<String, Object> datasetDetails(Map<String, Object> params) throws IOException {
         Map<String, Object> dataset;
-        String datasetId = (String) params.get("dataset_source_id");
+        String datasetId = (String) params.get("dataset_uuid");
         List<Map<String, Object>> datasets;
 
         final String[][] PROPERTIES = new String[][]{
+            new String[]{"dataset_uuid", "dataset_uuid"},
             new String[]{"dataset_maximum_age_at_baseline", "dataset_maximum_age_at_baseline"},
             new String[]{"dataset_minimum_age_at_baseline", "dataset_minimum_age_at_baseline"},
             new String[]{"dataset_storage_distribution", "dataset_storage_distribution"},
@@ -791,6 +792,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         };
 
         Map<String, String> mapping = Map.ofEntries(
+            Map.entry("dataset_uuid", "dataset_uuid"),
             Map.entry("dataset_maximum_age_at_baseline", "dataset_maximum_age_at_baseline"),
             Map.entry("dataset_minimum_age_at_baseline", "dataset_minimum_age_at_baseline"),
             Map.entry("dataset_storage_distribution", "dataset_storage_distribution"),
@@ -821,14 +823,14 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         );
 
         Map<String, Object> dataset_params = Map.ofEntries(
-            Map.entry("dataset_source_id", List.of(datasetId)),
-            Map.entry(ORDER_BY, "dataset_source_id"),
+            Map.entry("dataset_uuid", List.of(datasetId)),
+            Map.entry(ORDER_BY, "dataset_uuid"),
             Map.entry(SORT_DIRECTION, "ASC"),
             Map.entry(PAGE_SIZE, 1),
             Map.entry(OFFSET, 0)
         );
 
-        datasets = overview(DATASETS_END_POINT, dataset_params, PROPERTIES, "dataset_source_id", mapping, REGULAR_PARAMS, "nested_filters", "datasets");
+        datasets = overview(DATASETS_END_POINT, dataset_params, PROPERTIES, "dataset_uuid", mapping, REGULAR_PARAMS, "nested_filters", "datasets");
 
         try {
             dataset = datasets.get(0);
@@ -850,7 +852,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         List<Map<String, Object>> files;
 
         final String[][] PROPERTIES = new String[][]{
-            new String[]{"dataset_source_id", "dataset_source_id"},
+            new String[]{"dataset_uuid", "dataset_uuid"},
             new String[]{"file_url_repo_prefix", "file_url_repo_prefix"},
             new String[]{"file_id", "file_id"},
             new String[]{"file_name", "file_name"},
@@ -860,7 +862,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         };
 
         Map<String, String> mapping = Map.ofEntries(
-            Map.entry("dataset_source_id", "dataset_source_id.sort"),
+            Map.entry("dataset_uuid", "dataset_uuid.sort"),
             Map.entry("file_url_repo_prefix", "file_url_repo_prefix.sort"),
             Map.entry("file_id", "file_id.sort"),
             Map.entry("file_name", "file_name.sort"),
@@ -875,8 +877,8 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         // Rename 'accessTypes' to 'access_level'
         queryParams.put("access_level.search", queryParams.remove("accessTypes"));
 
-        // Turn dataset_source_id into a list
-        queryParams.put("dataset_source_id.search", List.of(queryParams.remove("dataset_source_id")));
+        // Turn dataset_uuid into a list
+        queryParams.put("dataset_uuid", List.of(queryParams.remove("dataset_uuid")));
 
         // Turn filters into lowercase
         for (String key : queryParams.keySet()) {
@@ -919,7 +921,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     /**
      * Gets the details for a single Program record
      *
-     * @param programId The ID of the Program
+     * @param params The filters applied
      * @return A map of the Program record's properties
      * @throws IOException
      */
@@ -974,7 +976,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     /**
      * Gets the details for a single Project record
      *
-     * @param projectId The ID of the Project
+     * @param params The filters applied
      * @return A map of the Project record's properties
      * @throws IOException
      */

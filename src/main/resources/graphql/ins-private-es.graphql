@@ -161,6 +161,7 @@ type DatasetFile {
 }
 
 type DatasetDetails {
+    dataset_uuid: String
     dataset_maximum_age_at_baseline: Int
     dataset_minimum_age_at_baseline: Int
     dataset_storage_distribution: String
@@ -388,8 +389,8 @@ type QueryType {
     ): [PublicationsOverview]
 
     programInfo: [ProgramInfo]
-    datasetDetails(dataset_source_id: String):  DatasetDetails
-    getDatasetFiles(dataset_source_id: String!, accessTypes: [String!]!): [DatasetFile]
+    datasetDetails(dataset_uuid: String!):  DatasetDetails
+    getDatasetFiles(dataset_uuid: String!, accessTypes: [String!]!): [DatasetFile]
     programDetails(program_id: String):  ProgramDetails
     projectDetails(project_id: String):  ProjectDetails
     subjectDetail(subject_id: String): SubjectDetail
