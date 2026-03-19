@@ -875,10 +875,19 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
         Map<String, Object> queryParams = new HashMap<>(params);
 
         // Rename 'accessTypes' to 'access_level'
-        queryParams.put("access_level", queryParams.remove("accessTypes"));
+        queryParams.put("access_level.search", queryParams.remove("accessTypes"));
 
         // Turn dataset_uuid into a list
         queryParams.put("dataset_uuid", List.of(queryParams.remove("dataset_uuid")));
+
+        // Turn filters into lowercase
+        for (String key : queryParams.keySet()) {
+            @SuppressWarnings("unchecked")
+            List<String> list = (List<String>) queryParams.get(key);
+            List<String> lowerCaseList = new ArrayList<String>();
+            list.forEach(s -> lowerCaseList.add(s.toLowerCase()));
+            queryParams.put(key, lowerCaseList);
+        }
 
         // Add missing sorting params if not present
         queryParams.putIfAbsent(ORDER_BY, "file_name");
