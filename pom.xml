@@ -41,9 +41,9 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec</artifactId>
-            <version>4.1.125.Final</version>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>4.1.125.Final</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -196,7 +196,7 @@
         <dependency>
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
-            <version>11.0.20</version>
+            <version>11.0.21</version>
         </dependency>
         <!-- JUnit -->
         <dependency>
