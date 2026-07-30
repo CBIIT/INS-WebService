@@ -71,24 +71,41 @@ Indices:
         type: integer
       num_publications:
         type: integer
+      num_resources:
+        type: integer
     # Using OPTIONAL MATCH so that we get all Programs
     cypher_query: >
-      MATCH (d:dataset)
-      WITH COUNT(DISTINCT d) AS num_datasets
-      MATCH (pg:program)
-      WITH num_datasets, COUNT(DISTINCT pg) AS num_programs
-      OPTIONAL MATCH (pj:project)-[:projects_of_program]->(pg)
-      WITH num_datasets, num_programs, COUNT(DISTINCT pj) AS num_projects
-      OPTIONAL MATCH (g:grant)-[:grants_of_project]->(pj)
-      WITH num_datasets, num_programs, num_projects, COUNT(DISTINCT g) AS num_grants
-      OPTIONAL MATCH (pb:publication)-[:has_publication]->(pj)
-      WITH num_datasets, num_grants, num_programs, num_projects, COUNT(DISTINCT pb) AS num_publications
+      CALL {
+        MATCH (d:dataset)
+        RETURN count(d) AS num_datasets
+      }
+      CALL {
+        MATCH (g:grant)
+        RETURN count(g) AS num_grants
+      }
+      CALL {
+        MATCH (pg:program)
+        RETURN count(pg) AS num_programs
+      }
+      CALL {
+        MATCH (pj:project)
+        RETURN count(pj) AS num_projects
+      }
+      CALL {
+        MATCH (pb:publication)
+        RETURN count(pb) AS num_publications
+      }
+      CALL {
+        MATCH (r:resource)
+        RETURN count(r) AS num_resources
+      }
       RETURN
         num_datasets,
         num_grants,
         num_programs,
         num_projects,
-        num_publications;
+        num_publications,
+        num_resources;
 
   # Grants are connected to Programs through Projects
   - index_name: grants
