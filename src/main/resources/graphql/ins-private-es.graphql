@@ -306,6 +306,7 @@ type QueryType {
     numberOfPrograms: Int
     numberOfProjects: Int
     numberOfPublications: Int
+    numberOfResources: Int
 
     stats (
         # Facet filters
