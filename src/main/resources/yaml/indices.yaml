@@ -1,0 +1,1490 @@
+# Datamodel commit fb6185a
+Settings:
+  number_of_shards: 1
+  max_result_window: 60000
+  max_inner_result_window: 500
+  mapping.total_fields.limit: 2000
+  max_ngram_diff: 30
+  analysis:
+    tokenizer:
+      ngram_tokenizer:
+        type: "ngram"
+        min_gram: 3
+        max_gram: 30
+        token_chars:
+          - "letter"
+          - "digit"
+          - "symbol"
+          - "punctuation"
+    filter:
+      my_filter:
+        type: "ngram"
+        min_gram: 3
+        max_gram: 30
+        token_chars:
+          - "letter"
+          - "digit"
+          - "symbol"
+          - "punctuation"
+    analyzer:
+      keyword_analyzer:
+        type: "custom"
+        tokenizer: "keyword"
+        filter:
+          - "lowercase"
+      ngram_analyzer:
+        type: "custom"
+        tokenizer: "ngram_tokenizer"
+        filter:
+          - "lowercase"
+      standard_analyzer:
+        type: "custom"
+        tokenizer: "whitespace"
+        filter:
+          - "lowercase"
+          - "my_filter"
+
+Indices:
+  # Global search
+  - index_name: ins_static_pages
+    type: about_file
+    mapping:
+      page:
+        type: search_as_you_type
+      title:
+        type: search_as_you_type
+      primaryContentImage:
+        type: text
+      content:
+        type: object
+
+  - index_name: home_stats
+    type: neo4j
+    mapping:
+      num_datasets:
+        type: integer
+      num_grants:
+        type: integer
+      num_programs:
+        type: integer
+      num_projects:
+        type: integer
+      num_publications:
+        type: integer
+      num_resources:
+        type: integer
+    # Using OPTIONAL MATCH so that we get all Programs
+    cypher_query: >
+      CALL {
+        MATCH (d:dataset)
+        RETURN count(d) AS num_datasets
+      }
+      CALL {
+        MATCH (g:grant)
+        RETURN count(g) AS num_grants
+      }
+      CALL {
+        MATCH (pg:program)
+        RETURN count(pg) AS num_programs
+      }
+      CALL {
+        MATCH (pj:project)
+        RETURN count(pj) AS num_projects
+      }
+      CALL {
+        MATCH (pb:publication)
+        RETURN count(pb) AS num_publications
+      }
+      CALL {
+        MATCH (r:resource)
+        RETURN count(r) AS num_resources
+      }
+      RETURN
+        num_datasets,
+        num_grants,
+        num_programs,
+        num_projects,
+        num_publications,
+        num_resources;
+
+  # Grants are connected to Programs through Projects
+  - index_name: grants
+    type: neo4j
+    mapping:
+      grant_id:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      grant_id_sort:
+        type: keyword
+      application_id:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      fiscal_year:
+        type: integer
+      grant_title:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      grant_title_sort:
+        type: keyword
+      grant_abstract_text:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      keywords: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      principal_investigators: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      principal_investigators_sort:
+        type: keyword
+      program_officers:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_officers_sort:
+        type: keyword
+      award_amount:
+        type: integer
+      nci_funded_amount:
+        type: integer
+      award_notice_date:
+        type: date
+        format: yyyy-MM-dd
+      grant_start_date:
+        type: date
+        format: yyyy-MM-dd
+      grant_end_date:
+        type: date
+        format: yyyy-MM-dd
+      grant_opportunity_number:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      grant_org_name:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      grant_org_city:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      grant_org_state:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      grant_org_country:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      # Programs
+      programs:
+        type: nested
+        properties:
+          focus_area: # list
+            type: keyword
+          cancer_type: # list
+            type: keyword
+          program_id:
+            type: keyword
+          program_name:
+            type: keyword
+      # Projects
+      project_id:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      project_id_sort:
+        type: keyword
+    # Avoiding OPTIONAL MATCH so that we don't get null grants
+    cypher_query: >
+      MATCH (pg:program),
+        (pj:project)-[:projects_of_program]->(pg),
+        (g:grant)-[:grants_of_project]->(pj)
+      WITH
+        g.grant_id AS grant_id,
+        apoc.text.regreplace(apoc.text.clean(g.grant_id), '[^\\p{Alpha}0-9]', '') AS grant_id_sort,
+        g.application_id AS application_id,
+        g.fiscal_year AS fiscal_year,
+        g.grant_title AS grant_title,
+        apoc.text.regreplace(apoc.text.clean(g.grant_title), '[^\\p{Alpha}0-9]', '') AS grant_title_sort,
+        g.grant_abstract_text AS grant_abstract_text,
+        g.keywords AS keywords,
+        g.principal_investigators AS principal_investigators,
+        apoc.text.regreplace(apoc.text.clean(g.principal_investigators), '[^\\p{Alpha}0-9]', '') AS principal_investigators_sort,
+        g.program_officers AS program_officers,
+        apoc.text.regreplace(apoc.text.clean(g.program_officers), '[^\\p{Alpha}0-9]', '') AS program_officers_sort,
+        g.award_amount AS award_amount,
+        g.nci_funded_amount AS nci_funded_amount,
+        (CASE g.award_notice_date WHEN '' THEN NULL ELSE g.award_notice_date END) AS award_notice_date,
+        (CASE g.grant_start_date WHEN '' THEN NULL ELSE g.grant_start_date END) AS grant_start_date,
+        (CASE g.grant_end_date WHEN '' THEN NULL ELSE g.grant_end_date END) AS grant_end_date,
+        g.grant_opportunity_number AS grant_opportunity_number,
+        g.grant_org_name AS grant_org_name,
+        g.grant_org_city AS grant_org_city,
+        g.grant_org_state AS grant_org_state,
+        g.grant_org_country AS grant_org_country,
+        COLLECT(DISTINCT({
+          focus_area: apoc.text.split(pg.focus_area, ';'),
+          cancer_type: apoc.text.split(pg.cancer_type, ';'),
+          program_id: pg.program_id,
+          program_name: pg.program_name
+        })) AS programs,
+        pj.project_id AS project_id,
+        apoc.text.regreplace(apoc.text.clean(pj.project_id), '[^\\p{Alpha}0-9]', '') AS project_id_sort
+      RETURN
+        grant_id,
+        grant_id_sort,
+        application_id,
+        fiscal_year,
+        grant_title,
+        grant_title_sort,
+        grant_abstract_text,
+        keywords,
+        principal_investigators,
+        principal_investigators_sort,
+        program_officers,
+        program_officers_sort,
+        award_amount,
+        nci_funded_amount,
+        award_notice_date,
+        grant_start_date,
+        grant_end_date,
+        grant_opportunity_number,
+        grant_org_name,
+        grant_org_city,
+        grant_org_state,
+        grant_org_country,
+        programs,
+        project_id,
+        project_id_sort;
+
+  # Programs are many-to-many with Projects
+  - index_name: programs
+    type: neo4j
+    mapping:
+      program_id:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_id_sort:
+        type: keyword
+      program_name:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_name_sort:
+        type: keyword
+      program_acronym:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_acronym_sort:
+        type: keyword
+      data_link_and_program_acronym:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      data_link_and_program_acronym_sort:
+        type: keyword
+      focus_area: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      focus_area_sort:
+        type: keyword
+      focus_area_str:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      cancer_type: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      cancer_type_sort:
+        type: keyword
+      cancer_type_str:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_doc: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_doc_str:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      contact_pi:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      contact_pi_email:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      contact_nih:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      contact_nih_email:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      nofo: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      nofo_str:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      award: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      award_str:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_link:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_link_sort:
+        type: keyword
+      data_link:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      data_link_sort:
+        type: keyword
+    cypher_query: >
+      MATCH (pg:program)
+      WITH
+        pg,
+        (CASE pg.data_link
+          WHEN '' THEN NULL
+          ELSE pg.program_acronym
+        END) AS data_link_and_program_acronym
+      WITH
+        pg.program_id AS program_id,
+        apoc.text.regreplace(apoc.text.clean(pg.program_id), '[^\\p{Alpha}0-9]', '') AS program_id_sort,
+        pg.program_name AS program_name,
+        apoc.text.regreplace(apoc.text.clean(pg.program_name), '[^\\p{Alpha}0-9]', '') AS program_name_sort,
+        pg.program_acronym AS program_acronym,
+        apoc.text.regreplace(apoc.text.clean(pg.program_acronym), '[^\\p{Alpha}0-9]', '') AS program_acronym_sort,
+        data_link_and_program_acronym,
+        apoc.text.regreplace(apoc.text.clean(data_link_and_program_acronym), '[^\\p{Alpha}0-9]', '') AS data_link_and_program_acronym_sort,
+        apoc.coll.sort(apoc.text.split(pg.focus_area, ';')) AS focus_area,
+        pg.focus_area AS focus_area_str,
+        apoc.text.regreplace(apoc.text.clean(pg.focus_area), '[^\\p{Alpha}0-9]', '') AS focus_area_sort,
+        apoc.coll.sort(apoc.text.split(pg.cancer_type, ';')) AS cancer_type,
+        pg.cancer_type AS cancer_type_str,
+        apoc.text.regreplace(apoc.text.clean(pg.cancer_type), '[^\\p{Alpha}0-9]', '') AS cancer_type_sort,
+        apoc.text.split(pg.program_doc, ';') AS program_doc,
+        pg.program_doc AS program_doc_str,
+        pg.contact_pi AS contact_pi,
+        pg.contact_pi_email AS contact_pi_email,
+        pg.contact_nih AS contact_nih,
+        pg.contact_nih_email AS contact_nih_email,
+        apoc.text.split(pg.nofo, ';') AS nofo,
+        pg.nofo AS nofo_str,
+        apoc.text.split(pg.award, ';') AS award,
+        pg.award AS award_str,
+        pg.program_link AS program_link,
+        apoc.text.regreplace(apoc.text.clean(pg.program_link), '[^\\p{Alpha}0-9]', '') AS program_link_sort,
+        pg.data_link AS data_link,
+        apoc.text.regreplace(apoc.text.clean(pg.data_link), '[^\\p{Alpha}0-9]', '') AS data_link_sort
+      RETURN
+        program_id,
+        program_id_sort,
+        program_name,
+        program_name_sort,
+        program_acronym,
+        program_acronym_sort,
+        data_link_and_program_acronym,
+        data_link_and_program_acronym_sort,
+        focus_area,
+        focus_area_str,
+        focus_area_sort,
+        cancer_type,
+        cancer_type_str,
+        cancer_type_sort,
+        program_doc,
+        program_doc_str,
+        contact_pi,
+        contact_pi_email,
+        contact_nih,
+        contact_nih_email,
+        nofo,
+        nofo_str,
+        award,
+        award_str,
+        program_link,
+        program_link_sort,
+        data_link,
+        data_link_sort;
+
+  - index_name: faceted_projects
+    type: neo4j
+    mapping:
+      project_id:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      # Programs
+      focus_area:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      cancer_type:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_id:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_name:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+    cypher_query: >
+      MATCH (pg:program)<-[:projects_of_program]-(pj:project)
+      RETURN
+        pj.project_id AS project_id,
+        apoc.text.split(pg.focus_area, ';') AS focus_area,
+        apoc.text.split(pg.cancer_type, ';') AS cancer_type,
+        pg.program_id AS program_id,
+        pg.program_name AS program_name;
+
+  # Projects are many-to-many with Programs
+  - index_name: projects
+    type: neo4j
+    mapping:
+      project_id:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      project_id_sort:
+        type: keyword
+      project_title:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      project_title_sort:
+        type: keyword
+      project_abstract_text:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      project_start_date:
+        type: date
+        format: yyyy-MM-dd
+      project_end_date:
+        type: date
+        format: yyyy-MM-dd
+      project_opportunity_number:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      project_org_name:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      project_org_name_sort:
+        type: keyword
+      project_org_city:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      project_org_state:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      project_org_country:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      # Programs
+      focus_area:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      cancer_type:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_acronyms:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_ids:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_names:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      program_names_sort:
+        type: keyword
+      programs:
+        type: nested
+        properties:
+          focus_area: # list
+            type: keyword
+          cancer_type: # list
+            type: keyword
+          program_id:
+            type: keyword
+          program_name:
+            type: keyword
+    # Avoiding OPTIONAL MATCH so that we don't get null projects
+    cypher_query: >
+      MATCH (pg:program)<-[:projects_of_program]-(pj:project)
+      WITH
+        pg,
+        pj,
+        apoc.text.split(pg.focus_area, ';') AS focus_areas,
+        apoc.text.split(pg.cancer_type, ';') AS cancer_type
+      ORDER BY toLower(pg.program_name) ASC
+      UNWIND focus_areas AS focus_area
+      WITH
+        pj.project_id AS project_id,
+        apoc.text.regreplace(apoc.text.clean(pj.project_id), '[^\\p{Alpha}0-9]', '') AS project_id_sort,
+        pj.project_title AS project_title,
+        apoc.text.regreplace(apoc.text.clean(pj.project_title), '[^\\p{Alpha}0-9]', '') AS project_title_sort,
+        pj.project_abstract_text AS project_abstract_text,
+        (CASE pj.project_start_date WHEN '' THEN NULL ELSE pj.project_start_date END) AS project_start_date,
+        (CASE pj.project_end_date WHEN '' THEN NULL ELSE pj.project_end_date END) AS project_end_date,
+        pj.project_opportunity_number AS project_opportunity_number,
+        pj.project_org_name AS project_org_name,
+        apoc.text.regreplace(apoc.text.clean(pj.project_org_name), '[^\\p{Alpha}0-9]', '') AS project_org_name_sort,
+        pj.project_org_city AS project_org_city,
+        pj.project_org_state AS project_org_state,
+        pj.project_org_country AS project_org_country,
+        COLLECT(DISTINCT focus_area) AS focus_area,
+        COLLECT(DISTINCT cancer_type) AS cancer_type,
+        apoc.text.join(COLLECT(DISTINCT pg.program_acronym), ';') AS program_acronyms,
+        apoc.text.join(COLLECT(DISTINCT pg.program_id), ';') AS program_ids,
+        apoc.text.join(COLLECT(DISTINCT pg.program_name), ';') AS program_names,
+        apoc.text.join(COLLECT(DISTINCT apoc.text.regreplace(apoc.text.clean(pg.program_name), '[^\\p{Alpha}0-9]', '')), '') AS program_names_sort,
+        COLLECT(DISTINCT({
+          focus_area: apoc.text.split(pg.focus_area, ';'),
+          cancer_type: apoc.text.split(pg.cancer_type, ';'),
+          program_id: pg.program_id,
+          program_name: pg.program_name
+        })) AS programs
+      RETURN
+        project_id,
+        project_id_sort,
+        project_title,
+        project_title_sort,
+        project_abstract_text,
+        project_start_date,
+        project_end_date,
+        project_opportunity_number,
+        project_org_name,
+        project_org_name_sort,
+        project_org_city,
+        project_org_state,
+        project_org_country,
+        focus_area,
+        cancer_type,
+        program_acronyms,
+        program_ids,
+        program_names,
+        program_names_sort,
+        programs;
+
+  # Publications are connected to Programs through Projects
+  - index_name: publications
+    type: neo4j
+    mapping:
+      pmid:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      pmid_sort:
+        type: keyword
+      publication_title:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      publication_title_sort:
+        type: keyword
+      authors: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      authors_sort:
+        type: keyword
+      publication_date:
+        type: date
+        format: yyyy-MM-dd
+      cited_by:
+        type: integer
+      relative_citation_ratio:
+        type: float
+      # Programs
+      programs:
+        type: nested
+        properties:
+          focus_area: # list
+            type: keyword
+          cancer_type: # list
+            type: keyword
+          program_id:
+            type: keyword
+          program_name:
+            type: keyword
+      # Projects
+      projects:
+        type: nested
+        properties:
+          project_id:
+            type: keyword
+      # Projects
+      project_ids:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      project_ids_sort:
+        type: keyword
+    # Avoiding OPTIONAL MATCH so that we don't get null publications
+    cypher_query: >
+      MATCH (pg:program),
+        (pj:project)-[:projects_of_program]->(pg),
+        (pb:publication)-[:has_publication]->(pj)
+      WITH
+        pb,
+        pj,
+        COLLECT(DISTINCT pg) AS programs,
+        COLLECT(DISTINCT pj) AS projects
+      ORDER BY toLower(pj.project_id) ASC
+      UNWIND programs AS program
+      UNWIND projects AS project
+      WITH
+        pb.pmid AS pmid,
+        apoc.text.regreplace(apoc.text.clean(pb.pmid), '[^\\p{Alpha}0-9]', '') AS pmid_sort,
+        pb.publication_title AS publication_title,
+        apoc.text.regreplace(apoc.text.clean(pb.publication_title), '[^\\p{Alpha}0-9]', '') AS publication_title_sort,
+        pb.authors AS authors,
+        apoc.text.regreplace(apoc.text.clean(pb.authors), '[^\\p{Alpha}0-9]', '') AS authors_sort,
+        (CASE pb.publication_date WHEN '' THEN NULL ELSE pb.publication_date END) AS publication_date,
+        toInteger(pb.cited_by) AS cited_by,
+        toFloat(pb.relative_citation_ratio) AS relative_citation_ratio,
+        COLLECT(DISTINCT({
+          focus_area: apoc.text.split(program.focus_area, ';'),
+          cancer_type: apoc.text.split(program.cancer_type, ';'),
+          program_id: program.program_id,
+          program_name: program.program_name
+        })) AS programs,
+        COLLECT(DISTINCT({
+          project_id: project.project_id
+        })) AS projects,
+        apoc.text.join(COLLECT(DISTINCT project.project_id), ';') AS project_ids,
+        apoc.text.regreplace(apoc.text.clean(apoc.text.join(COLLECT(DISTINCT project.project_id), '')), '[^\\p{Alpha}0-9]', '') AS project_ids_sort
+      RETURN
+        pmid,
+        pmid_sort,
+        publication_title,
+        publication_title_sort,
+        authors,
+        authors_sort,
+        publication_date,
+        cited_by,
+        relative_citation_ratio,
+        programs,
+        projects,
+        project_ids,
+        project_ids_sort;
+
+  # Datasets
+  # String fields are keyword for display, with subfields for sorting and searching
+  # Numeric and date fields are indexed as-is
+  - index_name: datasets
+    type: neo4j
+    mapping:
+      dataset_maximum_age_at_baseline:
+        type: integer
+        fields:
+          sort:
+            type: integer
+      dataset_minimum_age_at_baseline:
+        type: integer
+        fields:
+          sort:
+            type: integer
+      dataset_storage_distribution:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      dataset_title:
+        type: keyword
+        fields:
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      dataset_title_sort:
+        type: keyword
+      dataset_uuid:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      dataset_source_repo:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      dataset_year_enrollment_ended:
+        type: integer
+        fields:
+          sort:
+            type: integer
+      dataset_year_enrollment_started:
+        type: integer
+        fields:
+          sort:
+            type: integer
+      description:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      description_anchorless: # Only property that has anchor tags, so far
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      experimental_approaches: # not required
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      dataset_source_id:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      dataset_source_url:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      institute: # not required
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      PI_name: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      GPA: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      dataset_doc: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      dataset_pmid: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      funding_source: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      release_date:
+        type: date
+        format: yyyy-MM-dd
+      limitations_for_reuse: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      assay_method: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      study_type: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      primary_disease: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      participant_count:
+        type: integer
+        fields:
+          sort:
+            type: integer
+      sample_count:
+        type: integer
+        fields:
+          sort:
+            type: integer
+      study_links: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      related_genes: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      related_diseases: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      related_terms: # list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+    cypher_query: >
+      MATCH (d:dataset)
+      WITH
+        CASE d.dataset_maximum_age_at_baseline
+          WHEN '' THEN NULL
+          ELSE d.dataset_maximum_age_at_baseline
+        END AS dataset_maximum_age_at_baseline,
+        CASE d.dataset_minimum_age_at_baseline
+          WHEN '' THEN NULL
+          ELSE d.dataset_minimum_age_at_baseline
+        END AS dataset_minimum_age_at_baseline,
+        CASE d.dataset_storage_distribution
+          WHEN '' THEN NULL
+          ELSE d.dataset_storage_distribution
+        END AS dataset_storage_distribution,
+        d.dataset_title AS dataset_title,
+        apoc.text.regreplace(apoc.text.clean(d.dataset_title), '[^\\p{Alpha}0-9]', '') AS dataset_title_sort, // clean() applies lowercase
+        d.dataset_uuid AS dataset_uuid,
+        d.dataset_source_repo AS dataset_source_repo,
+        CASE d.dataset_year_enrollment_ended
+          WHEN '' THEN NULL
+          ELSE d.dataset_year_enrollment_ended
+        END AS dataset_year_enrollment_ended,
+        CASE d.dataset_year_enrollment_started
+          WHEN '' THEN NULL
+          ELSE d.dataset_year_enrollment_started
+        END AS dataset_year_enrollment_started,
+        d.description AS description,
+        apoc.text.replace(d.description, '(?s)<[^>]*>', '') AS description_anchorless,
+        d.experimental_approaches AS experimental_approaches,
+        d.dataset_source_id AS dataset_source_id,
+        d.dataset_source_url AS dataset_source_url,
+        d.institute AS institute,
+        d.PI_name AS PI_name,
+        d.GPA AS GPA,
+        d.dataset_doc AS dataset_doc,
+        d.dataset_pmid AS dataset_pmid,
+        d.funding_source AS funding_source,
+        CASE d.release_date
+          WHEN '' THEN NULL
+          ELSE d.release_date
+        END AS release_date,
+        d.limitations_for_reuse AS limitations_for_reuse,
+        d.assay_method AS assay_method,
+        d.study_type AS study_type,
+        d.primary_disease AS primary_disease,
+        CASE d.participant_count
+          WHEN '' THEN NULL
+          ELSE d.participant_count
+        END AS participant_count,
+        CASE d.sample_count
+          WHEN '' THEN NULL
+          ELSE d.sample_count
+        END AS sample_count,
+        d.study_links AS study_links,
+        d.related_genes AS related_genes,
+        d.related_diseases AS related_diseases,
+        d.related_terms AS related_terms
+      RETURN
+        dataset_maximum_age_at_baseline,
+        dataset_minimum_age_at_baseline,
+        dataset_storage_distribution,
+        dataset_title,
+        dataset_title_sort,
+        dataset_uuid,
+        dataset_source_repo,
+        dataset_year_enrollment_ended,
+        dataset_year_enrollment_started,
+        description,
+        description_anchorless,
+        experimental_approaches,
+        dataset_source_id,
+        dataset_source_url,
+        institute,
+        PI_name,
+        GPA,
+        dataset_doc,
+        dataset_pmid,
+        funding_source,
+        release_date,
+        limitations_for_reuse,
+        assay_method,
+        study_type,
+        primary_disease,
+        participant_count,
+        sample_count,
+        study_links,
+        related_genes,
+        related_diseases,
+        related_terms;
+
+  - index_name: files
+    type: neo4j
+    mapping:
+      dataset_uuid: # Foreign key for dataset
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: standard_analyzer
+            search_analyzer: keyword_analyzer
+      file_id:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: standard_analyzer
+            search_analyzer: keyword_analyzer
+      file_name:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: standard_analyzer
+            search_analyzer: keyword_analyzer
+      file_type:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: standard_analyzer
+            search_analyzer: keyword_analyzer
+      file_url: # not required
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: standard_analyzer
+            search_analyzer: keyword_analyzer
+      file_url_repo_prefix: # formatted from dataset_source_repo
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: standard_analyzer
+            search_analyzer: keyword_analyzer
+      access_level:
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: standard_analyzer
+            search_analyzer: keyword_analyzer
+    cypher_query: >
+      MATCH (f:file)-[:files_of_dataset]->(d:dataset)
+      WITH
+        d.dataset_uuid AS dataset_uuid,
+        CASE d.dataset_source_repo
+          WHEN 'CTD² Network' THEN 'CTD2'
+          ELSE d.dataset_source_repo
+        END AS file_url_repo_prefix,
+        f.file_id AS file_id,
+        f.file_name AS file_name,
+        CASE f.file_type
+          WHEN '' THEN NULL
+          ELSE f.file_type
+        END AS file_type,
+        f.file_url AS file_url,
+        f.access_level AS access_level
+      RETURN
+        dataset_uuid,
+        file_url_repo_prefix,
+        file_id,
+        file_name,
+        file_type,
+        file_url,
+        access_level;
+
+  # Resources
+  # String fields are keyword for display, with subfields for sorting and searching
+  # Numeric and date fields are indexed as-is
+  - index_name: resources
+    type: neo4j
+    mapping:
+      resource_uuid: # required; resource internal identifier
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+      # resource_source_id:  # not required; not displayed
+      #   type: integer
+      #   fields:
+      #     sort:
+      #       type: integer
+      resource_title: # required
+        type: keyword
+        fields:
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_title_sort:
+        type: keyword
+      resource_short_description: # not required
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_short_description_anchorless: # HTML tags removed
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_source_url: # required
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_tool_type: # required; list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_tool_subtype: # not required; list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_research_area: # required; list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_research_type: # not required; list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_access: # not required
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_doc: # not required; list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_poc_name: # not required; list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_poc_email: # not required; list
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_full_description: # not required
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+      resource_full_description_anchorless: # HTML tags removed
+        type: keyword
+        fields:
+          sort:
+            type: keyword
+            normalizer: lowercase
+          search:
+            type: text
+            analyzer: ngram_analyzer
+            search_analyzer: keyword_analyzer
+    cypher_query: >
+      MATCH (r:resource)
+      WITH
+        r.resource_uuid AS resource_uuid,
+        r.resource_title AS resource_title,
+        apoc.text.regreplace(apoc.text.clean(r.resource_title), '[^\\p{Alpha}0-9]', '') AS resource_title_sort, /* clean() applies lowercase */
+        CASE r.resource_short_description
+          WHEN '' THEN NULL
+          ELSE r.resource_short_description
+        END AS resource_short_description,
+        CASE r.resource_short_description
+          WHEN '' THEN NULL
+          ELSE apoc.text.replace(r.resource_short_description, '(?s)<[^>]*>', '')
+        END AS resource_short_description_anchorless,
+        r.resource_source_url AS resource_source_url,
+        apoc.text.split(r.resource_tool_type, ';') AS resource_tool_type,
+        CASE r.resource_tool_subtype
+          WHEN '' THEN []
+          ELSE apoc.text.split(r.resource_tool_subtype, ';')
+        END AS resource_tool_subtype,
+        apoc.text.split(r.resource_research_area, ';') AS resource_research_area,
+        CASE r.resource_research_type
+          WHEN '' THEN []
+          ELSE apoc.text.split(r.resource_research_type, ';')
+        END AS resource_research_type,
+        CASE r.resource_access
+          WHEN '' THEN NULL
+          ELSE r.resource_access
+        END AS resource_access,
+        CASE r.resource_doc
+          WHEN '' THEN []
+          ELSE apoc.text.split(r.resource_doc, ';')
+        END AS resource_doc,
+        CASE r.resource_poc_name
+          WHEN '' THEN []
+          ELSE apoc.text.split(r.resource_poc_name, ';')
+        END AS resource_poc_name,
+        CASE r.resource_poc_email
+          WHEN '' THEN []
+          ELSE apoc.text.split(r.resource_poc_email, ';')
+        END AS resource_poc_email,
+        CASE r.resource_full_description
+          WHEN '' THEN NULL
+          ELSE r.resource_full_description
+        END AS resource_full_description,
+        CASE r.resource_full_description
+          WHEN '' THEN NULL
+          ELSE apoc.text.replace(r.resource_full_description, '(?s)<[^>]*>', '')
+        END AS resource_full_description_anchorless
+      RETURN
+        resource_uuid,
+        resource_title,
+        resource_title_sort,
+        resource_short_description,
+        resource_short_description_anchorless,
+        resource_source_url,
+        resource_tool_type,
+        resource_tool_subtype,
+        resource_research_area,
+        resource_research_type,
+        resource_access,
+        resource_doc,
+        resource_poc_name,
+        resource_poc_email,
+        resource_full_description,
+        resource_full_description_anchorless;
