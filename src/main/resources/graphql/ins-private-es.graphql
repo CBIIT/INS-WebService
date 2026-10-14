@@ -201,6 +201,7 @@ type ProgramDetails {
     program_acronym: String
     program_link: String
     program_name: String
+    program_active_status: String
 }
 
 type ProjectDetails {
