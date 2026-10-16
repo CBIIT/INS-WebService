@@ -964,6 +964,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             new String[]{"program_acronym", "program_acronym"},
             new String[]{"program_link", "program_link"},
             new String[]{"program_name", "program_name"},
+            new String[]{"program_active_status", "program_active_status"},
         };
 
         Map<String, String> mapping = Map.ofEntries(

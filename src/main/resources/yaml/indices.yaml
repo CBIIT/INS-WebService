@@ -430,6 +430,8 @@ Indices:
             normalizer: lowercase
       data_link_sort:
         type: keyword
+      program_active_status:
+        type: keyword
     cypher_query: >
       MATCH (pg:program)
       WITH
@@ -466,7 +468,8 @@ Indices:
         pg.program_link AS program_link,
         apoc.text.regreplace(apoc.text.clean(pg.program_link), '[^\\p{Alpha}0-9]', '') AS program_link_sort,
         pg.data_link AS data_link,
-        apoc.text.regreplace(apoc.text.clean(pg.data_link), '[^\\p{Alpha}0-9]', '') AS data_link_sort
+        apoc.text.regreplace(apoc.text.clean(pg.data_link), '[^\\p{Alpha}0-9]', '') AS data_link_sort,
+        pg.program_active_status AS program_active_status
       RETURN
         program_id,
         program_id_sort,
@@ -495,7 +498,8 @@ Indices:
         program_link,
         program_link_sort,
         data_link,
-        data_link_sort;
+        data_link_sort,
+        program_active_status;
 
   - index_name: faceted_projects
     type: neo4j
