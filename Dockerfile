@@ -6,7 +6,10 @@ COPY . .
 RUN mvn package -DskipTests
 
 # Production stage
-FROM tomcat:11.0.23-jdk17 AS fnl_base_image
+FROM tomcat:11.0.27-jdk17 AS fnl_base_image
+
+# Pebble is bundled by the base image but is not used by this service.
+RUN rm -f /usr/bin/pebble
 
 RUN apt-get update && apt-get -y upgrade
 

@@ -10,7 +10,8 @@ The Bento Backend Framework is a server-side backend written in Java to be used 
 
 The Bento Backend can be found in this Github Repository: [Bento Backend](https://github.com/CBIIT/bento-backend)
 ## Pre-requisites
-*   Java 11 or newer installed on the server hosting the Bento Backend
+*   Java 17 or newer installed on the server hosting the Bento Backend
+*   Tomcat 11 / Servlet 6.1 when deploying the WAR to an external server
 *   The Neo4j database containing the Bento data has been initialized and is running
 
 ## Configuration
