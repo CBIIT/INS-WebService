@@ -256,8 +256,8 @@ Indices:
         g.grant_org_state AS grant_org_state,
         g.grant_org_country AS grant_org_country,
         COLLECT(DISTINCT({
-          focus_area: apoc.text.split(pg.focus_area, ';'),
-          cancer_type: apoc.text.split(pg.cancer_type, ';'),
+          focus_area: [value IN apoc.text.split(pg.focus_area, ';') | trim(value)],
+          cancer_type: [value IN apoc.text.split(pg.cancer_type, ';') | trim(value)],
           program_id: pg.program_id,
           program_name: pg.program_name
         })) AS programs,
@@ -449,21 +449,21 @@ Indices:
         apoc.text.regreplace(apoc.text.clean(pg.program_acronym), '[^\\p{Alpha}0-9]', '') AS program_acronym_sort,
         data_link_and_program_acronym,
         apoc.text.regreplace(apoc.text.clean(data_link_and_program_acronym), '[^\\p{Alpha}0-9]', '') AS data_link_and_program_acronym_sort,
-        apoc.coll.sort(apoc.text.split(pg.focus_area, ';')) AS focus_area,
+        apoc.coll.sort([value IN apoc.text.split(pg.focus_area, ';') | trim(value)]) AS focus_area,
         pg.focus_area AS focus_area_str,
         apoc.text.regreplace(apoc.text.clean(pg.focus_area), '[^\\p{Alpha}0-9]', '') AS focus_area_sort,
-        apoc.coll.sort(apoc.text.split(pg.cancer_type, ';')) AS cancer_type,
+        apoc.coll.sort([value IN apoc.text.split(pg.cancer_type, ';') | trim(value)]) AS cancer_type,
         pg.cancer_type AS cancer_type_str,
         apoc.text.regreplace(apoc.text.clean(pg.cancer_type), '[^\\p{Alpha}0-9]', '') AS cancer_type_sort,
-        apoc.text.split(pg.program_doc, ';') AS program_doc,
+        [value IN apoc.text.split(pg.program_doc, ';') | trim(value)] AS program_doc,
         pg.program_doc AS program_doc_str,
         pg.contact_pi AS contact_pi,
         pg.contact_pi_email AS contact_pi_email,
         pg.contact_nih AS contact_nih,
         pg.contact_nih_email AS contact_nih_email,
-        apoc.text.split(pg.nofo, ';') AS nofo,
+        [value IN apoc.text.split(pg.nofo, ';') | trim(value)] AS nofo,
         pg.nofo AS nofo_str,
-        apoc.text.split(pg.award, ';') AS award,
+        [value IN apoc.text.split(pg.award, ';') | trim(value)] AS award,
         pg.award AS award_str,
         pg.program_link AS program_link,
         apoc.text.regreplace(apoc.text.clean(pg.program_link), '[^\\p{Alpha}0-9]', '') AS program_link_sort,
@@ -539,8 +539,8 @@ Indices:
       MATCH (pg:program)<-[:projects_of_program]-(pj:project)
       RETURN
         pj.project_id AS project_id,
-        apoc.text.split(pg.focus_area, ';') AS focus_area,
-        apoc.text.split(pg.cancer_type, ';') AS cancer_type,
+        [value IN apoc.text.split(pg.focus_area, ';') | trim(value)] AS focus_area,
+        [value IN apoc.text.split(pg.cancer_type, ';') | trim(value)] AS cancer_type,
         pg.program_id AS program_id,
         pg.program_name AS program_name;
 
@@ -658,8 +658,8 @@ Indices:
       WITH
         pg,
         pj,
-        apoc.text.split(pg.focus_area, ';') AS focus_areas,
-        apoc.text.split(pg.cancer_type, ';') AS cancer_type
+        [value IN apoc.text.split(pg.focus_area, ';') | trim(value)] AS focus_areas,
+        [value IN apoc.text.split(pg.cancer_type, ';') | trim(value)] AS cancer_type
       ORDER BY toLower(pg.program_name) ASC
       UNWIND focus_areas AS focus_area
       WITH
@@ -683,8 +683,8 @@ Indices:
         apoc.text.join(COLLECT(DISTINCT pg.program_name), ';') AS program_names,
         apoc.text.join(COLLECT(DISTINCT apoc.text.regreplace(apoc.text.clean(pg.program_name), '[^\\p{Alpha}0-9]', '')), '') AS program_names_sort,
         COLLECT(DISTINCT({
-          focus_area: apoc.text.split(pg.focus_area, ';'),
-          cancer_type: apoc.text.split(pg.cancer_type, ';'),
+          focus_area: [value IN apoc.text.split(pg.focus_area, ';') | trim(value)],
+          cancer_type: [value IN apoc.text.split(pg.cancer_type, ';') | trim(value)],
           program_id: pg.program_id,
           program_name: pg.program_name
         })) AS programs
@@ -796,8 +796,8 @@ Indices:
         toInteger(pb.cited_by) AS cited_by,
         toFloat(pb.relative_citation_ratio) AS relative_citation_ratio,
         COLLECT(DISTINCT({
-          focus_area: apoc.text.split(program.focus_area, ';'),
-          cancer_type: apoc.text.split(program.cancer_type, ';'),
+          focus_area: [value IN apoc.text.split(program.focus_area, ';') | trim(value)],
+          cancer_type: [value IN apoc.text.split(program.cancer_type, ';') | trim(value)],
           program_id: program.program_id,
           program_name: program.program_name
         })) AS programs,
@@ -1441,15 +1441,15 @@ Indices:
           ELSE apoc.text.replace(r.resource_short_description, '(?s)<[^>]*>', '')
         END AS resource_short_description_anchorless,
         r.resource_source_url AS resource_source_url,
-        apoc.text.split(r.resource_tool_type, ';') AS resource_tool_type,
+        [value IN apoc.text.split(r.resource_tool_type, ';') | trim(value)] AS resource_tool_type,
         CASE r.resource_tool_subtype
           WHEN '' THEN []
-          ELSE apoc.text.split(r.resource_tool_subtype, ';')
+          ELSE [value IN apoc.text.split(r.resource_tool_subtype, ';') | trim(value)]
         END AS resource_tool_subtype,
-        apoc.text.split(r.resource_research_area, ';') AS resource_research_area,
+        [value IN apoc.text.split(r.resource_research_area, ';') | trim(value)] AS resource_research_area,
         CASE r.resource_research_type
           WHEN '' THEN []
-          ELSE apoc.text.split(r.resource_research_type, ';')
+          ELSE [value IN apoc.text.split(r.resource_research_type, ';') | trim(value)]
         END AS resource_research_type,
         CASE r.resource_access
           WHEN '' THEN NULL
@@ -1457,15 +1457,15 @@ Indices:
         END AS resource_access,
         CASE r.resource_doc
           WHEN '' THEN []
-          ELSE apoc.text.split(r.resource_doc, ';')
+          ELSE [value IN apoc.text.split(r.resource_doc, ';') | trim(value)]
         END AS resource_doc,
         CASE r.resource_poc_name
           WHEN '' THEN []
-          ELSE apoc.text.split(r.resource_poc_name, ';')
+          ELSE [value IN apoc.text.split(r.resource_poc_name, ';') | trim(value)]
         END AS resource_poc_name,
         CASE r.resource_poc_email
           WHEN '' THEN []
-          ELSE apoc.text.split(r.resource_poc_email, ';')
+          ELSE [value IN apoc.text.split(r.resource_poc_email, ';') | trim(value)]
         END AS resource_poc_email,
         CASE r.resource_full_description
           WHEN '' THEN NULL
