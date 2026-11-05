@@ -130,6 +130,9 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
                         .dataFetcher("numberOfPublications", env -> {
                             return numberOfPublications();
                         })
+                        .dataFetcher("numberOfResources", env -> {
+                            return numberOfResources();
+                        })
                         .dataFetcher("datasetDetails", env -> {
                             Map<String, Object> args = env.getArguments();
                             return datasetDetails(args);
@@ -749,6 +752,27 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
     }
 
     /**
+     * Queries Opensearch for the total Resources count
+     * @return
+     * @throws Exception
+     */
+    private Integer numberOfResources() throws Exception {
+        Request homeStatsRequest = new Request("GET", HOME_STATS_END_POINT);
+        JsonObject homeStatsResult = insEsService.send(homeStatsRequest);
+        JsonArray hits = homeStatsResult.getAsJsonObject("hits").getAsJsonArray("hits");
+        Iterator<JsonElement> hitsIter = hits.iterator();
+
+        if (!hitsIter.hasNext()) {
+            throw new Exception("Error: no results for homepage stats!");
+        }
+
+        JsonObject counts = hitsIter.next().getAsJsonObject().getAsJsonObject("_source");
+        int count = counts.get("num_resources").getAsInt();
+
+        return count;
+    }
+
+    /**
      * Gets the details for a single Dataset record
      *
      * @param params The filters applied
@@ -940,6 +964,7 @@ public class PrivateESDataFetcher extends AbstractPrivateESDataFetcher {
             new String[]{"program_acronym", "program_acronym"},
             new String[]{"program_link", "program_link"},
             new String[]{"program_name", "program_name"},
+            new String[]{"program_active_status", "program_active_status"},
         };
 
         Map<String, String> mapping = Map.ofEntries(
